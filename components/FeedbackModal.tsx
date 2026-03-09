@@ -2,7 +2,6 @@ import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
-  Modal,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
@@ -235,9 +234,11 @@ export function FeedbackModal({
     onSave();
   };
 
+  if (!visible) return null;
+
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="fullScreen">
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
+    <View style={[styles.overlay, { backgroundColor: colors.background }]}>
+      <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
         {/* Header */}
         <View style={[styles.header, { borderBottomColor: colors.separator, borderBottomWidth: 0.5 }]}>
           <TouchableOpacity onPress={onCancel} activeOpacity={0.7} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
@@ -273,13 +274,14 @@ export function FeedbackModal({
           </TouchableOpacity>
         </View>
       </SafeAreaView>
-    </Modal>
+    </View>
   );
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
+  overlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 100 },
   container: { flex: 1 },
   header: {
     flexDirection: "row",

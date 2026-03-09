@@ -107,17 +107,17 @@ export default function TodayScreen() {
       : "skip"
   );
 
-  const todayWorkout = useQuery(
-    api.workouts.getTodaysWorkout,
+  // Single source of truth: what's next in the meso cycle
+  const next = useQuery(
+    api.workouts.getNextSession,
     userId ? { userId } : "skip"
   );
 
-  const isLoading = userLoading || meso === undefined;
+  const isLoading = userLoading || meso === undefined || next === undefined;
 
-  // Find today's session by day of week
-  const todayDow = new Date().getDay();
-  const todaySession = meso?.sessions.find((s) => s.dayOfWeek === todayDow) ?? null;
-  const isRestDay = meso !== null && meso !== undefined && !todaySession;
+  const nextSession = next?.session ?? null;
+  const isRestDay = meso != null && next != null && (next.status === "week_complete" || next.status === "meso_complete");
+  const isMesoComplete = next?.status === "meso_complete";
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={["top"]}>
@@ -127,13 +127,13 @@ export default function TodayScreen() {
       >
         {/* RP-style header */}
         <Animated.View entering={FadeIn.duration(400)} style={{ marginTop: 8, marginBottom: 24 }}>
-          {meso ? (
+          {meso && next ? (
             <>
               <Text style={[typography.caption2, { color: colors.labelTertiary, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }]}>
                 {meso.name}
               </Text>
               <Text style={[typography.largeTitle, { color: colors.label, fontWeight: "800" }]}>
-                WEEK {meso.weekNumber} · DAY {todaySession ? todaySession.order + 1 : "—"} · {new Date().toLocaleDateString("en-US", { weekday: "long" }).toUpperCase()}
+                WEEK {next.weekNumber} · {nextSession ? `DAY ${nextSession.order + 1}` : isMesoComplete ? "COMPLETE" : "REST"}
               </Text>
             </>
           ) : (
@@ -223,23 +223,78 @@ export default function TodayScreen() {
           </Animated.View>
         )}
 
-        {/* Rest day */}
+        {/* Rest / week complete / meso complete */}
         {!isLoading && meso && isRestDay && (
-          <Animated.View
-            entering={FadeInDown.springify()}
-            style={[styles.card, { backgroundColor: colors.backgroundSecondary }]}
-          >
-            <Text style={[typography.title3, { color: colors.label, marginBottom: 8 }]}>
-              Rest day
-            </Text>
-            <Text style={[typography.body, { color: colors.labelSecondary }]}>
-              No session scheduled today. Recover well.
-            </Text>
-          </Animated.View>
+          <>
+            <Animated.View
+              entering={FadeInDown.springify()}
+              style={[styles.card, { backgroundColor: colors.backgroundSecondary }]}
+            >
+              <Text style={[typography.title3, { color: colors.label, marginBottom: 6 }]}>
+                {isMesoComplete ? "Mesocycle Complete 🎉" : "Week Complete"}
+              </Text>
+              <Text style={[typography.body, { color: colors.labelSecondary }]}>
+                {isMesoComplete
+                  ? "You finished all weeks. Start a new mesocycle when ready."
+                  : `Week ${next!.weekNumber + 1} of ${next!.mesoWeeks} starts next.`}
+              </Text>
+            </Animated.View>
+
+            {/* Next week session preview */}
+            {!isMesoComplete && (next as any)?.upcomingSessions?.length > 0 && (() => {
+              const upcoming = (next as any).upcomingSessions as { _id: string; name: string; order: number; muscleGroups: string[] }[];
+              const nextWeek = next!.weekNumber + 1;
+              return (
+                <Animated.View entering={FadeInDown.delay(80).springify()} style={{ marginTop: 20 }}>
+                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                    <Text style={[typography.footnote, { color: colors.labelSecondary, letterSpacing: 0.8, textTransform: "uppercase" }]}>
+                      Week {nextWeek} — Coming Up
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => router.push(`/workout/new?sessionId=${upcoming[0]._id}&week=${nextWeek}`)}
+                      activeOpacity={0.7}
+                      style={[styles.startWeekBtn, { backgroundColor: colors.accent }]}
+                    >
+                      <Text style={{ color: "#FFF", fontWeight: "700", fontSize: 13 }}>
+                        Start Week {nextWeek} Now
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                  {upcoming.map((s, i) => (
+                    <Animated.View
+                      key={s._id}
+                      entering={FadeInDown.delay(100 + i * 40).springify()}
+                      style={[styles.upcomingRow, { backgroundColor: colors.backgroundSecondary }]}
+                    >
+                      <View style={[styles.upcomingNum, { backgroundColor: colors.fillSecondary }]}>
+                        <Text style={[typography.caption1, { color: colors.labelSecondary, fontWeight: "700" }]}>
+                          {s.order + 1}
+                        </Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[typography.body, { color: colors.label, fontWeight: "600" }]}>{s.name}</Text>
+                        <Text style={[typography.caption1, { color: colors.labelSecondary, marginTop: 2 }]}>
+                          {s.muscleGroups.map((mg) => MUSCLE_DISPLAY_NAMES[mg as keyof typeof MUSCLE_DISPLAY_NAMES] ?? mg).join(" · ")}
+                        </Text>
+                      </View>
+                      {i === 0 && (
+                        <TouchableOpacity
+                          onPress={() => router.push(`/workout/new?sessionId=${s._id}&week=${nextWeek}`)}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={[typography.caption1, { color: colors.accent, fontWeight: "700" }]}>START →</Text>
+                        </TouchableOpacity>
+                      )}
+                    </Animated.View>
+                  ))}
+                </Animated.View>
+              );
+            })()}
+          </>
         )}
 
-        {/* Today's session */}
-        {!isLoading && meso && todaySession && (
+        {/* Next session card */}
+        {!isLoading && meso && nextSession && (
           <>
             <Animated.View
               entering={FadeInDown.delay(80).springify()}
@@ -247,47 +302,40 @@ export default function TodayScreen() {
             >
               <View style={styles.cardHeader}>
                 <Text style={[typography.title3, { color: colors.label }]}>
-                  {todaySession.name}
+                  {nextSession.name}
                 </Text>
-                {todayWorkout?.status === "in_progress" && (
+                {next?.status === "in_progress" ? (
                   <View style={[styles.badge, { backgroundColor: colors.accent + "22" }]}>
-                    <Text style={[typography.caption2, { color: colors.accent, fontWeight: "700" }]}>
-                      IN PROGRESS
-                    </Text>
+                    <Text style={[typography.caption2, { color: colors.accent, fontWeight: "700" }]}>IN PROGRESS</Text>
+                  </View>
+                ) : (
+                  <View style={[styles.badge, { backgroundColor: colors.accentGreen + "22" }]}>
+                    <Text style={[typography.caption2, { color: colors.accentGreen, fontWeight: "700" }]}>UP NEXT</Text>
                   </View>
                 )}
               </View>
 
-              {/* Exercise list or muscle group preview */}
+              {/* Muscle groups preview */}
               <View style={{ gap: 10, marginBottom: 20 }}>
-                {todaySession.exercises.length > 0
-                  ? todaySession.exercises.map((ex) => (
-                      <View key={ex.id} style={styles.exerciseRow}>
-                        <View style={[styles.exDot, { backgroundColor: colors.accent }]} />
-                        <Text style={[typography.body, { color: colors.label, flex: 1 }]}>
-                          {ex.name}
-                        </Text>
-                      </View>
-                    ))
-                  : todaySession.muscleGroups.map((mg) => (
-                      <View key={mg} style={styles.exerciseRow}>
-                        <View style={[styles.exDot, { backgroundColor: colors.fillPrimary }]} />
-                        <Text style={[typography.body, { color: colors.labelSecondary, flex: 1 }]}>
-                          {MUSCLE_DISPLAY_NAMES[mg as keyof typeof MUSCLE_DISPLAY_NAMES] ?? mg}
-                        </Text>
-                      </View>
-                    ))}
+                {nextSession.muscleGroups.map((mg) => (
+                  <View key={mg} style={styles.exerciseRow}>
+                    <View style={[styles.exDot, { backgroundColor: colors.accent }]} />
+                    <Text style={[typography.body, { color: colors.labelSecondary, flex: 1 }]}>
+                      {MUSCLE_DISPLAY_NAMES[mg as keyof typeof MUSCLE_DISPLAY_NAMES] ?? mg}
+                    </Text>
+                  </View>
+                ))}
               </View>
 
               <Button
-                label={todayWorkout?.status === "in_progress" ? "Resume Workout" : "Start Workout"}
-                onPress={() =>
-                  router.push(
-                    todayWorkout?.status === "in_progress"
-                      ? `/workout/${todayWorkout._id}`
-                      : `/workout/new?sessionId=${todaySession._id}`
-                  )
-                }
+                label={next?.status === "in_progress" ? "Resume Workout" : "Start Workout"}
+                onPress={() => {
+                  if (next?.status === "in_progress" && next.workoutId) {
+                    router.push(`/workout/${next.workoutId}`);
+                  } else {
+                    router.push(`/workout/new?sessionId=${nextSession._id}`);
+                  }
+                }}
               />
             </Animated.View>
 
@@ -295,7 +343,7 @@ export default function TodayScreen() {
             <Animated.View entering={FadeIn.delay(200)} style={{ alignItems: "center", marginTop: 16 }}>
               <TouchableOpacity activeOpacity={0.7}>
                 <Text style={[typography.subheadline, { color: colors.labelSecondary }]}>
-                  Skip today's session
+                  Skip this session
                 </Text>
               </TouchableOpacity>
             </Animated.View>
@@ -376,5 +424,25 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
+  },
+  upcomingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 8,
+  },
+  upcomingNum: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  startWeekBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
 });

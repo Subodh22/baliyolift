@@ -129,6 +129,93 @@ export const deleteAllForUser = mutation({
   },
 });
 
+// Rep ranges by muscle group
+const REP_RANGES: Record<string, { min: number; max: number }> = {
+  chest: { min: 8, max: 12 }, back: { min: 8, max: 12 },
+  shoulders: { min: 10, max: 15 }, biceps: { min: 10, max: 15 },
+  triceps: { min: 8, max: 12 }, quads: { min: 8, max: 12 },
+  hamstrings: { min: 8, max: 12 }, glutes: { min: 10, max: 15 },
+  calves: { min: 12, max: 20 }, abs: { min: 10, max: 20 },
+  forearms: { min: 12, max: 20 },
+};
+
+// Creates a custom meso and auto-assigns exercises per session from the library
+export const createCustom = mutation({
+  args: {
+    userId: v.id("users"),
+    name: v.string(),
+    weeks: v.number(),
+    volumeTargets: v.array(volumeTargetValidator),
+    // Each session: day of week + ordered muscle groups
+    sessions: v.array(v.object({
+      dayOfWeek: v.number(),
+      name: v.string(),
+      muscleGroups: v.array(v.string()),
+      order: v.number(),
+    })),
+  },
+  handler: async (ctx, args) => {
+    const mesoId = await ctx.db.insert("mesocycles", {
+      userId: args.userId,
+      name: args.name,
+      startDate: Date.now(),
+      weeks: args.weeks,
+      status: "active",
+      volumeTargets: args.volumeTargets,
+    });
+
+    for (const sessionDef of args.sessions) {
+      const allExIds: any[] = [];
+      const seInputs: { exerciseId: any; repMin: number; repMax: number }[] = [];
+
+      for (const mg of sessionDef.muscleGroups) {
+        // Pick top exercises for this muscle (SFR high first, then medium)
+        const exList = await ctx.db
+          .query("exercises")
+          .withIndex("by_muscle_group", (q) => q.eq("muscleGroup", mg as any))
+          .collect();
+
+        // Sort: high SFR first, then medium, then low
+        const sfrOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
+        exList.sort((a, b) => (sfrOrder[a.sfr] ?? 2) - (sfrOrder[b.sfr] ?? 2));
+
+        // Pick top 2 per muscle group
+        const picked = exList.slice(0, 2);
+        const range = REP_RANGES[mg] ?? { min: 8, max: 12 };
+        for (const ex of picked) {
+          allExIds.push(ex._id);
+          seInputs.push({ exerciseId: ex._id, repMin: range.min, repMax: range.max });
+        }
+      }
+
+      const sessionId = await ctx.db.insert("sessions", {
+        mesocycleId: mesoId,
+        userId: args.userId,
+        dayOfWeek: sessionDef.dayOfWeek,
+        name: sessionDef.name,
+        exerciseIds: allExIds,
+        order: sessionDef.order,
+        muscleGroups: sessionDef.muscleGroups,
+      });
+
+      for (let i = 0; i < seInputs.length; i++) {
+        const se = seInputs[i];
+        await ctx.db.insert("sessionExercises", {
+          sessionId,
+          exerciseId: se.exerciseId,
+          order: i,
+          repRangeMin: se.repMin,
+          repRangeMax: se.repMax,
+          targetSets: 3,
+          setType: "regular",
+        });
+      }
+    }
+
+    return mesoId;
+  },
+});
+
 export const startDeload = mutation({
   args: {
     mesocycleId: v.id("mesocycles"),
@@ -228,8 +315,22 @@ export const getActiveWithDetails = query({
 
     sessionsWithDetails.sort((a, b) => a.order - b.order);
 
+    // Week number = max(calendar week, highest week of any logged workout)
+    // This ensures starting a week early is reflected immediately
     const msPerWeek = 7 * 24 * 60 * 60 * 1000;
-    const weekNumber = Math.max(1, Math.ceil((Date.now() - meso.startDate) / msPerWeek));
+    const calendarWeek = Math.max(1, Math.ceil((Date.now() - meso.startDate) / msPerWeek));
+
+    const allWorkouts = await ctx.db
+      .query("workouts")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .filter((q) => q.eq(q.field("mesocycleId"), meso._id))
+      .collect();
+
+    const maxLoggedWeek = allWorkouts.length > 0
+      ? Math.max(...allWorkouts.map((w) => w.weekNumber))
+      : 1;
+
+    const weekNumber = Math.min(Math.max(calendarWeek, maxLoggedWeek), meso.weeks);
 
     return { ...meso, sessions: sessionsWithDetails, weekNumber };
   },

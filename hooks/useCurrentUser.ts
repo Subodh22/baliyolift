@@ -2,11 +2,8 @@ import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useEffect, useRef, useState } from "react";
+import { useUser } from "@clerk/clerk-expo";
 
-// Stable device ID for development — replace with real auth (Clerk) later
-const DEV_CLERK_ID = "local-dev-user-001";
-
-// Module-level cache so multiple hook instances share the same userId
 let cachedUserId: Id<"users"> | null = null;
 
 export function useCurrentUser() {
@@ -15,23 +12,23 @@ export function useCurrentUser() {
   const [loading, setLoading] = useState(!cachedUserId);
   const initialized = useRef(!!cachedUserId);
 
+  const { user, isLoaded } = useUser();
+  const clerkId = user?.id ?? null;
+  const clerkName = user?.fullName ?? "Athlete";
+
   useEffect(() => {
+    if (!isLoaded || !clerkId) return;
     if (initialized.current) return;
     initialized.current = true;
 
-    createOrGet({
-      clerkId: DEV_CLERK_ID,
-      name: "Athlete",
-      experienceLevel: "intermediate",
-      unitSystem: "kg",
-    })
+    createOrGet({ clerkId, name: clerkName, experienceLevel: "intermediate", unitSystem: "kg" })
       .then((id) => {
         cachedUserId = id as Id<"users">;
         setUserId(id as Id<"users">);
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [createOrGet]);
+  }, [isLoaded, clerkId]);
 
   return { userId, loading };
 }

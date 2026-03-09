@@ -46,6 +46,59 @@ export const getUser = query({
   },
 });
 
+/**
+ * Wipes ALL training data for a user — mesocycles, sessions, sessionExercises,
+ * workouts, sets, and sessionFeedback. Keeps the user account itself.
+ */
+export const deleteAllUserData = mutation({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const uid = args.userId;
+
+    // 1. Sets
+    const sets = await ctx.db
+      .query("sets")
+      .withIndex("by_user_timestamp", (q) => q.eq("userId", uid))
+      .collect();
+    for (const s of sets) await ctx.db.delete(s._id);
+
+    // 2. Session feedback
+    const allFeedback = await ctx.db
+      .query("sessionFeedback")
+      .filter((q) => q.eq(q.field("userId"), uid))
+      .collect();
+    for (const f of allFeedback) await ctx.db.delete(f._id);
+
+    // 3. Workouts
+    const workouts = await ctx.db
+      .query("workouts")
+      .withIndex("by_user", (q) => q.eq("userId", uid))
+      .collect();
+    for (const w of workouts) await ctx.db.delete(w._id);
+
+    // 4. Mesocycles → sessions → sessionExercises
+    const mesos = await ctx.db
+      .query("mesocycles")
+      .withIndex("by_user", (q) => q.eq("userId", uid))
+      .collect();
+    for (const meso of mesos) {
+      const sessions = await ctx.db
+        .query("sessions")
+        .withIndex("by_mesocycle", (q) => q.eq("mesocycleId", meso._id))
+        .collect();
+      for (const session of sessions) {
+        const seExs = await ctx.db
+          .query("sessionExercises")
+          .withIndex("by_session", (q) => q.eq("sessionId", session._id))
+          .collect();
+        for (const se of seExs) await ctx.db.delete(se._id);
+        await ctx.db.delete(session._id);
+      }
+      await ctx.db.delete(meso._id);
+    }
+  },
+});
+
 export const updateExperienceLevel = mutation({
   args: {
     userId: v.id("users"),

@@ -87,59 +87,61 @@ function getSuggestion(
 
 // ─── PPL Template with realistic starting weights ─────────────────────────────
 
+// startReps = repMax - 2 → athlete starts near top of range so weight increase fires within the meso.
+// This is realistic for an intermediate who already knows their working weight.
 const PPL_SESSIONS = [
   {
     name: "Push A — Chest & Shoulders", day: "Mon",
     exercises: [
-      { name: "Incline DB Press",       repMin: 8,  repMax: 12, baseSets: 3, muscleGroup: "chest",     startWeight: 32.5 },
-      { name: "Machine Chest Press",    repMin: 10, repMax: 15, baseSets: 3, muscleGroup: "chest",     startWeight: 60 },
-      { name: "Cable Lateral Raise",    repMin: 12, repMax: 20, baseSets: 3, muscleGroup: "shoulders", startWeight: 10 },
-      { name: "Overhead Tricep Ext",    repMin: 10, repMax: 15, baseSets: 3, muscleGroup: "triceps",   startWeight: 25 },
+      { name: "Incline DB Press",       repMin: 8,  repMax: 12, baseSets: 3, muscleGroup: "chest",     startWeight: 32.5, startReps: 10 },
+      { name: "Machine Chest Press",    repMin: 10, repMax: 15, baseSets: 3, muscleGroup: "chest",     startWeight: 60,   startReps: 13 },
+      { name: "Cable Lateral Raise",    repMin: 12, repMax: 20, baseSets: 3, muscleGroup: "shoulders", startWeight: 10,   startReps: 18 },
+      { name: "Overhead Tricep Ext",    repMin: 10, repMax: 15, baseSets: 3, muscleGroup: "triceps",   startWeight: 25,   startReps: 13 },
     ],
   },
   {
     name: "Pull A — Back & Biceps", day: "Tue",
     exercises: [
-      { name: "Cable Row",              repMin: 8,  repMax: 12, baseSets: 3, muscleGroup: "back",    startWeight: 55 },
-      { name: "Lat Pulldown",           repMin: 8,  repMax: 12, baseSets: 3, muscleGroup: "back",    startWeight: 60 },
-      { name: "Incline DB Curl",        repMin: 10, repMax: 15, baseSets: 3, muscleGroup: "biceps",  startWeight: 12.5 },
-      { name: "Hammer Curl",            repMin: 10, repMax: 15, baseSets: 2, muscleGroup: "biceps",  startWeight: 15 },
+      { name: "Cable Row",              repMin: 8,  repMax: 12, baseSets: 3, muscleGroup: "back",    startWeight: 55,   startReps: 10 },
+      { name: "Lat Pulldown",           repMin: 8,  repMax: 12, baseSets: 3, muscleGroup: "back",    startWeight: 60,   startReps: 10 },
+      { name: "Incline DB Curl",        repMin: 10, repMax: 15, baseSets: 3, muscleGroup: "biceps",  startWeight: 12.5, startReps: 13 },
+      { name: "Hammer Curl",            repMin: 10, repMax: 15, baseSets: 2, muscleGroup: "biceps",  startWeight: 15,   startReps: 13 },
     ],
   },
   {
     name: "Legs A — Quads & Glutes", day: "Wed",
     exercises: [
-      { name: "Leg Press",              repMin: 8,  repMax: 12, baseSets: 3, muscleGroup: "quads",      startWeight: 120 },
-      { name: "Leg Extension",          repMin: 12, repMax: 20, baseSets: 3, muscleGroup: "quads",      startWeight: 50 },
-      { name: "Romanian Deadlift",      repMin: 8,  repMax: 12, baseSets: 3, muscleGroup: "hamstrings", startWeight: 60 },
-      { name: "Standing Calf Raise",    repMin: 10, repMax: 20, baseSets: 4, muscleGroup: "calves",     startWeight: 40 },
+      { name: "Leg Press",              repMin: 8,  repMax: 12, baseSets: 3, muscleGroup: "quads",      startWeight: 120, startReps: 10 },
+      { name: "Leg Extension",          repMin: 12, repMax: 20, baseSets: 3, muscleGroup: "quads",      startWeight: 50,  startReps: 18 },
+      { name: "Romanian Deadlift",      repMin: 8,  repMax: 12, baseSets: 3, muscleGroup: "hamstrings", startWeight: 60,  startReps: 10 },
+      { name: "Standing Calf Raise",    repMin: 10, repMax: 20, baseSets: 4, muscleGroup: "calves",     startWeight: 40,  startReps: 18 },
     ],
   },
   {
     name: "Push B — Chest & Triceps", day: "Thu",
     exercises: [
-      { name: "Flat DB Press",          repMin: 8,  repMax: 12, baseSets: 3, muscleGroup: "chest",     startWeight: 35 },
-      { name: "Pec Dec",                repMin: 12, repMax: 20, baseSets: 3, muscleGroup: "chest",     startWeight: 45 },
-      { name: "Machine Shoulder Press", repMin: 10, repMax: 15, baseSets: 3, muscleGroup: "shoulders", startWeight: 40 },
-      { name: "Cable Tricep Pushdown",  repMin: 12, repMax: 20, baseSets: 3, muscleGroup: "triceps",   startWeight: 20 },
+      { name: "Flat DB Press",          repMin: 8,  repMax: 12, baseSets: 3, muscleGroup: "chest",     startWeight: 35,  startReps: 10 },
+      { name: "Pec Dec",                repMin: 12, repMax: 20, baseSets: 3, muscleGroup: "chest",     startWeight: 45,  startReps: 18 },
+      { name: "Machine Shoulder Press", repMin: 10, repMax: 15, baseSets: 3, muscleGroup: "shoulders", startWeight: 40,  startReps: 13 },
+      { name: "Cable Tricep Pushdown",  repMin: 12, repMax: 20, baseSets: 3, muscleGroup: "triceps",   startWeight: 20,  startReps: 18 },
     ],
   },
   {
     name: "Pull B — Back & Biceps", day: "Fri",
     exercises: [
-      { name: "Chest Supported Row",    repMin: 8,  repMax: 12, baseSets: 3, muscleGroup: "back",   startWeight: 50 },
-      { name: "Single Arm Cable Row",   repMin: 10, repMax: 15, baseSets: 3, muscleGroup: "back",   startWeight: 25 },
-      { name: "EZ Bar Curl",            repMin: 8,  repMax: 12, baseSets: 3, muscleGroup: "biceps", startWeight: 30 },
-      { name: "Cable Curl",             repMin: 12, repMax: 20, baseSets: 2, muscleGroup: "biceps", startWeight: 12.5 },
+      { name: "Chest Supported Row",    repMin: 8,  repMax: 12, baseSets: 3, muscleGroup: "back",   startWeight: 50,   startReps: 10 },
+      { name: "Single Arm Cable Row",   repMin: 10, repMax: 15, baseSets: 3, muscleGroup: "back",   startWeight: 25,   startReps: 13 },
+      { name: "EZ Bar Curl",            repMin: 8,  repMax: 12, baseSets: 3, muscleGroup: "biceps", startWeight: 30,   startReps: 10 },
+      { name: "Cable Curl",             repMin: 12, repMax: 20, baseSets: 2, muscleGroup: "biceps", startWeight: 12.5, startReps: 18 },
     ],
   },
   {
     name: "Legs B — Hams & Glutes", day: "Sat",
     exercises: [
-      { name: "Hack Squat",             repMin: 8,  repMax: 12, baseSets: 3, muscleGroup: "quads",      startWeight: 80 },
-      { name: "Leg Curl",               repMin: 10, repMax: 15, baseSets: 3, muscleGroup: "hamstrings", startWeight: 40 },
-      { name: "Hip Thrust",             repMin: 8,  repMax: 12, baseSets: 3, muscleGroup: "glutes",     startWeight: 80 },
-      { name: "Seated Calf Raise",      repMin: 10, repMax: 20, baseSets: 3, muscleGroup: "calves",     startWeight: 30 },
+      { name: "Hack Squat",             repMin: 8,  repMax: 12, baseSets: 3, muscleGroup: "quads",      startWeight: 80, startReps: 10 },
+      { name: "Leg Curl",               repMin: 10, repMax: 15, baseSets: 3, muscleGroup: "hamstrings", startWeight: 40, startReps: 13 },
+      { name: "Hip Thrust",             repMin: 8,  repMax: 12, baseSets: 3, muscleGroup: "glutes",     startWeight: 80, startReps: 10 },
+      { name: "Seated Calf Raise",      repMin: 10, repMax: 20, baseSets: 3, muscleGroup: "calves",     startWeight: 30, startReps: 18 },
     ],
   },
 ];
@@ -172,7 +174,7 @@ const WEEKS = 5;
 
 interface ExerciseState {
   name: string; day: string; session: string;
-  muscleGroup: string; repMin: number; repMax: number; baseSets: number;
+  muscleGroup: string; repMin: number; repMax: number; baseSets: number; startReps: number;
   last: SetData | null; prev: SetData | null;
   history: Array<{
     week: number; weight: number; reps: number; rir: number; sets: number;
@@ -186,6 +188,7 @@ const exerciseStates: ExerciseState[] = PPL_SESSIONS.flatMap((s) =>
   s.exercises.map((ex) => ({
     ...ex, day: s.day, session: s.name,
     last: null, prev: null, history: [],
+    startReps: ex.startReps,
   }))
 );
 
@@ -218,7 +221,10 @@ for (let week = 1; week <= WEEKS; week++) {
         fbWorkload, fbSoreness
       );
 
-      if (week === 1 || sug.weight === 0) sug.weight = ex.startWeight;
+      if (week === 1 || sug.weight === 0) {
+        sug.weight = ex.startWeight;
+        sug.reps = state.startReps; // start near top of rep range, not repMin
+      }
 
       const performed = simulate(sug, ex.repMin, ex.repMax);
       const volume = performed.weight * performed.reps * performed.sets;

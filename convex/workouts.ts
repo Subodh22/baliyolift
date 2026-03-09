@@ -187,6 +187,113 @@ export const getWeeklyVolume = query({
   },
 });
 
+// Returns the next unfinished session in the active meso (by order),
+// or the in-progress workout to resume, based on actual completed workouts.
+export const getNextSession = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const meso = await ctx.db
+      .query("mesocycles")
+      .withIndex("by_user_status", (q) =>
+        q.eq("userId", args.userId).eq("status", "active")
+      )
+      .first();
+    if (!meso) return null;
+
+    // All sessions for this meso, sorted by order
+    const sessions = await ctx.db
+      .query("sessions")
+      .withIndex("by_mesocycle", (q) => q.eq("mesocycleId", meso._id))
+      .collect();
+    sessions.sort((a, b) => a.order - b.order);
+
+    // In-progress workout (resume takes priority)
+    const inProgress = await ctx.db
+      .query("workouts")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("mesocycleId"), meso._id),
+          q.eq(q.field("status"), "in_progress")
+        )
+      )
+      .first();
+
+    // Week number = max(calendar week, highest week logged) so early-start works
+    const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+    const calendarWeek = Math.max(1, Math.ceil((Date.now() - meso.startDate) / msPerWeek));
+    const allWorkouts = await ctx.db
+      .query("workouts")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .filter((q) => q.eq(q.field("mesocycleId"), meso._id))
+      .collect();
+    const maxLoggedWeek = allWorkouts.length > 0 ? Math.max(...allWorkouts.map((w) => w.weekNumber)) : 1;
+    const weekNumber = Math.min(Math.max(calendarWeek, maxLoggedWeek), meso.weeks);
+
+    if (inProgress) {
+      const session = sessions.find((s) => s._id === inProgress.sessionId) ?? null;
+      return {
+        weekNumber,
+        mesoWeeks: meso.weeks,
+        status: "in_progress" as const,
+        session: session
+          ? { _id: session._id, name: session.name, order: session.order, muscleGroups: session.muscleGroups ?? [] }
+          : null,
+        workoutId: inProgress._id,
+      };
+    }
+
+    // Completed workouts this week
+    const completedThisWeek = await ctx.db
+      .query("workouts")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("mesocycleId"), meso._id),
+          q.eq(q.field("weekNumber"), weekNumber),
+          q.eq(q.field("status"), "completed")
+        )
+      )
+      .collect();
+
+    const completedIds = new Set(completedThisWeek.map((w) => w.sessionId as string));
+
+    // First session not yet completed this week
+    const nextSession = sessions.find((s) => !completedIds.has(s._id as string)) ?? null;
+
+    if (!nextSession) {
+      // Return all sessions as "upcoming" so the UI can show next week preview
+      const upcomingSessions = sessions.map((s) => ({
+        _id: s._id,
+        name: s.name,
+        order: s.order,
+        muscleGroups: s.muscleGroups ?? [],
+      }));
+      return {
+        weekNumber,
+        mesoWeeks: meso.weeks,
+        status: weekNumber >= meso.weeks ? ("meso_complete" as const) : ("week_complete" as const),
+        session: null,
+        workoutId: null,
+        upcomingSessions,
+      };
+    }
+
+    return {
+      weekNumber,
+      mesoWeeks: meso.weeks,
+      status: "ready" as const,
+      session: {
+        _id: nextSession._id,
+        name: nextSession.name,
+        order: nextSession.order,
+        muscleGroups: nextSession.muscleGroups ?? [],
+      },
+      workoutId: null,
+    };
+  },
+});
+
 export const getHistory = query({
   args: {
     userId: v.id("users"),

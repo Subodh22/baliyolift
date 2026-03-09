@@ -3,14 +3,6 @@ import { useColorScheme, Platform, Text } from "react-native";
 import { Colors } from "@/constants/colors";
 import { Typography } from "@/constants/typography";
 
-// Simple emoji icons — no native modules, always works in Expo Go
-const TAB_ICONS: Record<string, { active: string; inactive: string }> = {
-  index:    { active: "🏋️", inactive: "🏋️" },
-  plan:     { active: "📅", inactive: "📅" },
-  progress: { active: "📈", inactive: "📈" },
-  profile:  { active: "👤", inactive: "👤" },
-};
-
 export default function TabLayout() {
   const rawScheme = useColorScheme();
   const scheme: "light" | "dark" = rawScheme === "light" ? "light" : "dark";

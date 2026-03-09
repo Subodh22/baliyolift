@@ -71,7 +71,7 @@ function WorkoutCard({ workout, colors, typography }: { workout: any; colors: an
             </Text>
           </View>
           <View style={{ alignItems: "flex-end", gap: 4 }}>
-            {workout.durationMin && (
+            {!!workout.durationMin && (
               <Text style={[typography.caption1, { color: colors.labelSecondary }]}>
                 {workout.durationMin} min
               </Text>
@@ -101,13 +101,17 @@ function WorkoutCard({ workout, colors, typography }: { workout: any; colors: an
                   ))}
                 </View>
                 {/* Overload summary for this exercise */}
-                {ex.sets.length > 0 && (() => {
+                {(() => {
+                  if (!ex.sets.length) return null;
                   const lastSet = ex.sets[ex.sets.length - 1];
                   const ind = lastSet.overloadIndicator ? INDICATOR_LABEL[lastSet.overloadIndicator] : null;
                   if (!ind || lastSet.overloadIndicator === "maintain") return null;
+                  const label = lastSet.overloadIndicator === "increase" ? "Weight increased"
+                    : lastSet.overloadIndicator === "decrease" ? "Weight reduced"
+                    : "+1 rep next session";
                   return (
                     <Text style={{ color: ind.color, fontSize: 11, fontWeight: "700", marginTop: 2 }}>
-                      {ind.symbol} {lastSet.overloadIndicator === "increase" ? "Weight increased" : lastSet.overloadIndicator === "decrease" ? "Weight reduced" : "+1 rep next session"}
+                      {ind.symbol} {label}
                     </Text>
                   );
                 })()}

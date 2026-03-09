@@ -1,14 +1,51 @@
-import { View, Text, ScrollView, StyleSheet, Switch } from "react-native";
+import { View, Text, ScrollView, StyleSheet, Switch, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useState } from "react";
 import { useTheme } from "@/hooks/useTheme";
 import { Row, RowGroup } from "@/components/ui/Row";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useRouter } from "expo-router";
+import { useAuth } from "@clerk/clerk-expo";
 
 export default function ProfileScreen() {
   const { colors, typography } = useTheme();
   const [unit, setUnit] = useState<"kg" | "lbs">("kg");
   const [notifications, setNotifications] = useState(true);
+  const { userId } = useCurrentUser();
+  const deleteAllData = useMutation(api.users.deleteAllUserData);
+  const router = useRouter();
+  const authHook = useAuth();
+
+  const handleResetData = () => {
+    Alert.alert(
+      "Reset All Data",
+      "This will permanently delete all your workouts, mesocycles, and training history. This cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete Everything",
+          style: "destructive",
+          onPress: async () => {
+            if (!userId) return;
+            try {
+              await deleteAllData({ userId });
+              Alert.alert("Done", "All training data has been deleted.");
+            } catch (e: any) {
+              Alert.alert("Error", e.message ?? "Failed to delete data.");
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleSignOut = async () => {
+    await authHook.signOut();
+    router.replace("/sign-in");
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={["top"]}>
@@ -97,7 +134,8 @@ export default function ProfileScreen() {
             ACCOUNT
           </Text>
           <RowGroup>
-            <Row label="Reset All Data" destructive onPress={() => {}} showChevron={false} />
+            <Row label="Sign Out" onPress={handleSignOut} showChevron={false} />
+            <Row label="Reset All Data" destructive onPress={handleResetData} showChevron={false} />
           </RowGroup>
         </Animated.View>
 

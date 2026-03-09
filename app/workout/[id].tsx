@@ -339,7 +339,7 @@ function NumPad({ onKey, colors }: { onKey: (k: string) => void; colors: any }) 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 export default function WorkoutScreen() {
-  const { id, sessionId } = useLocalSearchParams<{ id?: string; sessionId?: string }>();
+  const { id, sessionId, week } = useLocalSearchParams<{ id?: string; sessionId?: string; week?: string }>();
   const { colors, typography } = useTheme();
   const { userId } = useCurrentUser();
   const insets = useSafeAreaInsets();
@@ -406,16 +406,18 @@ export default function WorkoutScreen() {
   useEffect(() => {
     if (startedRef.current || state.workoutId || !sessionId || !userId || !meso) return;
     startedRef.current = true;
+    const weekNumber = week ? parseInt(week, 10) : meso.weekNumber;
     startMut({
       userId,
       sessionId: sessionId as Id<"sessions">,
       mesocycleId: meso._id,
-      weekNumber: meso.weekNumber,
+      weekNumber,
     }).then((wid) => dispatch({ type: "SET_WID", wid }));
   }, [sessionId, userId, meso?.weekNumber]);
 
   const wid = state.workoutId;
-  const weekNumber = meso?.weekNumber ?? 1;
+  // Use URL week param (early-start) if provided, otherwise fall back to meso's computed week
+  const weekNumber = week ? parseInt(week, 10) : (meso?.weekNumber ?? 1);
 
   const trainedMuscles = useMemo((): string[] => {
     if (!sessionExs) return [];
@@ -512,8 +514,8 @@ export default function WorkoutScreen() {
       {/* Feedback modal */}
       {state.feedbackVisible && wid && userId && (
         <FeedbackModal visible muscleGroups={trainedMuscles} workoutId={wid} userId={userId}
-          onSave={() => { dispatch({ type: "HIDE_FB" }); router.back(); }}
-          onCancel={() => { dispatch({ type: "HIDE_FB" }); router.back(); }} />
+          onSave={() => { dispatch({ type: "HIDE_FB" }); router.replace("/(tabs)"); }}
+          onCancel={() => { dispatch({ type: "HIDE_FB" }); router.replace("/(tabs)"); }} />
       )}
     </View>
   );

@@ -366,7 +366,7 @@ function StepVolume({
 export default function MesoNew() {
   const { colors, typography } = useTheme();
   const { userId } = useCurrentUser();
-  const createMeso = useMutation(api.mesocycles.create);
+  const createMeso = useMutation(api.mesocycles.createCustom);
 
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
@@ -423,15 +423,21 @@ export default function MesoNew() {
   };
 
   const buildSessions = () => {
+    const MUSCLE_SHORT: Record<string, string> = {
+      chest: "Chest", back: "Back", shoulders: "Shoulders",
+      biceps: "Biceps", triceps: "Triceps", quads: "Quads",
+      hamstrings: "Hams", glutes: "Glutes", calves: "Calves",
+      abs: "Abs", forearms: "Forearms",
+    };
     return selectedDays
       .sort((a, b) => a - b)
-      .map((day, i) => ({
-        dayOfWeek: day,
-        name: `Session ${i + 1}`,
-        exerciseIds: [] as never[],
-        muscleGroups: (sessionMuscles[day] ?? []) as string[],
-        order: i,
-      }));
+      .map((day, i) => {
+        const muscles = (sessionMuscles[day] ?? []) as string[];
+        const name = muscles.length > 0
+          ? muscles.slice(0, 3).map((m) => MUSCLE_SHORT[m] ?? m).join(" / ")
+          : `Session ${i + 1}`;
+        return { dayOfWeek: day, name, muscleGroups: muscles, order: i };
+      });
   };
 
   const handleCreate = async () => {
@@ -442,7 +448,6 @@ export default function MesoNew() {
         userId,
         name,
         weeks,
-        startDate: Date.now(),
         volumeTargets: buildVolumeTargets(),
         sessions: buildSessions(),
       });
