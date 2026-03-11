@@ -1088,3 +1088,30 @@ export const seedExercises = mutation({
     return { seeded: true, count: EXERCISE_SEED_DATA.length };
   },
 });
+
+// Upserts any exercises from EXERCISE_SEED_DATA that don't yet exist in the DB.
+// Safe to call at any time — skips exercises that already exist by name.
+export const seedMissingExercises = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const existing = await ctx.db.query("exercises").collect();
+    const existingNames = new Set(existing.map((e) => e.name.toLowerCase()));
+
+    let added = 0;
+    for (const exercise of EXERCISE_SEED_DATA) {
+      if (!existingNames.has(exercise.name.toLowerCase())) {
+        await ctx.db.insert("exercises", {
+          name: exercise.name,
+          muscleGroup: exercise.muscleGroup,
+          equipment: exercise.equipment,
+          sfr: exercise.sfr,
+          instructions: exercise.instructions,
+          isCustom: false,
+        });
+        added++;
+      }
+    }
+
+    return { added, total: existing.length + added };
+  },
+});

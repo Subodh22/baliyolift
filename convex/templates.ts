@@ -183,15 +183,15 @@ export const createLaxmanTemplate = mutation({
         muscleGroups: ["shoulders", "biceps", "forearms"],
         exercises: [
           // SUPER SET: Bent Over Lateral Raise + Incline DB Front Raise — 4x15
-          { name: "Rear Delt Fly Machine",            repRangeMin: 15, repRangeMax: 15, targetSets: 4, setType: "regular" as const },
-          { name: "Front Raise",                      repRangeMin: 15, repRangeMax: 15, targetSets: 4, setType: "regular" as const },
+          { name: "Bent Over Lateral Raise",          repRangeMin: 15, repRangeMax: 15, targetSets: 4, setType: "regular" as const },
+          { name: "Incline DB Front Raise",           repRangeMin: 15, repRangeMax: 15, targetSets: 4, setType: "regular" as const },
           // SUPER SET: Wide Grip Upright Row + Machine Shoulder Press — 5x10
           { name: "Upright Row",                      repRangeMin: 10, repRangeMax: 10, targetSets: 5, setType: "regular" as const },
-          { name: "Arnold Press",                     repRangeMin: 10, repRangeMax: 10, targetSets: 5, setType: "regular" as const },
+          { name: "Machine Shoulder Press",           repRangeMin: 10, repRangeMax: 10, targetSets: 5, setType: "regular" as const },
           // Cable Rotation — 4x20
-          { name: "Pallof Press",                     repRangeMin: 20, repRangeMax: 20, targetSets: 4, setType: "regular" as const },
-          // SUPER SET: Hummer Machine Shoulder Press + Lateral Raise — 3x10
-          { name: "Overhead Press Dumbbell",          repRangeMin: 10, repRangeMax: 10, targetSets: 3, setType: "regular" as const },
+          { name: "Cable Rotation",                   repRangeMin: 20, repRangeMax: 20, targetSets: 4, setType: "regular" as const },
+          // SUPER SET: Machine Shoulder Press + Lateral Raise — 3x10
+          { name: "Machine Shoulder Press",           repRangeMin: 10, repRangeMax: 10, targetSets: 3, setType: "regular" as const },
           { name: "Machine Lateral Raise",            repRangeMin: 10, repRangeMax: 10, targetSets: 3, setType: "regular" as const },
           // Reverse Grip Barbell Curl — 4x15
           { name: "Reverse Curl",                     repRangeMin: 15, repRangeMax: 15, targetSets: 4, setType: "regular" as const },
@@ -207,9 +207,9 @@ export const createLaxmanTemplate = mutation({
         muscleGroups: ["back", "shoulders"],
         exercises: [
           // Reverse Grip Pull Down — 6x15
-          { name: "Lat Pulldown",                     repRangeMin: 15, repRangeMax: 15, targetSets: 6, setType: "regular" as const },
+          { name: "Reverse Grip Pulldown",            repRangeMin: 15, repRangeMax: 15, targetSets: 6, setType: "regular" as const },
           // V Bar Pull Down — 3x30 + drop 10+10+10
-          { name: "Straight-Arm Pulldown",            repRangeMin: 10, repRangeMax: 30, targetSets: 3, setType: "myorep" as const },
+          { name: "V Bar Pulldown",                   repRangeMin: 10, repRangeMax: 30, targetSets: 3, setType: "myorep" as const },
           // DB Row — 2x20
           { name: "Dumbbell Row",                     repRangeMin: 20, repRangeMax: 20, targetSets: 2, setType: "regular" as const },
           // Wide Grip Cable Row — 3x8-10-12 all drop sets
@@ -232,7 +232,7 @@ export const createLaxmanTemplate = mutation({
           // Cable Overhead Extension — 4x12
           { name: "Cable Overhead Tricep Extension",  repRangeMin: 12, repRangeMax: 12, targetSets: 4, setType: "regular" as const },
           // Reverse Grip Push Down — 3x8-10-12 all drop sets
-          { name: "Single-Arm Cable Pushdown",        repRangeMin: 8,  repRangeMax: 12, targetSets: 3, setType: "myorep" as const },
+          { name: "Reverse Grip Pushdown",            repRangeMin: 8,  repRangeMax: 12, targetSets: 3, setType: "myorep" as const },
           // Deadlift — 3x30 + drop 10+10+10
           { name: "Deadlift",                         repRangeMin: 10, repRangeMax: 30, targetSets: 3, setType: "myorep" as const },
           // Chest Supported Barbell Row — 6x15

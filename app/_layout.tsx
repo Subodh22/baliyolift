@@ -14,8 +14,10 @@ const convex = new ConvexReactClient(CONVEX_URL);
 
 function SeedOnMount() {
   const seedExercises = useMutation(api.seed.seedExercises);
+  const seedMissing = useMutation(api.seed.seedMissingExercises);
   useEffect(() => {
     seedExercises().catch(() => {});
+    seedMissing().catch(() => {});
   }, []);
   return null;
 }

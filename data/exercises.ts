@@ -1040,6 +1040,64 @@ export const EXERCISE_SEED_DATA: Exercise[] = [
       "Perform a full sit-up holding a plate to your chest. Allows progressive overload of the abs over time as bodyweight becomes insufficient.",
   },
 
+  // LAXMAN PROGRAM SPECIFIC
+  {
+    name: "Bent Over Lateral Raise",
+    muscleGroup: "shoulders",
+    equipment: "dumbbell",
+    sfr: "high",
+    instructions:
+      "Hinge forward at the hips until torso is nearly parallel to the floor. With slight elbow bend, raise dumbbells out to the sides targeting the rear delts. Control the descent.",
+  },
+  {
+    name: "Incline DB Front Raise",
+    muscleGroup: "shoulders",
+    equipment: "dumbbell",
+    sfr: "medium",
+    instructions:
+      "Lie face-down on an incline bench. Raise dumbbells forward and up to shoulder height, keeping arms straight. Controls anterior deltoid through full range.",
+  },
+  {
+    name: "Machine Shoulder Press",
+    muscleGroup: "shoulders",
+    equipment: "machine",
+    sfr: "high",
+    instructions:
+      "Sit in the shoulder press machine, grip the handles at shoulder height. Press overhead until arms are nearly extended, then lower with control. Keeps constant tension on the delts.",
+  },
+  {
+    name: "Cable Rotation",
+    muscleGroup: "shoulders",
+    equipment: "cable",
+    sfr: "medium",
+    instructions:
+      "Stand side-on to a cable set at shoulder height. Rotate the torso away from the cable, keeping arms extended. Controls the rotator cuff and shoulder stability muscles.",
+  },
+  {
+    name: "Reverse Grip Pulldown",
+    muscleGroup: "back",
+    equipment: "cable",
+    sfr: "high",
+    instructions:
+      "Sit at a lat pulldown station and grip the bar with an underhand (supinated) grip, hands shoulder-width. Pull the bar to your upper chest leading with elbows, squeezing lats and biceps at the bottom.",
+  },
+  {
+    name: "V Bar Pulldown",
+    muscleGroup: "back",
+    equipment: "cable",
+    sfr: "high",
+    instructions:
+      "Attach a V-bar to the lat pulldown cable. Grip the V-bar with a neutral (palms-facing) grip and pull it to your upper chest. The neutral grip allows a strong lat contraction and is easier on the elbows.",
+  },
+  {
+    name: "Reverse Grip Pushdown",
+    muscleGroup: "triceps",
+    equipment: "cable",
+    sfr: "high",
+    instructions:
+      "Attach a straight or EZ bar to a high cable. Grip the bar with an underhand (supinated) grip, elbows tucked to sides. Push the bar down to full extension focusing on the long head of the tricep.",
+  },
+
   // FOREARMS (additional)
   {
     name: "Plate Pinch",
