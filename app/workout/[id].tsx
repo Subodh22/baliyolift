@@ -6,8 +6,6 @@ import {
   TouchableOpacity,
   Pressable,
   StyleSheet,
-  ActionSheetIOS,
-  Platform,
   Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -19,7 +17,7 @@ import Animated, {
   withTiming,
   FadeInDown,
 } from "react-native-reanimated";
-import * as Haptics from "expo-haptics";
+import { impactLight, impactMedium, selectionAsync, notificationSuccess } from "@/utils/haptics";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -213,24 +211,17 @@ function ExCard({ se, exState, suggestion, activeCell, dispatch, workoutId, user
     const w = parseFloat(set.weight) || 0;
     const r = parseInt(set.reps) || 0;
     if (!w || !r) { Alert.alert("Enter weight and reps first"); return; }
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    impactMedium();
     const sid = await logMut({ workoutId, exerciseId: ex._id, userId, weight: w, reps: r, rir: set.rir, targetRir: suggestion?.targetRir ?? 2, setNumber: setIdx + 1, isWarmup: false });
     dispatch({ type: "LOG", exId, setIdx, sid, ind: suggestion?.overloadIndicator ?? "maintain" });
   }, [workoutId, userId, exState, suggestion]);
 
   const showMenu = (setIdx: number) => {
-    if (Platform.OS === "ios") {
-      ActionSheetIOS.showActionSheetWithOptions(
-        { options: ["Cancel", "Add set below", "Delete set"], destructiveButtonIndex: 2, cancelButtonIndex: 0 },
-        (btn) => { if (btn === 1) dispatch({ type: "ADD_SET", exId }); if (btn === 2) dispatch({ type: "DEL_SET", exId, setIdx }); }
-      );
-    } else {
-      Alert.alert("Set options", undefined, [
-        { text: "Add set below", onPress: () => dispatch({ type: "ADD_SET", exId }) },
-        { text: "Delete", style: "destructive", onPress: () => dispatch({ type: "DEL_SET", exId, setIdx }) },
-        { text: "Cancel", style: "cancel" },
-      ]);
-    }
+    Alert.alert("Set options", undefined, [
+      { text: "Add set below", onPress: () => dispatch({ type: "ADD_SET", exId }) },
+      { text: "Delete", style: "destructive", onPress: () => dispatch({ type: "DEL_SET", exId, setIdx }) },
+      { text: "Cancel", style: "cancel" },
+    ]);
   };
 
   if (!ex) return null;
@@ -287,7 +278,7 @@ function ExCard({ se, exState, suggestion, activeCell, dispatch, workoutId, user
       ))}
 
       {/* Add set */}
-      <TouchableOpacity onPress={() => { Haptics.selectionAsync(); dispatch({ type: "ADD_SET", exId }); }} style={{ alignItems: "center", paddingVertical: 10 }}>
+      <TouchableOpacity onPress={() => { selectionAsync(); dispatch({ type: "ADD_SET", exId }); }} style={{ alignItems: "center", paddingVertical: 10 }}>
         <Text style={[typography.subheadline, { color: colors.accent }]}>+ Add set</Text>
       </TouchableOpacity>
 
@@ -295,7 +286,7 @@ function ExCard({ se, exState, suggestion, activeCell, dispatch, workoutId, user
       <View style={[styles.setTypeRow, { borderTopColor: colors.separator }]}>
         <Text style={{ color: colors.labelTertiary, fontSize: 11, fontWeight: "600", marginRight: 8 }}>SET TYPE</Text>
         {(["regular", "myorep", "myorep_match"] as SetType[]).map((t) => (
-          <Pressable key={t} onPress={() => { Haptics.selectionAsync(); dispatch({ type: "SET_TYPE", exId, st: t }); }}
+          <Pressable key={t} onPress={() => { selectionAsync(); dispatch({ type: "SET_TYPE", exId, st: t }); }}
             style={[styles.typePill, { backgroundColor: setType === t ? colors.accent : colors.fillSecondary }]}>
             <Text style={{ color: setType === t ? "#FFF" : colors.labelSecondary, fontSize: 11, fontWeight: "600" }}>
               {t === "regular" ? "Regular" : t === "myorep" ? "Myorep" : "Myorep match"}
@@ -328,7 +319,7 @@ function NumPad({ onKey, colors }: { onKey: (k: string) => void; colors: any }) 
     <View style={styles.numGrid}>
       {["1","2","3","4","5","6","7","8","9",".","0","⌫"].map((k) => (
         <TouchableOpacity key={k} style={[styles.numKey, { backgroundColor: colors.backgroundTertiary }]}
-          onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onKey(k); }} activeOpacity={0.55}>
+          onPress={() => { impactLight(); onKey(k); }} activeOpacity={0.55}>
           <Text style={{ fontSize: 20, fontWeight: "500", color: colors.label }}>{k}</Text>
         </TouchableOpacity>
       ))}
@@ -432,7 +423,7 @@ export default function WorkoutScreen() {
 
   const handleFinish = async () => {
     if (!wid) return;
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    notificationSuccess();
     await completeMut({ workoutId: wid, durationMs: Date.now() - state.startTime });
     dispatch({ type: "SHOW_FB" });
   };

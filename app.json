@@ -13,7 +13,11 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.baliyolift.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -22,10 +26,26 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.baliyolift.app"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "output": "static",
+      "name": "BaliYoLift",
+      "shortName": "BaliYoLift",
+      "themeColor": "#CC2020",
+      "backgroundColor": "#000000",
+      "startUrl": "/",
+      "display": "standalone",
+      "orientation": "portrait",
+      "description": "RP-style hypertrophy training tracker"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "9644ae9d-60fc-4f87-bcfa-422d142e0053"
+      }
     }
   }
 }

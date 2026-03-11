@@ -9,6 +9,20 @@ export const startWorkout = mutation({
     weekNumber: v.number(),
   },
   handler: async (ctx, args) => {
+    // Reuse existing in-progress workout for this session — prevents duplicates on resume
+    const existing = await ctx.db
+      .query("workouts")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("sessionId"), args.sessionId),
+          q.eq(q.field("status"), "in_progress")
+        )
+      )
+      .first();
+
+    if (existing) return existing._id;
+
     const workoutId = await ctx.db.insert("workouts", {
       userId: args.userId,
       sessionId: args.sessionId,

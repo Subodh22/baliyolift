@@ -2,9 +2,18 @@ import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useEffect, useRef, useState } from "react";
-import { useUser } from "@clerk/clerk-expo";
+import { Platform } from "react-native";
 
 let cachedUserId: Id<"users"> | null = null;
+
+function useClerkUser() {
+  if (Platform.OS === "web") {
+    const { useUser } = require("@clerk/clerk-react");
+    return useUser();
+  }
+  const { useUser } = require("@clerk/clerk-expo");
+  return useUser();
+}
 
 export function useCurrentUser() {
   const createOrGet = useMutation(api.users.createOrGetUser);
@@ -12,7 +21,7 @@ export function useCurrentUser() {
   const [loading, setLoading] = useState(!cachedUserId);
   const initialized = useRef(!!cachedUserId);
 
-  const { user, isLoaded } = useUser();
+  const { user, isLoaded } = useClerkUser();
   const clerkId = user?.id ?? null;
   const clerkName = user?.fullName ?? "Athlete";
 

@@ -8,7 +8,7 @@ import {
   Pressable,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import * as Haptics from "expo-haptics";
+import { selectionAsync, notificationSuccess } from "@/utils/haptics";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -91,7 +91,7 @@ function OptionPill({
   return (
     <Pressable
       onPress={() => {
-        Haptics.selectionAsync();
+        selectionAsync();
         onPress();
       }}
       style={[
@@ -220,7 +220,7 @@ export function FeedbackModal({
   );
 
   const handleSave = async () => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    notificationSuccess();
     await saveFeedback({
       workoutId,
       userId,

@@ -1,6 +1,6 @@
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from "react-native";
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withSequence } from "react-native-reanimated";
-import * as Haptics from "expo-haptics";
+import { impactLight } from "@/utils/haptics";
 import { useTheme } from "@/hooks/useTheme";
 
 interface ButtonProps {
@@ -33,7 +33,7 @@ export function Button({
       withSpring(0.97, { damping: 15 }),
       withSpring(1, { damping: 12 })
     );
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impactLight();
     onPress();
   };
 

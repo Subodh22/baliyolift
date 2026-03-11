@@ -1,24 +1,16 @@
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useColorScheme } from "react-native";
+import { Platform, useColorScheme } from "react-native";
 import { ConvexProvider, ConvexReactClient, useMutation } from "convex/react";
 import { useEffect } from "react";
 import { WorkoutProvider } from "@/hooks/useWorkoutStore";
 import { api } from "@/convex/_generated/api";
-import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
+import { tokenCache } from "@/utils/tokenCache";
 
 const CONVEX_URL = process.env.EXPO_PUBLIC_CONVEX_URL ?? "";
 const CLERK_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
 
 const convex = new ConvexReactClient(CONVEX_URL);
-
-// In-memory token cache — works in Expo Go (SecureStore AES requires a dev build)
-const tokenStore: Record<string, string> = {};
-const tokenCache = {
-  getToken: (key: string) => Promise.resolve(tokenStore[key] ?? null),
-  saveToken: (key: string, value: string) => { tokenStore[key] = value; return Promise.resolve(); },
-  clearToken: (key: string) => { delete tokenStore[key]; return Promise.resolve(); },
-};
 
 function SeedOnMount() {
   const seedExercises = useMutation(api.seed.seedExercises);
@@ -28,28 +20,12 @@ function SeedOnMount() {
   return null;
 }
 
-function InitialLayout() {
-  const { isLoaded, isSignedIn } = useAuth();
-  const segments = useSegments();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isLoaded) return;
-    const inTabs = segments[0] === "(tabs)";
-    const onSignIn = segments[0] === "sign-in";
-    if (!isSignedIn && inTabs) {
-      // Signed out while in the app — go to login
-      router.replace("/sign-in");
-    } else if (isSignedIn && onSignIn) {
-      // Already signed in but on login screen — go to app
-      router.replace("/(tabs)");
-    }
-  }, [isLoaded, isSignedIn, segments]);
-
+function AppStack() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="sign-in" />
+      <Stack.Screen name="sso-callback" />
       <Stack.Screen
         name="workout/[id]"
         options={{ presentation: "fullScreenModal", animation: "slide_from_bottom" }}
@@ -66,15 +42,66 @@ function InitialLayout() {
   );
 }
 
+function NativeLayout() {
+  const { useAuth } = require("@clerk/clerk-expo");
+  const { isLoaded, isSignedIn } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    const inTabs = segments[0] === "(tabs)";
+    const onSignIn = segments[0] === "sign-in";
+    if (!isSignedIn && inTabs) router.replace("/sign-in");
+    else if (isSignedIn && onSignIn) router.replace("/(tabs)");
+  }, [isLoaded, isSignedIn, segments]);
+
+  return <AppStack />;
+}
+
+function WebLayout() {
+  const { useAuth } = require("@clerk/clerk-react");
+  const { isLoaded, isSignedIn } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    const inTabs = segments[0] === "(tabs)";
+    const onSignIn = segments[0] === "sign-in";
+    if (!isSignedIn && inTabs) router.replace("/sign-in");
+    else if (isSignedIn && onSignIn) router.replace("/(tabs)");
+  }, [isLoaded, isSignedIn, segments]);
+
+  return <AppStack />;
+}
+
 export default function RootLayout() {
   const scheme = useColorScheme();
+
+  if (Platform.OS === "web") {
+    const { ClerkProvider } = require("@clerk/clerk-react");
+    return (
+      <ClerkProvider publishableKey={CLERK_KEY}>
+        <ConvexProvider client={convex}>
+          <SeedOnMount />
+          <WorkoutProvider>
+            <StatusBar style={scheme === "dark" ? "light" : "dark"} />
+            <WebLayout />
+          </WorkoutProvider>
+        </ConvexProvider>
+      </ClerkProvider>
+    );
+  }
+
+  const { ClerkProvider } = require("@clerk/clerk-expo");
   return (
     <ClerkProvider publishableKey={CLERK_KEY} tokenCache={tokenCache}>
       <ConvexProvider client={convex}>
         <SeedOnMount />
         <WorkoutProvider>
           <StatusBar style={scheme === "dark" ? "light" : "dark"} />
-          <InitialLayout />
+          <NativeLayout />
         </WorkoutProvider>
       </ConvexProvider>
     </ClerkProvider>

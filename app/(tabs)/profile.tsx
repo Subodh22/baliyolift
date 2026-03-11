@@ -8,7 +8,8 @@ import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useRouter } from "expo-router";
-import { useAuth } from "@clerk/clerk-expo";
+import { Platform } from "react-native";
+const { useAuth } = Platform.OS === "web" ? require("@clerk/clerk-react") : require("@clerk/clerk-expo");
 
 export default function ProfileScreen() {
   const { colors, typography } = useTheme();

@@ -76,26 +76,20 @@ export default function SignInScreen() {
           RP-style hypertrophy tracking
         </Text>
 
-        {/* Google Sign In */}
         <TouchableOpacity
           style={[styles.googleBtn, { backgroundColor: colors.backgroundSecondary, borderColor: colors.separator }]}
           onPress={handleGoogleSignIn}
           activeOpacity={0.8}
           disabled={oauthLoading}
         >
-          {oauthLoading ? (
-            <ActivityIndicator color={colors.label} />
-          ) : (
+          {oauthLoading ? <ActivityIndicator color={colors.label} /> : (
             <>
               <Text style={styles.googleIcon}>G</Text>
-              <Text style={[typography.body, { color: colors.label, fontWeight: "600" }]}>
-                Continue with Google
-              </Text>
+              <Text style={[typography.body, { color: colors.label, fontWeight: "600" }]}>Continue with Google</Text>
             </>
           )}
         </TouchableOpacity>
 
-        {/* Divider */}
         <View style={styles.divider}>
           <View style={[styles.dividerLine, { backgroundColor: colors.separator }]} />
           <Text style={[typography.footnote, { color: colors.labelTertiary, marginHorizontal: 12 }]}>or</Text>
@@ -104,31 +98,18 @@ export default function SignInScreen() {
 
         <TextInput
           style={[styles.input, { backgroundColor: colors.backgroundSecondary, color: colors.label, borderColor: colors.separator }]}
-          placeholder="Email"
-          placeholderTextColor={colors.labelTertiary}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
+          placeholder="Email" placeholderTextColor={colors.labelTertiary}
+          autoCapitalize="none" keyboardType="email-address"
+          value={email} onChangeText={setEmail}
         />
         <TextInput
           style={[styles.input, { backgroundColor: colors.backgroundSecondary, color: colors.label, borderColor: colors.separator }]}
-          placeholder="Password"
-          placeholderTextColor={colors.labelTertiary}
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
+          placeholder="Password" placeholderTextColor={colors.labelTertiary}
+          secureTextEntry value={password} onChangeText={setPassword}
         />
 
-        <TouchableOpacity
-          style={[styles.btn, { backgroundColor: colors.accent }]}
-          onPress={handleSubmit}
-          activeOpacity={0.8}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#FFF" />
-          ) : (
+        <TouchableOpacity style={[styles.btn, { backgroundColor: colors.accent }]} onPress={handleSubmit} activeOpacity={0.8} disabled={loading}>
+          {loading ? <ActivityIndicator color="#FFF" /> : (
             <Text style={{ color: "#FFF", fontWeight: "700", fontSize: 16 }}>
               {mode === "sign_in" ? "Sign In" : "Create Account"}
             </Text>
@@ -147,27 +128,10 @@ export default function SignInScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 28, justifyContent: "center" },
-  googleBtn: {
-    height: 52, borderRadius: 14, borderWidth: 1,
-    flexDirection: "row", alignItems: "center", justifyContent: "center",
-    gap: 10, marginBottom: 4,
-  },
-  googleIcon: {
-    fontSize: 18, fontWeight: "700", color: "#4285F4",
-    fontFamily: "System",
-  },
-  divider: {
-    flexDirection: "row", alignItems: "center",
-    marginVertical: 20,
-  },
+  googleBtn: { height: 52, borderRadius: 14, borderWidth: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 4 },
+  googleIcon: { fontSize: 18, fontWeight: "700", color: "#4285F4" },
+  divider: { flexDirection: "row", alignItems: "center", marginVertical: 20 },
   dividerLine: { flex: 1, height: 0.5 },
-  input: {
-    borderRadius: 12, borderWidth: 1,
-    paddingHorizontal: 16, paddingVertical: 14,
-    fontSize: 16, marginBottom: 12,
-  },
-  btn: {
-    height: 52, borderRadius: 14,
-    alignItems: "center", justifyContent: "center", marginTop: 8,
-  },
+  input: { borderRadius: 12, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 14, fontSize: 16, marginBottom: 12 },
+  btn: { height: 52, borderRadius: 14, alignItems: "center", justifyContent: "center", marginTop: 8 },
 });

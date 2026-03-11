@@ -10,7 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { router } from "expo-router";
 import { useQuery, useMutation } from "convex/react";
-import * as Haptics from "expo-haptics";
+import { notificationSuccess } from "@/utils/haptics";
 import { useTheme } from "@/hooks/useTheme";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { Button } from "@/components/ui/Button";
@@ -63,13 +63,13 @@ export default function PlanScreen() {
 
   const handleEndMeso = async () => {
     if (!meso) return;
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    notificationSuccess();
     await completeMeso({ mesocycleId: meso._id });
   };
 
   const handleReset = async () => {
     if (!userId) return;
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    notificationSuccess();
     await deleteAllMesos({ userId });
   };
 

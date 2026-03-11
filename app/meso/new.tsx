@@ -6,9 +6,6 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
-  Switch,
-  Dimensions,
-  FlatList,
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -17,7 +14,6 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
   FadeInRight,
-  FadeOutLeft,
   FadeInDown,
 } from "react-native-reanimated";
 import { impactLight, selectionAsync, notificationSuccess } from "@/utils/haptics";
@@ -33,8 +29,6 @@ import {
   VOLUME_DEFAULTS,
   type MuscleGroup,
 } from "@/constants/muscles";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const TOTAL_STEPS = 4;
 
 // ---- Template definitions (display only) ----

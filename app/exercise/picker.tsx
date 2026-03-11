@@ -16,7 +16,7 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from "react-native-reanimated";
-import * as Haptics from "expo-haptics";
+import { impactLight, selectionAsync } from "@/utils/haptics";
 import { router } from "expo-router";
 import { useTheme } from "@/hooks/useTheme";
 import { EXERCISE_SEED_DATA, type Exercise } from "@/data/exercises";
@@ -74,7 +74,7 @@ function FilterPillButton({
     scale.value = withSpring(0.88, SPRING_CONFIG, () => {
       scale.value = withSpring(1, SPRING_CONFIG);
     });
-    Haptics.selectionAsync();
+    selectionAsync();
     onPress();
   };
 
@@ -305,7 +305,7 @@ export default function ExercisePicker() {
   // ── Exercise selection ──────────────────────────────────────────────────
 
   const handleSelect = useCallback((exercise: Exercise) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impactLight();
     console.log("[ExercisePicker] selected:", exercise);
     router.back();
   }, []);
@@ -354,7 +354,7 @@ export default function ExercisePicker() {
     sfrScale.value = withSpring(0.9, SPRING_CONFIG, () => {
       sfrScale.value = withSpring(1, SPRING_CONFIG);
     });
-    Haptics.selectionAsync();
+    selectionAsync();
     setHighSfrOnly((v) => !v);
   };
 
