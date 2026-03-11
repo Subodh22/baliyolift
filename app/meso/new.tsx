@@ -9,6 +9,7 @@ import {
   Switch,
   Dimensions,
   FlatList,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, {
@@ -17,8 +18,9 @@ import Animated, {
   withSpring,
   FadeInRight,
   FadeOutLeft,
+  FadeInDown,
 } from "react-native-reanimated";
-import * as Haptics from "expo-haptics";
+import { impactLight, selectionAsync, notificationSuccess } from "@/utils/haptics";
 import { router } from "expo-router";
 import { useMutation } from "convex/react";
 import { useTheme } from "@/hooks/useTheme";
@@ -34,6 +36,106 @@ import {
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const TOTAL_STEPS = 4;
+
+// ---- Template definitions (display only) ----
+const TEMPLATES = [
+  {
+    id: "laxman",
+    name: "Laxman",
+    subtitle: "4 days · Shoulders/Biceps · Back · Triceps/Back · Legs",
+    tag: "High Volume",
+    tagColor: "#FF6B35",
+    description: "Super-set heavy 4-day split with drop sets and pre-fatigue protocols.",
+    weeks: 5,
+  },
+  {
+    id: "ppl",
+    name: "PPL Hypertrophy",
+    subtitle: "6 days · Push · Pull · Legs × 2",
+    tag: "RP-Style",
+    tagColor: "#007AFF",
+    description: "Classic Push/Pull/Legs twice per week. Maximum frequency for hypertrophy.",
+    weeks: 5,
+  },
+  {
+    id: "upper_lower",
+    name: "Upper / Lower",
+    subtitle: "4 days · Upper A · Lower A · Upper B · Lower B",
+    tag: "Beginner–Intermediate",
+    tagColor: "#34C759",
+    description: "Balanced upper/lower split. Ideal if you're building your training base.",
+    weeks: 5,
+  },
+];
+
+// ---- Step 0: Template picker ----
+function StepTemplates({ onSelectTemplate, onBuildCustom, colors, typography, loading }: any) {
+  return (
+    <Animated.View entering={FadeInDown.springify()} style={styles.stepContainer}>
+      <Text style={[typography.largeTitle, { color: colors.label }]}>
+        Start with a template
+      </Text>
+      <Text style={[typography.body, { color: colors.labelSecondary, marginTop: 8, marginBottom: 28 }]}>
+        Pick a proven program or build your own from scratch.
+      </Text>
+
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={{ gap: 12 }}>
+          {TEMPLATES.map((t) => (
+            <TouchableOpacity
+              key={t.id}
+              onPress={() => !loading && onSelectTemplate(t.id)}
+              activeOpacity={0.8}
+              style={[templateStyles.card, { backgroundColor: colors.backgroundSecondary }]}
+            >
+              <View style={templateStyles.cardHeader}>
+                <Text style={[typography.headline, { color: colors.label, flex: 1 }]}>{t.name}</Text>
+                <View style={[templateStyles.tag, { backgroundColor: t.tagColor + "22" }]}>
+                  <Text style={[typography.caption2, { color: t.tagColor, fontWeight: "700" }]}>{t.tag}</Text>
+                </View>
+              </View>
+              <Text style={[typography.caption1, { color: colors.accent, marginBottom: 8, fontWeight: "600" }]}>
+                {t.subtitle}
+              </Text>
+              <Text style={[typography.subheadline, { color: colors.labelSecondary }]}>
+                {t.description}
+              </Text>
+              {loading === t.id && (
+                <ActivityIndicator style={{ marginTop: 10 }} color={colors.accent} />
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <TouchableOpacity
+          onPress={!loading ? onBuildCustom : undefined}
+          activeOpacity={0.7}
+          style={{ alignItems: "center", paddingVertical: 20 }}
+        >
+          <Text style={[typography.body, { color: colors.accent }]}>Build custom mesocycle</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </Animated.View>
+  );
+}
+
+const templateStyles = StyleSheet.create({
+  card: {
+    borderRadius: 18,
+    padding: 18,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+    gap: 10,
+  },
+  tag: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+});
 
 // ---- Step 1: Name & Duration ----
 function StepNameDuration({
@@ -87,7 +189,7 @@ function StepNameDuration({
               },
             ]}
             onPress={() => {
-              Haptics.selectionAsync();
+              selectionAsync();
               setWeeks(w);
             }}
             activeOpacity={0.8}
@@ -113,7 +215,7 @@ const DAY_VALUES = [1, 2, 3, 4, 5, 6, 0];
 
 function StepDays({ selectedDays, setSelectedDays, colors, typography }: any) {
   const toggle = (day: number) => {
-    Haptics.selectionAsync();
+    selectionAsync();
     setSelectedDays((prev: number[]) =>
       prev.includes(day) ? prev.filter((d: number) => d !== day) : [...prev, day]
     );
@@ -177,7 +279,7 @@ function StepSessions({
   const dayLabel = (d: number) => DAY_LABELS[DAY_VALUES.indexOf(d)];
 
   const toggleMuscle = (day: number, muscle: MuscleGroup) => {
-    Haptics.selectionAsync();
+    selectionAsync();
     setSessionMuscles((prev: Record<number, MuscleGroup[]>) => {
       const current = prev[day] ?? [];
       return {
@@ -323,7 +425,7 @@ function StepVolume({
                       <View style={styles.stepper}>
                         <TouchableOpacity
                           onPress={() => {
-                            Haptics.selectionAsync();
+                            selectionAsync();
                             setVolumeOverrides((prev: any) => ({
                               ...prev,
                               [muscle]: { mev, mav, mrv, [key]: Math.max(0, val - 1) },
@@ -338,7 +440,7 @@ function StepVolume({
                         </Text>
                         <TouchableOpacity
                           onPress={() => {
-                            Haptics.selectionAsync();
+                            selectionAsync();
                             setVolumeOverrides((prev: any) => ({
                               ...prev,
                               [muscle]: { mev, mav, mrv, [key]: val + 1 },
@@ -367,8 +469,13 @@ export default function MesoNew() {
   const { colors, typography } = useTheme();
   const { userId } = useCurrentUser();
   const createMeso = useMutation(api.mesocycles.createCustom);
+  const createLaxman = useMutation(api.templates.createLaxmanTemplate);
+  const createPPL = useMutation(api.templates.createPPLTemplate);
+  const createUpperLower = useMutation(api.templates.createUpperLowerTemplate);
 
-  const [step, setStep] = useState(0);
+  // -1 = template picker, 0–3 = custom wizard steps
+  const [step, setStep] = useState(-1);
+  const [templateLoading, setTemplateLoading] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [weeks, setWeeks] = useState(5);
   const [selectedDays, setSelectedDays] = useState<number[]>([1, 3, 5]);
@@ -376,10 +483,25 @@ export default function MesoNew() {
   const [volumeOverrides, setVolumeOverrides] = useState<Record<string, any>>({});
   const [creating, setCreating] = useState(false);
 
+  const handleSelectTemplate = async (templateId: string) => {
+    if (!userId) return;
+    setTemplateLoading(templateId);
+    try {
+      if (templateId === "laxman") await createLaxman({ userId });
+      else if (templateId === "ppl") await createPPL({ userId });
+      else if (templateId === "upper_lower") await createUpperLower({ userId });
+      notificationSuccess();
+      router.back();
+    } catch {
+      setTemplateLoading(null);
+    }
+  };
+
   // TODO: pull from user profile
   const experienceLevel = "intermediate";
 
   const canAdvance = () => {
+    if (step < 0) return false; // template picker handles its own actions
     if (step === 0) return name.trim().length > 0;
     if (step === 1) return selectedDays.length > 0;
     if (step === 2) return selectedDays.every((d) => (sessionMuscles[d] ?? []).length > 0);
@@ -388,7 +510,7 @@ export default function MesoNew() {
 
   const next = () => {
     if (!canAdvance() || creating) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impactLight();
     if (step < TOTAL_STEPS - 1) {
       setStep((s) => s + 1);
     } else {
@@ -397,10 +519,13 @@ export default function MesoNew() {
   };
 
   const back = () => {
-    if (step === 0) {
+    if (step === -1) {
       router.back();
+    } else if (step === 0) {
+      selectionAsync();
+      setStep(-1);
     } else {
-      Haptics.selectionAsync();
+      selectionAsync();
       setStep((s) => s - 1);
     }
   };
@@ -451,7 +576,7 @@ export default function MesoNew() {
         volumeTargets: buildVolumeTargets(),
         sessions: buildSessions(),
       });
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      notificationSuccess();
       router.back();
     } catch (e) {
       setCreating(false);
@@ -460,37 +585,51 @@ export default function MesoNew() {
 
   const stepProps = { colors, typography };
 
+  const isTemplatePicker = step === -1;
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top", "bottom"]}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={back} style={styles.backBtn} activeOpacity={0.7}>
           <Text style={[typography.body, { color: colors.accent }]}>
-            {step === 0 ? "Cancel" : "Back"}
+            {step <= 0 ? "Cancel" : "Back"}
           </Text>
         </TouchableOpacity>
 
-        {/* Progress dots */}
-        <View style={styles.dots}>
-          {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
-            <View
-              key={i}
-              style={[
-                styles.dot,
-                {
-                  backgroundColor: i <= step ? colors.label : colors.fillSecondary,
-                  width: i === step ? 20 : 6,
-                },
-              ]}
-            />
-          ))}
-        </View>
+        {/* Progress dots — only show during custom wizard */}
+        {!isTemplatePicker ? (
+          <View style={styles.dots}>
+            {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.dot,
+                  {
+                    backgroundColor: i <= step ? colors.label : colors.fillSecondary,
+                    width: i === step ? 20 : 6,
+                  },
+                ]}
+              />
+            ))}
+          </View>
+        ) : (
+          <View />
+        )}
 
         <View style={{ width: 60 }} />
       </View>
 
       {/* Step content */}
       <View style={styles.content}>
+        {isTemplatePicker && (
+          <StepTemplates
+            onSelectTemplate={handleSelectTemplate}
+            onBuildCustom={() => { impactLight(); setStep(0); }}
+            loading={templateLoading}
+            {...stepProps}
+          />
+        )}
         {step === 0 && (
           <StepNameDuration
             name={name}
@@ -526,14 +665,16 @@ export default function MesoNew() {
         )}
       </View>
 
-      {/* Bottom CTA */}
-      <View style={styles.footer}>
-        <Button
-          label={step === TOTAL_STEPS - 1 ? "Create Mesocycle" : "Continue"}
-          onPress={next}
-          disabled={!canAdvance()}
-        />
-      </View>
+      {/* Bottom CTA — only show during custom wizard */}
+      {!isTemplatePicker && (
+        <View style={styles.footer}>
+          <Button
+            label={step === TOTAL_STEPS - 1 ? "Create Mesocycle" : "Continue"}
+            onPress={next}
+            disabled={!canAdvance()}
+          />
+        </View>
+      )}
     </SafeAreaView>
   );
 }
