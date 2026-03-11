@@ -4,12 +4,13 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web"
   },
   "dependencies": {
     "@clerk/clerk-expo": "^0.19.12",
+    "@clerk/clerk-react": "^5.61.3",
     "convex": "^1.32.0",
     "expo": "~54.0.0",
     "expo-auth-session": "^7.0.10",
@@ -24,11 +25,13 @@
     "expo-symbols": "~1.0.8",
     "expo-web-browser": "~15.0.10",
     "react": "19.1.0",
+    "react-dom": "19.1.0",
     "react-native": "^0.81.4",
     "react-native-gesture-handler": "~2.28.0",
     "react-native-reanimated": "^4.1.6",
     "react-native-safe-area-context": "~5.6.2",
     "react-native-screens": "~4.16.0",
+    "react-native-web": "^0.21.0",
     "react-native-worklets": "^0.5.1"
   },
   "devDependencies": {
