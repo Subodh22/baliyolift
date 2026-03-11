@@ -308,6 +308,22 @@ export const getNextSession = query({
   },
 });
 
+// Lightweight — only dates, used for heatmap + stats (no sets loaded)
+export const getWorkoutDates = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const twelveMonthsAgo = Date.now() - 366 * 24 * 60 * 60 * 1000;
+    const workouts = await ctx.db
+      .query("workouts")
+      .withIndex("by_user_date", (q) =>
+        q.eq("userId", args.userId).gte("date", twelveMonthsAgo)
+      )
+      .filter((q) => q.eq(q.field("status"), "completed"))
+      .collect();
+    return workouts.map((w) => ({ date: w.date, durationMs: w.durationMs ?? null }));
+  },
+});
+
 export const getHistory = query({
   args: {
     userId: v.id("users"),

@@ -5,8 +5,8 @@ import {
   ScrollView,
   StyleSheet,
   ActivityIndicator,
-  useWindowDimensions,
   TouchableOpacity,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery } from "convex/react";
@@ -17,6 +17,8 @@ import { MUSCLE_DISPLAY_NAMES } from "@/constants/muscles";
 import { MUSCLE_BADGE_COLORS } from "@/constants/colors";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const MONTH_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 function dayKey(ts: number): string {
   const d = new Date(ts);
@@ -33,143 +35,205 @@ function formatDate(ts: number): string {
   return d.toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" });
 }
 
-const MONTH_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+// ─── Calendar Heatmap ─────────────────────────────────────────────────────────
 
-// ─── Heatmap ──────────────────────────────────────────────────────────────────
+function CalendarHeatmap({ workoutDates, colors }: { workoutDates: Set<string>; colors: any }) {
+  const { width } = useWindowDimensions();
+  const H_GAP = 2;
+  const ROW_GAP = 5;
+  const LABEL_W = 26;
+  const LABEL_GAP = 8;
+  // 16px screen padding each side + 14px card padding each side = 60px total
+  const contentW = width - 60;
+  const CELL = Math.max(6, Math.floor((contentW - LABEL_W - LABEL_GAP - 30 * H_GAP) / 31));
+  const STRIDE = CELL + H_GAP;
 
-const WEEKS = 26;
-const DAY_LABEL_W = 18;
-const CELL_GAP = 2;
-
-function Heatmap({ workoutDates, colors }: { workoutDates: Set<string>; colors: any }) {
-  const { width: screenWidth } = useWindowDimensions();
-
-  const cellSize = Math.floor(
-    (screenWidth - 32 - DAY_LABEL_W - CELL_GAP * (WEEKS + 1)) / WEEKS
-  );
-
-  const { weeks, monthLabels } = useMemo(() => {
+  const months = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
-    // Go back WEEKS*7 days, align to Sunday
-    const start = new Date(today);
-    start.setDate(today.getDate() - WEEKS * 7 + 1);
-    start.setDate(start.getDate() - start.getDay());
-
-    const weeks: Array<Array<{ key: string; date: Date; hasWorkout: boolean; isFuture: boolean }>> = [];
-    const monthLabels: { label: string; col: number }[] = [];
-    let seenMonths = new Set<string>();
-    const cur = new Date(start);
-
-    for (let w = 0; w < WEEKS; w++) {
-      const week = [];
-      for (let d = 0; d < 7; d++) {
-        const key = dayKey(cur.getTime());
-        week.push({
-          key,
-          date: new Date(cur),
-          hasWorkout: workoutDates.has(key),
-          isFuture: cur > today,
-        });
-        // Month label on first day of month
-        const monthKey = `${cur.getFullYear()}-${cur.getMonth()}`;
-        if (cur.getDate() === 1 && !seenMonths.has(monthKey)) {
-          seenMonths.add(monthKey);
-          monthLabels.push({ label: MONTH_SHORT[cur.getMonth()], col: w });
+    const result = [];
+    for (let i = 11; i >= 0; i--) {
+      const base = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const year = base.getFullYear();
+      const month = base.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const days: Array<{ empty: boolean; isFuture?: boolean; hasWorkout?: boolean }> = [];
+      for (let day = 1; day <= 31; day++) {
+        if (day > daysInMonth) {
+          days.push({ empty: true });
+        } else {
+          const cellDate = new Date(year, month, day);
+          days.push({
+            empty: false,
+            isFuture: cellDate > today,
+            hasWorkout: workoutDates.has(`${year}-${month}-${day}`),
+          });
         }
-        cur.setDate(cur.getDate() + 1);
       }
-      weeks.push(week);
+      result.push({ label: MONTH_SHORT[month], days });
     }
-    return { weeks, monthLabels };
+    return result;
   }, [workoutDates]);
 
   return (
     <View>
-      {/* Month labels */}
-      <View style={{ height: 16, position: "relative", marginLeft: DAY_LABEL_W + CELL_GAP }}>
-        {monthLabels.map((m, i) => (
-          <Text
-            key={i}
-            style={[
-              styles.monthLabel,
-              {
-                color: colors.labelTertiary,
-                left: m.col * (cellSize + CELL_GAP),
-              },
-            ]}
-          >
-            {m.label}
-          </Text>
-        ))}
-      </View>
-
-      {/* Grid */}
-      <View style={{ flexDirection: "row", gap: CELL_GAP }}>
-        {/* Day labels (Mon, Wed, Fri) */}
-        <View style={{ width: DAY_LABEL_W, gap: CELL_GAP }}>
-          {["", "M", "", "W", "", "F", ""].map((l, i) => (
-            <View key={i} style={{ height: cellSize, justifyContent: "center" }}>
-              <Text style={{ fontSize: 9, color: colors.labelTertiary }}>{l}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* Week columns */}
-        {weeks.map((week, wi) => (
-          <View key={wi} style={{ gap: CELL_GAP }}>
-            {week.map((day, di) => (
-              <View
-                key={di}
-                style={{
-                  width: cellSize,
-                  height: cellSize,
-                  borderRadius: 2,
-                  backgroundColor: day.isFuture
-                    ? "transparent"
-                    : day.hasWorkout
-                    ? colors.accent
-                    : colors.fillSecondary,
-                }}
-              />
-            ))}
+      {/* Day number hints — inline slots to match cell positions exactly */}
+      <View style={{ flexDirection: "row", marginLeft: LABEL_W + LABEL_GAP, marginBottom: 4 }}>
+        {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
+          <View key={d} style={{ width: CELL, marginRight: d < 31 ? H_GAP : 0, alignItems: "center" }}>
+            {[1, 8, 15, 22, 29].includes(d) && (
+              <Text style={{ fontSize: 9, color: colors.labelTertiary, fontWeight: "500" }}>{d}</Text>
+            )}
           </View>
         ))}
       </View>
 
+      {/* Month rows */}
+      {months.map((month, mi) => (
+        <View
+          key={mi}
+          style={{ flexDirection: "row", alignItems: "center", marginBottom: mi < 11 ? ROW_GAP : 0 }}
+        >
+          <Text style={{ width: LABEL_W, fontSize: 10, color: colors.labelTertiary, fontWeight: "500", marginRight: LABEL_GAP }}>
+            {month.label}
+          </Text>
+          {month.days.map((day, di) => (
+            <View
+              key={di}
+              style={{
+                width: CELL,
+                height: CELL,
+                borderRadius: 2,
+                marginRight: di < 30 ? H_GAP : 0,
+                backgroundColor:
+                  day.empty
+                    ? "transparent"
+                    : day.hasWorkout
+                    ? colors.accent
+                    : colors.fillSecondary,
+              }}
+            />
+          ))}
+        </View>
+      ))}
+
       {/* Legend */}
-      <View style={styles.legend}>
-        <Text style={[styles.legendLabel, { color: colors.labelTertiary }]}>Less</Text>
-        <View style={[styles.legendCell, { backgroundColor: colors.fillSecondary }]} />
-        <View style={[styles.legendCell, { backgroundColor: colors.accent + "66" }]} />
-        <View style={[styles.legendCell, { backgroundColor: colors.accent }]} />
-        <Text style={[styles.legendLabel, { color: colors.labelTertiary }]}>More</Text>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end", gap: 5, marginTop: 12 }}>
+        <View style={{ width: CELL, height: CELL, borderRadius: 2, backgroundColor: colors.fillSecondary }} />
+        <Text style={{ fontSize: 10, color: colors.labelTertiary }}>Rest</Text>
+        <View style={{ width: CELL, height: CELL, borderRadius: 2, backgroundColor: colors.accent, marginLeft: 8 }} />
+        <Text style={{ fontSize: 10, color: colors.labelTertiary }}>Trained</Text>
       </View>
     </View>
   );
 }
 
-// ─── Stat tile ────────────────────────────────────────────────────────────────
+// ─── Month Calendar ───────────────────────────────────────────────────────────
 
-function StatTile({
-  value, label, accent = false, colors, typography,
-}: {
-  value: string; label: string; accent?: boolean; colors: any; typography: any;
-}) {
+const DAY_HEADERS = ["M", "T", "W", "T", "F", "S", "S"];
+
+function MonthCalendar({ viewDate, workoutDates, colors }: { viewDate: Date; workoutDates: Set<string>; colors: any }) {
+  const { width } = useWindowDimensions();
+  const GAP = 4;
+  const CELL = Math.floor((width - 60 - 6 * GAP) / 7);
+
+  const today = useMemo(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }, []);
+
+  const cells = useMemo(() => {
+    const year = viewDate.getFullYear();
+    const month = viewDate.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const startOffset = (new Date(year, month, 1).getDay() + 6) % 7; // Mon=0
+
+    const result: Array<{ day: number | null; hasWorkout: boolean; isFuture: boolean; isToday: boolean }> = [];
+    for (let i = 0; i < startOffset; i++) result.push({ day: null, hasWorkout: false, isFuture: false, isToday: false });
+    for (let d = 1; d <= daysInMonth; d++) {
+      const cellDate = new Date(year, month, d);
+      result.push({
+        day: d,
+        hasWorkout: workoutDates.has(`${year}-${month}-${d}`),
+        isFuture: cellDate > today,
+        isToday: cellDate.toDateString() === today.toDateString(),
+      });
+    }
+    while (result.length % 7 !== 0) result.push({ day: null, hasWorkout: false, isFuture: false, isToday: false });
+    return result;
+  }, [viewDate, workoutDates, today]);
+
+  const rows: typeof cells[] = [];
+  for (let i = 0; i < cells.length; i += 7) rows.push(cells.slice(i, i + 7));
+
   return (
-    <View style={[styles.statTile, { backgroundColor: colors.backgroundSecondary }]}>
-      <Text style={[typography.numericLarge, { color: accent ? colors.accent : colors.label, fontSize: 26, fontWeight: "800" }]}>
-        {value}
-      </Text>
-      <Text style={[typography.caption2, { color: colors.labelSecondary, marginTop: 3, textAlign: "center" }]}>
-        {label}
-      </Text>
+    <View>
+      {/* Day headers */}
+      <View style={{ flexDirection: "row", gap: GAP, marginBottom: GAP + 2 }}>
+        {DAY_HEADERS.map((d, i) => (
+          <View key={i} style={{ width: CELL, alignItems: "center" }}>
+            <Text style={{ fontSize: 11, fontWeight: "600", color: colors.labelTertiary }}>{d}</Text>
+          </View>
+        ))}
+      </View>
+
+      {/* Weeks */}
+      {rows.map((row, ri) => (
+        <View key={ri} style={{ flexDirection: "row", gap: GAP, marginBottom: ri < rows.length - 1 ? GAP : 0 }}>
+          {row.map((cell, ci) => (
+            <View
+              key={ci}
+              style={{
+                width: CELL,
+                height: CELL,
+                borderRadius: 8,
+                backgroundColor: cell.day === null ? "transparent" : cell.hasWorkout ? colors.accent : colors.fillSecondary,
+                alignItems: "center",
+                justifyContent: "center",
+                borderWidth: cell.isToday ? 1.5 : 0,
+                borderColor: colors.accent,
+              }}
+            >
+              {cell.day !== null && (
+                <Text style={{
+                  fontSize: 12,
+                  fontWeight: cell.isToday ? "700" : "500",
+                  color: cell.hasWorkout ? "#fff" : cell.isFuture ? colors.labelQuaternary : colors.labelSecondary,
+                }}>
+                  {cell.day}
+                </Text>
+              )}
+            </View>
+          ))}
+        </View>
+      ))}
+
+      {/* Legend */}
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end", gap: 5, marginTop: 12 }}>
+        <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: colors.fillSecondary }} />
+        <Text style={{ fontSize: 10, color: colors.labelTertiary }}>Rest</Text>
+        <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: colors.accent, marginLeft: 8 }} />
+        <Text style={{ fontSize: 10, color: colors.labelTertiary }}>Trained</Text>
+      </View>
     </View>
   );
 }
 
-// ─── Workout card ─────────────────────────────────────────────────────────────
+// ─── Stat Tile ────────────────────────────────────────────────────────────────
+
+function StatTile({
+  value, label, accent = false, colors,
+}: {
+  value: string; label: string; accent?: boolean; colors: any;
+}) {
+  return (
+    <View style={[styles.statTile, { backgroundColor: colors.backgroundSecondary }]}>
+      <Text style={[styles.statValue, { color: accent ? colors.accent : colors.label }]}>
+        {value}
+      </Text>
+      <Text style={[styles.statLabel, { color: colors.labelTertiary }]}>{label}</Text>
+    </View>
+  );
+}
+
+// ─── Workout Card ─────────────────────────────────────────────────────────────
 
 function WorkoutCard({ workout, colors, typography }: { workout: any; colors: any; typography: any }) {
   const [expanded, setExpanded] = useState(false);
@@ -180,15 +244,15 @@ function WorkoutCard({ workout, colors, typography }: { workout: any; colors: an
       <TouchableOpacity onPress={() => setExpanded(v => !v)} activeOpacity={0.75}>
         <View style={styles.cardHeader}>
           <View style={{ flex: 1 }}>
-            <Text style={[typography.caption2, { color: colors.labelTertiary, textTransform: "uppercase", letterSpacing: 0.8 }]}>
-              {formatDate(workout.date)}  ·  Week {workout.weekNumber}
+            <Text style={{ fontSize: 11, fontWeight: "500", color: colors.labelTertiary, textTransform: "uppercase", letterSpacing: 0.6 }}>
+              {formatDate(workout.date)}{workout.weekNumber ? `  ·  Wk ${workout.weekNumber}` : ""}
             </Text>
             <Text style={[typography.headline, { color: colors.label, marginTop: 2 }]}>
               {workout.sessionName}
             </Text>
-            <View style={styles.musclePillRow}>
+            <View style={styles.pillRow}>
               {muscles.map(m => (
-                <View key={m} style={[styles.musclePill, { backgroundColor: (MUSCLE_BADGE_COLORS[m] ?? "#555") + "22" }]}>
+                <View key={m} style={[styles.pill, { backgroundColor: (MUSCLE_BADGE_COLORS[m] ?? "#555") + "22" }]}>
                   <Text style={{ fontSize: 10, fontWeight: "700", color: MUSCLE_BADGE_COLORS[m] ?? "#555" }}>
                     {(MUSCLE_DISPLAY_NAMES as any)[m]?.toUpperCase() ?? m}
                   </Text>
@@ -198,13 +262,9 @@ function WorkoutCard({ workout, colors, typography }: { workout: any; colors: an
           </View>
           <View style={{ alignItems: "flex-end", gap: 4 }}>
             {!!workout.durationMin && (
-              <Text style={[typography.caption1, { color: colors.labelSecondary }]}>
-                {workout.durationMin}m
-              </Text>
+              <Text style={[typography.caption1, { color: colors.labelSecondary }]}>{workout.durationMin}m</Text>
             )}
-            <Text style={{ color: colors.labelTertiary, fontSize: 14 }}>
-              {expanded ? "▾" : "▸"}
-            </Text>
+            <Text style={{ color: colors.labelTertiary, fontSize: 14 }}>{expanded ? "▾" : "▸"}</Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -213,18 +273,14 @@ function WorkoutCard({ workout, colors, typography }: { workout: any; colors: an
         <View style={{ marginTop: 12, gap: 10 }}>
           {workout.exercises.map((ex: any) => (
             <View key={ex.name}>
-              <Text style={[typography.subheadline, { color: colors.label, marginBottom: 5 }]}>
-                {ex.name}
-              </Text>
+              <Text style={[typography.subheadline, { color: colors.label, marginBottom: 5 }]}>{ex.name}</Text>
               <View style={styles.chipRow}>
                 {ex.sets.map((s: any, i: number) => (
                   <View key={i} style={[styles.setChip, { backgroundColor: colors.fillSecondary }]}>
                     <Text style={{ fontSize: 12, fontWeight: "600", color: colors.label }}>
                       {s.weight}kg × {s.reps}
                     </Text>
-                    <Text style={{ fontSize: 10, color: colors.labelTertiary, marginLeft: 4 }}>
-                      RIR {s.rir}
-                    </Text>
+                    <Text style={{ fontSize: 10, color: colors.labelTertiary, marginLeft: 4 }}>RIR {s.rir}</Text>
                   </View>
                 ))}
               </View>
@@ -241,86 +297,57 @@ function WorkoutCard({ workout, colors, typography }: { workout: any; colors: an
 export default function HistoryScreen() {
   const { colors, typography } = useTheme();
   const { userId, loading } = useCurrentUser();
+  const [heatmapView, setHeatmapView] = useState<"year" | "month">("year");
+  const [viewMonth, setViewMonth] = useState(() => new Date());
 
-  const history = useQuery(
-    api.workouts.getHistory,
-    userId ? { userId, limit: 300 } : "skip"
-  );
+  // Lightweight — just dates, for heatmap + stats
+  const dateSummary = useQuery(api.workouts.getWorkoutDates, userId ? { userId } : "skip");
 
-  const isLoading = loading || history === undefined;
+  // Full data — for recent workout cards (last 15 only)
+  const recentWorkouts = useQuery(api.workouts.getHistory, userId ? { userId, limit: 15 } : "skip");
+
+  const isLoading = loading || dateSummary === undefined;
 
   const { workoutDates, stats } = useMemo(() => {
-    if (!history || history.length === 0) {
+    if (!dateSummary || dateSummary.length === 0) {
       return { workoutDates: new Set<string>(), stats: null };
     }
 
-    // Unique workout days
     const dates = new Set<string>();
-    for (const w of history) dates.add(dayKey(w.date));
+    for (const w of dateSummary) dates.add(dayKey(w.date));
 
-    // ── Current streak (consecutive calendar days with a workout) ──────────
+    // Streak
     let streak = 0;
     const check = new Date();
     check.setHours(0, 0, 0, 0);
     if (!dates.has(dayKey(check.getTime()))) check.setDate(check.getDate() - 1);
-    while (dates.has(dayKey(check.getTime()))) {
-      streak++;
-      check.setDate(check.getDate() - 1);
-    }
+    while (dates.has(dayKey(check.getTime()))) { streak++; check.setDate(check.getDate() - 1); }
 
-    // ── Longest streak ────────────────────────────────────────────────────
-    const sortedDays = [...dates].map(k => {
-      const [y, mo, d] = k.split("-").map(Number);
-      return new Date(y, mo, d).getTime();
-    }).sort((a, b) => a - b);
-
+    // Longest streak
+    const sortedDays = [...dates]
+      .map(k => { const [y, mo, d] = k.split("-").map(Number); return new Date(y, mo, d).getTime(); })
+      .sort((a, b) => a - b);
     let longest = 0, curRun = 0;
     for (let i = 0; i < sortedDays.length; i++) {
-      if (i === 0) { curRun = 1; }
-      else {
-        const diff = (sortedDays[i] - sortedDays[i - 1]) / 86400000;
-        curRun = diff === 1 ? curRun + 1 : 1;
-      }
+      curRun = i === 0 ? 1 : (sortedDays[i] - sortedDays[i - 1]) / 86400000 === 1 ? curRun + 1 : 1;
       longest = Math.max(longest, curRun);
     }
 
-    // ── This week ─────────────────────────────────────────────────────────
+    // This week / month
     const weekStart = new Date();
     weekStart.setDate(weekStart.getDate() - weekStart.getDay());
     weekStart.setHours(0, 0, 0, 0);
-    const thisWeek = history.filter(w => w.date >= weekStart.getTime()).length;
-
-    // ── This month ────────────────────────────────────────────────────────
     const monthStart = new Date();
     monthStart.setDate(1);
     monthStart.setHours(0, 0, 0, 0);
-    const thisMonth = history.filter(w => w.date >= monthStart.getTime()).length;
+    const thisWeek = dateSummary.filter(w => w.date >= weekStart.getTime()).length;
+    const thisMonth = dateSummary.filter(w => w.date >= monthStart.getTime()).length;
 
-    // ── Avg per week (over last 12 weeks) ─────────────────────────────────
+    // Avg/week (last 12 weeks)
     const twelveWeeksAgo = Date.now() - 84 * 24 * 60 * 60 * 1000;
-    const avgPerWeek = (history.filter(w => w.date >= twelveWeeksAgo).length / 12).toFixed(1);
+    const avgPerWeek = (dateSummary.filter(w => w.date >= twelveWeeksAgo).length / 12).toFixed(1);
 
-    // ── Total volume (kg) this month ──────────────────────────────────────
-    let monthVolume = 0;
-    for (const w of history) {
-      if (w.date < monthStart.getTime()) continue;
-      for (const ex of w.exercises) {
-        for (const s of ex.sets) {
-          monthVolume += (s.weight ?? 0) * (s.reps ?? 0);
-        }
-      }
-    }
-
-    // ── Most trained muscle ───────────────────────────────────────────────
-    const muscleCounts: Record<string, number> = {};
-    for (const w of history) {
-      for (const ex of w.exercises) {
-        muscleCounts[ex.muscleGroup] = (muscleCounts[ex.muscleGroup] ?? 0) + ex.sets.length;
-      }
-    }
-    const topMuscle = Object.entries(muscleCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
-
-    // ── Unique training days per week (last 8 weeks) ──────────────────────
+    // Weekly frequency last 8 weeks
     const weeklyFrequency: number[] = [];
     for (let i = 7; i >= 0; i--) {
       const wStart = new Date();
@@ -329,17 +356,36 @@ export default function HistoryScreen() {
       const wEnd = new Date(wStart);
       wEnd.setDate(wStart.getDate() + 7);
       const days = new Set(
-        history.filter(w => w.date >= wStart.getTime() && w.date < wEnd.getTime())
-               .map(w => dayKey(w.date))
+        dateSummary.filter(w => w.date >= wStart.getTime() && w.date < wEnd.getTime()).map(w => dayKey(w.date))
       ).size;
       weeklyFrequency.push(days);
     }
 
     return {
       workoutDates: dates,
-      stats: { streak, longest, total: history.length, thisWeek, thisMonth, avgPerWeek, monthVolume, topMuscle, weeklyFrequency },
+      stats: { streak, longest, total: dateSummary.length, thisWeek, thisMonth, avgPerWeek, weeklyFrequency },
     };
-  }, [history]);
+  }, [dateSummary]);
+
+  // Volume + most trained — from the heavier query
+  const { monthVolume, topMuscle } = useMemo(() => {
+    if (!recentWorkouts || recentWorkouts.length === 0) return { monthVolume: 0, topMuscle: null };
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+    let vol = 0;
+    const muscleCounts: Record<string, number> = {};
+    for (const w of recentWorkouts) {
+      for (const ex of w.exercises) {
+        if (w.date >= monthStart.getTime()) {
+          for (const s of ex.sets) vol += (s.weight ?? 0) * (s.reps ?? 0);
+        }
+        muscleCounts[ex.muscleGroup] = (muscleCounts[ex.muscleGroup] ?? 0) + ex.sets.length;
+      }
+    }
+    const top = Object.entries(muscleCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+    return { monthVolume: vol, topMuscle: top };
+  }, [recentWorkouts]);
 
   const maxFreq = stats ? Math.max(...stats.weeklyFrequency, 1) : 1;
 
@@ -359,8 +405,8 @@ export default function HistoryScreen() {
           </View>
         )}
 
-        {!isLoading && history?.length === 0 && (
-          <View style={[styles.empty, { backgroundColor: colors.backgroundSecondary }]}>
+        {!isLoading && dateSummary?.length === 0 && (
+          <View style={[styles.card, { backgroundColor: colors.backgroundSecondary, padding: 24, marginTop: 20 }]}>
             <Text style={[typography.title3, { color: colors.label, marginBottom: 8 }]}>No workouts yet</Text>
             <Text style={[typography.body, { color: colors.labelSecondary }]}>
               Complete a workout to see your heatmap, streaks, and stats here.
@@ -370,61 +416,110 @@ export default function HistoryScreen() {
 
         {!isLoading && stats && (
           <>
-            {/* ── Heatmap ─────────────────────────────────────────── */}
-            <View style={[styles.sectionCard, { backgroundColor: colors.backgroundSecondary }]}>
-              <Text style={[styles.sectionLabel, { color: colors.labelSecondary }]}>
-                LAST 6 MONTHS
-              </Text>
-              <Heatmap workoutDates={workoutDates} colors={colors} />
-            </View>
-
-            {/* ── Stats row 1 ──────────────────────────────────────── */}
-            <View style={styles.statRow}>
-              <StatTile
-                value={stats.streak > 0 ? `${stats.streak}🔥` : "0"}
-                label="DAY STREAK"
-                accent
-                colors={colors}
-                typography={typography}
-              />
-              <StatTile value={`${stats.total}`} label="TOTAL" colors={colors} typography={typography} />
-              <StatTile value={stats.avgPerWeek} label="AVG/WEEK" colors={colors} typography={typography} />
-            </View>
-
-            {/* ── Stats row 2 ──────────────────────────────────────── */}
-            <View style={styles.statRow}>
-              <StatTile value={`${stats.thisWeek}`} label="THIS WEEK" colors={colors} typography={typography} />
-              <StatTile value={`${stats.thisMonth}`} label="THIS MONTH" colors={colors} typography={typography} />
-              <StatTile value={`${stats.longest}`} label="BEST STREAK" colors={colors} typography={typography} />
-            </View>
-
-            {/* ── Volume this month ─────────────────────────────────── */}
-            {stats.monthVolume > 0 && (
-              <View style={[styles.sectionCard, { backgroundColor: colors.backgroundSecondary, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }]}>
-                <Text style={[typography.subheadline, { color: colors.labelSecondary }]}>Volume this month</Text>
-                <Text style={[typography.numericMedium, { color: colors.label, fontWeight: "700" }]}>
-                  {stats.monthVolume >= 1000
-                    ? `${(stats.monthVolume / 1000).toFixed(1)}t`
-                    : `${stats.monthVolume.toLocaleString()}kg`}
+            {/* ── Heatmap ───────────────────────────────────────────── */}
+            <View style={[styles.card, { backgroundColor: colors.backgroundSecondary, padding: 14, marginBottom: 8 }]}>
+              {/* Header: label + toggle */}
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <Text style={[styles.sectionLabel, { color: colors.labelSecondary, marginBottom: 0 }]}>
+                  {heatmapView === "year" ? "12 MONTHS" : `${MONTH_SHORT[viewMonth.getMonth()].toUpperCase()} ${viewMonth.getFullYear()}`}
                 </Text>
-              </View>
-            )}
-
-            {/* ── Most trained ──────────────────────────────────────── */}
-            {stats.topMuscle && (
-              <View style={[styles.sectionCard, { backgroundColor: colors.backgroundSecondary, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }]}>
-                <Text style={[typography.subheadline, { color: colors.labelSecondary }]}>Most trained</Text>
-                <View style={[styles.musclePill, { backgroundColor: (MUSCLE_BADGE_COLORS[stats.topMuscle] ?? colors.accent) + "22" }]}>
-                  <Text style={{ fontSize: 13, fontWeight: "700", color: MUSCLE_BADGE_COLORS[stats.topMuscle] ?? colors.accent }}>
-                    {(MUSCLE_DISPLAY_NAMES as any)[stats.topMuscle] ?? stats.topMuscle}
-                  </Text>
+                <View style={{ flexDirection: "row", backgroundColor: colors.fillSecondary, borderRadius: 8, padding: 2 }}>
+                  {(["month", "year"] as const).map(v => (
+                    <TouchableOpacity
+                      key={v}
+                      onPress={() => setHeatmapView(v)}
+                      style={{
+                        paddingHorizontal: 12,
+                        paddingVertical: 5,
+                        borderRadius: 6,
+                        backgroundColor: heatmapView === v ? colors.background : "transparent",
+                      }}
+                    >
+                      <Text style={{ fontSize: 12, fontWeight: "600", color: heatmapView === v ? colors.label : colors.labelTertiary }}>
+                        {v === "month" ? "Month" : "Year"}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
                 </View>
               </View>
+
+              {/* Month nav (month view only) */}
+              {heatmapView === "month" && (() => {
+                const now = new Date();
+                const atCurrent = viewMonth.getFullYear() === now.getFullYear() && viewMonth.getMonth() === now.getMonth();
+                return (
+                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                    <TouchableOpacity
+                      onPress={() => setViewMonth(d => new Date(d.getFullYear(), d.getMonth() - 1, 1))}
+                      style={{ padding: 4 }}
+                    >
+                      <Text style={{ fontSize: 22, color: colors.labelSecondary, lineHeight: 24 }}>‹</Text>
+                    </TouchableOpacity>
+                    <Text style={{ fontSize: 15, fontWeight: "600", color: colors.label }}>
+                      {MONTH_SHORT[viewMonth.getMonth()]} {viewMonth.getFullYear()}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => !atCurrent && setViewMonth(d => new Date(d.getFullYear(), d.getMonth() + 1, 1))}
+                      style={{ padding: 4 }}
+                    >
+                      <Text style={{ fontSize: 22, color: atCurrent ? colors.labelQuaternary : colors.labelSecondary, lineHeight: 24 }}>›</Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })()}
+
+              {heatmapView === "year"
+                ? <CalendarHeatmap workoutDates={workoutDates} colors={colors} />
+                : <MonthCalendar viewDate={viewMonth} workoutDates={workoutDates} colors={colors} />
+              }
+            </View>
+
+            {/* ── Stats (2 per row) ──────────────────────────────────── */}
+            <View style={styles.statRow}>
+              <StatTile
+                value={stats.streak > 0 ? `${stats.streak} 🔥` : "—"}
+                label="STREAK"
+                accent
+                colors={colors}
+              />
+              <StatTile value={`${stats.total}`} label="ALL TIME" colors={colors} />
+            </View>
+            <View style={styles.statRow}>
+              <StatTile value={`${stats.thisWeek}`} label="THIS WEEK" colors={colors} />
+              <StatTile value={`${stats.thisMonth}`} label="THIS MONTH" colors={colors} />
+            </View>
+            <View style={[styles.statRow, { marginBottom: 8 }]}>
+              <StatTile value={stats.avgPerWeek} label="AVG / WEEK" colors={colors} />
+              <StatTile value={`${stats.longest}`} label="BEST STREAK" colors={colors} />
+            </View>
+
+            {/* ── Volume + muscle ────────────────────────────────────── */}
+            {(monthVolume > 0 || topMuscle) && (
+              <View style={[styles.card, { backgroundColor: colors.backgroundSecondary, flexDirection: "row", marginBottom: 8, overflow: "hidden" }]}>
+                {monthVolume > 0 && (
+                  <View style={[styles.metaCell, { borderRightWidth: topMuscle ? StyleSheet.hairlineWidth : 0, borderRightColor: colors.separator }]}>
+                    <Text style={[styles.metaValue, { color: colors.label }]}>
+                      {monthVolume >= 1000 ? `${(monthVolume / 1000).toFixed(1)}t` : `${monthVolume.toLocaleString()}kg`}
+                    </Text>
+                    <Text style={[styles.metaLabel, { color: colors.labelTertiary }]}>VOLUME / MONTH</Text>
+                  </View>
+                )}
+                {topMuscle && (
+                  <View style={styles.metaCell}>
+                    <View style={[styles.pill, { backgroundColor: (MUSCLE_BADGE_COLORS[topMuscle] ?? colors.accent) + "22" }]}>
+                      <Text style={{ fontSize: 13, fontWeight: "700", color: MUSCLE_BADGE_COLORS[topMuscle] ?? colors.accent }}>
+                        {(MUSCLE_DISPLAY_NAMES as any)[topMuscle] ?? topMuscle}
+                      </Text>
+                    </View>
+                    <Text style={[styles.metaLabel, { color: colors.labelTertiary }]}>MOST TRAINED</Text>
+                  </View>
+                )}
+              </View>
             )}
 
-            {/* ── Weekly frequency bar chart ────────────────────────── */}
-            <View style={[styles.sectionCard, { backgroundColor: colors.backgroundSecondary }]}>
-              <Text style={[styles.sectionLabel, { color: colors.labelSecondary }]}>DAYS/WEEK (LAST 8 WEEKS)</Text>
+            {/* ── Frequency bar chart ────────────────────────────────── */}
+            <View style={[styles.card, { backgroundColor: colors.backgroundSecondary, padding: 14, marginBottom: 8 }]}>
+              <Text style={[styles.sectionLabel, { color: colors.labelSecondary }]}>DAYS / WEEK · LAST 8 WEEKS</Text>
               <View style={styles.barChart}>
                 {stats.weeklyFrequency.map((days, i) => (
                   <View key={i} style={styles.barCol}>
@@ -439,25 +534,23 @@ export default function HistoryScreen() {
                         ]}
                       />
                     </View>
-                    <Text style={[styles.barLabel, { color: colors.labelTertiary }]}>
-                      {days}
-                    </Text>
+                    <Text style={[styles.barNum, { color: colors.labelTertiary }]}>{days}</Text>
                   </View>
                 ))}
               </View>
-              <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 4 }}>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 3 }}>
                 <Text style={{ fontSize: 9, color: colors.labelTertiary }}>8 wks ago</Text>
-                <Text style={{ fontSize: 9, color: colors.labelTertiary }}>This wk</Text>
+                <Text style={{ fontSize: 9, color: colors.labelTertiary }}>This week</Text>
               </View>
             </View>
 
-            {/* ── Recent workouts ───────────────────────────────────── */}
-            {history && history.length > 0 && (
+            {/* ── Recent workouts ────────────────────────────────────── */}
+            {recentWorkouts && recentWorkouts.length > 0 && (
               <>
-                <Text style={[styles.sectionLabel, { color: colors.labelSecondary, marginTop: 20, marginBottom: 8 }]}>
+                <Text style={[styles.sectionLabel, { color: colors.labelSecondary, marginTop: 16, marginBottom: 8 }]}>
                   RECENT WORKOUTS
                 </Text>
-                {history.map(w => (
+                {recentWorkouts.map(w => (
                   <WorkoutCard key={w._id} workout={w} colors={colors} typography={typography} />
                 ))}
               </>
@@ -472,10 +565,9 @@ export default function HistoryScreen() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  sectionCard: {
+  card: {
     borderRadius: 16,
-    padding: 16,
-    marginBottom: 8,
+    marginBottom: 0,
   },
   sectionLabel: {
     fontSize: 11,
@@ -492,51 +584,47 @@ const styles = StyleSheet.create({
   statTile: {
     flex: 1,
     borderRadius: 14,
-    padding: 14,
+    padding: 16,
     alignItems: "center",
   },
-  empty: {
-    borderRadius: 16,
-    padding: 24,
-    marginTop: 20,
+  statValue: {
+    fontSize: 28,
+    fontWeight: "800",
+    letterSpacing: -0.5,
   },
-  monthLabel: {
-    position: "absolute",
+  statLabel: {
     fontSize: 10,
     fontWeight: "600",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+    marginTop: 4,
   },
-  legend: {
-    flexDirection: "row",
+  metaCell: {
+    flex: 1,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
     alignItems: "center",
-    justifyContent: "flex-end",
-    gap: 4,
-    marginTop: 10,
+    justifyContent: "center",
   },
-  legendLabel: {
+  metaValue: {
+    fontSize: 22,
+    fontWeight: "700",
+    letterSpacing: -0.3,
+  },
+  metaLabel: {
     fontSize: 10,
+    fontWeight: "600",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+    marginTop: 4,
   },
-  legendCell: {
-    width: 10,
-    height: 10,
-    borderRadius: 2,
-  },
-  card: {
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 8,
-  },
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-  },
-  musclePillRow: {
+  pillRow: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 5,
     marginTop: 6,
   },
-  musclePill: {
+  pill: {
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 5,
@@ -553,16 +641,22 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 6,
   },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    padding: 14,
+  },
   barChart: {
     flexDirection: "row",
     alignItems: "flex-end",
-    height: 60,
+    height: 52,
     gap: 4,
   },
   barCol: {
     flex: 1,
     alignItems: "center",
-    height: 72,
+    height: 64,
     justifyContent: "flex-end",
   },
   barTrack: {
@@ -576,7 +670,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     minHeight: 3,
   },
-  barLabel: {
+  barNum: {
     fontSize: 10,
     fontWeight: "600",
   },
