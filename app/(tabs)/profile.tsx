@@ -22,41 +22,28 @@ export default function ProfileScreen() {
   const authHook = useAuth();
 
   const handleResetData = () => {
+    if (!userId) {
+      Alert.alert("Error", `User not loaded yet (userId=${userId}). Please wait a moment and try again.`);
+      return;
+    }
     Alert.alert(
       "Reset All Data",
-      "Are you sure? This will permanently delete all your workouts, mesocycles, training history, and progress photos. This cannot be undone.",
+      "This will permanently delete all your workouts, mesocycles, training history, and progress photos. Cannot be undone.",
       [
         { text: "Cancel", style: "cancel" },
         {
           text: "Yes, Delete Everything",
           style: "destructive",
-          onPress: () => {
-            Alert.alert(
-              "Are you absolutely sure?",
-              "There is no going back. All data will be wiped.",
-              [
-                { text: "Cancel", style: "cancel" },
-                {
-                  text: "Delete Forever",
-                  style: "destructive",
-                  onPress: async () => {
-                    if (!userId) {
-                      Alert.alert("Error", "User not found. Please restart the app.");
-                      return;
-                    }
-                    setResetting(true);
-                    try {
-                      await deleteAllData({ userId });
-                      Alert.alert("Done", "All your data has been deleted.");
-                    } catch (e: any) {
-                      Alert.alert("Error", e.message ?? "Failed to delete data. Try again.");
-                    } finally {
-                      setResetting(false);
-                    }
-                  },
-                },
-              ]
-            );
+          onPress: async () => {
+            setResetting(true);
+            try {
+              await deleteAllData({ userId });
+              Alert.alert("Done", "All your data has been deleted.");
+            } catch (e: any) {
+              Alert.alert("Error", e.message ?? "Failed to delete data. Try again.");
+            } finally {
+              setResetting(false);
+            }
           },
         },
       ]
@@ -150,8 +137,8 @@ export default function ProfileScreen() {
         </Animated.View>
 
         {/* Danger zone */}
-        <Animated.View entering={FadeInDown.delay(300).springify()}>
-          <Text style={[typography.footnote, { color: colors.labelSecondary, marginTop: 24, marginBottom: 8 }]}>
+        <View style={{ marginTop: 24 }}>
+          <Text style={[typography.footnote, { color: colors.labelSecondary, marginBottom: 8 }]}>
             ACCOUNT
           </Text>
           <RowGroup>
@@ -171,7 +158,7 @@ export default function ProfileScreen() {
               </Text>
             )}
           </TouchableOpacity>
-        </Animated.View>
+        </View>
 
         {/* Version */}
         <Text style={[typography.caption2, { color: colors.labelQuaternary, textAlign: "center", marginTop: 32 }]}>
