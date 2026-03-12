@@ -457,25 +457,16 @@ export default function TodayScreen() {
             </View>
 
             {todayPhoto?.imageUrl ? (
-              <TouchableOpacity onPress={handleTakePhoto} activeOpacity={0.85} disabled={photoUploading}>
+              <View>
                 <Image
                   source={{ uri: todayPhoto.imageUrl }}
                   style={{ width: "100%", height: 220, borderRadius: 12 }}
                   resizeMode="cover"
                 />
-                {photoUploading ? (
-                  <View style={photoStyles.uploadingOverlay}>
-                    <ActivityIndicator color="#FFF" size="large" />
-                    <Text style={[typography.caption1, { color: "#FFF", marginTop: 8, fontWeight: "600" }]}>
-                      Uploading…
-                    </Text>
-                  </View>
-                ) : (
-                  <Text style={[typography.caption1, { color: colors.labelTertiary, marginTop: 8, textAlign: "center" }]}>
-                    Tap to retake
-                  </Text>
-                )}
-              </TouchableOpacity>
+                <Text style={[typography.caption1, { color: colors.labelTertiary, marginTop: 8, textAlign: "center" }]}>
+                  Done for today — see you tomorrow
+                </Text>
+              </View>
             ) : (
               <TouchableOpacity
                 onPress={handleTakePhoto}
