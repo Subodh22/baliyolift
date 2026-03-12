@@ -96,6 +96,13 @@ export const deleteAllUserData = mutation({
       }
       await ctx.db.delete(meso._id);
     }
+
+    // 5. Progress photos
+    const photos = await ctx.db
+      .query("progressPhotos")
+      .withIndex("by_user", (q) => q.eq("userId", uid))
+      .collect();
+    for (const p of photos) await ctx.db.delete(p._id);
   },
 });
 
