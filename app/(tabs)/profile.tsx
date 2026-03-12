@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, StyleSheet, Switch, Alert } from "react-native";
+import { View, Text, ScrollView, StyleSheet, Switch, Alert, ActivityIndicator, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useState } from "react";
@@ -15,6 +15,7 @@ export default function ProfileScreen() {
   const { colors, typography } = useTheme();
   const [unit, setUnit] = useState<"kg" | "lbs">("kg");
   const [notifications, setNotifications] = useState(true);
+  const [resetting, setResetting] = useState(false);
   const { userId } = useCurrentUser();
   const deleteAllData = useMutation(api.users.deleteAllUserData);
   const router = useRouter();
@@ -23,20 +24,39 @@ export default function ProfileScreen() {
   const handleResetData = () => {
     Alert.alert(
       "Reset All Data",
-      "This will permanently delete all your workouts, mesocycles, and training history. This cannot be undone.",
+      "Are you sure? This will permanently delete all your workouts, mesocycles, training history, and progress photos. This cannot be undone.",
       [
         { text: "Cancel", style: "cancel" },
         {
-          text: "Delete Everything",
+          text: "Yes, Delete Everything",
           style: "destructive",
-          onPress: async () => {
-            if (!userId) return;
-            try {
-              await deleteAllData({ userId });
-              Alert.alert("Done", "All training data has been deleted.");
-            } catch (e: any) {
-              Alert.alert("Error", e.message ?? "Failed to delete data.");
-            }
+          onPress: () => {
+            Alert.alert(
+              "Are you absolutely sure?",
+              "There is no going back. All data will be wiped.",
+              [
+                { text: "Cancel", style: "cancel" },
+                {
+                  text: "Delete Forever",
+                  style: "destructive",
+                  onPress: async () => {
+                    if (!userId) {
+                      Alert.alert("Error", "User not found. Please restart the app.");
+                      return;
+                    }
+                    setResetting(true);
+                    try {
+                      await deleteAllData({ userId });
+                      Alert.alert("Done", "All your data has been deleted.");
+                    } catch (e: any) {
+                      Alert.alert("Error", e.message ?? "Failed to delete data. Try again.");
+                    } finally {
+                      setResetting(false);
+                    }
+                  },
+                },
+              ]
+            );
           },
         },
       ]
@@ -136,8 +156,21 @@ export default function ProfileScreen() {
           </Text>
           <RowGroup>
             <Row label="Sign Out" onPress={handleSignOut} showChevron={false} />
-            <Row label="Reset All Data" destructive onPress={handleResetData} showChevron={false} />
           </RowGroup>
+          <TouchableOpacity
+            onPress={handleResetData}
+            disabled={resetting}
+            activeOpacity={0.7}
+            style={[styles.resetBtn, { backgroundColor: "#FF3B3022" }]}
+          >
+            {resetting ? (
+              <ActivityIndicator color="#FF3B30" />
+            ) : (
+              <Text style={{ color: "#FF3B30", fontWeight: "600", fontSize: 16 }}>
+                Reset All Data
+              </Text>
+            )}
+          </TouchableOpacity>
         </Animated.View>
 
         {/* Version */}
@@ -163,6 +196,12 @@ const styles = StyleSheet.create({
     borderRadius: 26,
     alignItems: "center",
     justifyContent: "center",
+  },
+  resetBtn: {
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: "center",
+    marginBottom: 8,
   },
   switchRow: {
     flexDirection: "row",
