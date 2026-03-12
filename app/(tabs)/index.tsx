@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, Pressable, StyleSheet, Dimensions, StatusBar } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Pressable, StyleSheet, Dimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useEffect, useMemo } from "react";
@@ -221,7 +221,6 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={s.screen} edges={["top"]}>
-      <StatusBar barStyle="light-content" />
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
 
         {/* ── Status bar ──────────────────────────────────────────────── */}

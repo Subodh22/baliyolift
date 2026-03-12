@@ -60,7 +60,7 @@ function ProfileGate() {
 
 function AppStack() {
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "#0A0A0B" } }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="sign-in" />
       <Stack.Screen name="sso-callback" />
@@ -151,7 +151,7 @@ export default function RootLayout() {
         <ConvexProvider client={convex}>
           <SeedOnMount />
           <WorkoutProvider>
-            <StatusBar style={scheme === "dark" ? "light" : "dark"} />
+            <StatusBar style="light" backgroundColor="#0A0A0B" />
             <WebLayout />
           </WorkoutProvider>
         </ConvexProvider>
@@ -165,7 +165,7 @@ export default function RootLayout() {
       <ConvexProvider client={convex}>
         <SeedOnMount />
         <WorkoutProvider>
-          <StatusBar style={scheme === "dark" ? "light" : "dark"} />
+          <StatusBar style="light" backgroundColor="#0A0A0B" />
           <NativeLayout />
         </WorkoutProvider>
       </ConvexProvider>
