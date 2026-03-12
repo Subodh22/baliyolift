@@ -77,6 +77,10 @@ function AppStack() {
         name="exercise/picker"
         options={{ presentation: "modal", animation: "slide_from_bottom" }}
       />
+      <Stack.Screen
+        name="camera"
+        options={{ presentation: "fullScreenModal", animation: "slide_from_bottom" }}
+      />
     </Stack>
   );
 }

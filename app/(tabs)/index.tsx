@@ -154,9 +154,10 @@ export default function HomeScreen() {
   const createUL  = useMutation(api.templates.createUpperLowerTemplate);
   const [templateLoading, setTemplateLoading] = useState<string | null>(null);
 
-  const meso   = useQuery(api.mesocycles.getActiveWithDetails, userId ? { userId } : "skip");
-  const volume = useQuery(api.workouts.getWeeklyVolume, meso && userId ? { userId, mesocycleId: meso._id, weekNumber: meso.weekNumber } : "skip");
-  const next   = useQuery(api.workouts.getNextSession, userId ? { userId } : "skip");
+  const meso        = useQuery(api.mesocycles.getActiveWithDetails, userId ? { userId } : "skip");
+  const volume      = useQuery(api.workouts.getWeeklyVolume, meso && userId ? { userId, mesocycleId: meso._id, weekNumber: meso.weekNumber } : "skip");
+  const next        = useQuery(api.workouts.getNextSession, userId ? { userId } : "skip");
+  const workoutDates = useQuery(api.workouts.getWorkoutDates, userId ? { userId } : "skip");
 
   const isLoading   = userLoading || meso === undefined || next === undefined;
   const nextSession = next?.session ?? null;
@@ -164,6 +165,28 @@ export default function HomeScreen() {
   const dayWord     = DAY_WORDS[new Date().getDay()];
   const today       = new Date().getDay(); // 0=Sun, 1=Mon...
   const todayMon    = today === 0 ? 6 : today - 1; // Mon=0...Sun=6
+
+  // Days this Mon–Sun that have a completed workout (Mon=0...Sun=6)
+  const completedDays = useMemo(() => {
+    if (!workoutDates) return new Set<number>();
+    const now = new Date();
+    const monOffset = now.getDay() === 0 ? 6 : now.getDay() - 1;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - monOffset);
+    monday.setHours(0, 0, 0, 0);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    sunday.setHours(23, 59, 59, 999);
+    const set = new Set<number>();
+    for (const w of workoutDates) {
+      const d = new Date(w.date);
+      if (d >= monday && d <= sunday) {
+        const dow = d.getDay() === 0 ? 6 : d.getDay() - 1; // Mon=0
+        set.add(dow);
+      }
+    }
+    return set;
+  }, [workoutDates]);
 
   const volumePct = useMemo(() => {
     if (!volume || volume.length === 0) return 0;
@@ -204,7 +227,7 @@ export default function HomeScreen() {
         {/* ── Status bar ──────────────────────────────────────────────── */}
         <View style={s.statusBar}>
           <Text style={s.statusTime}>{new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</Text>
-          <Text style={s.brandText}>P U L S E</Text>
+          <Text style={s.brandText}>B A L I Y O</Text>
           <Text style={s.statusIcon}>◎</Text>
         </View>
         <Line1 />
@@ -221,35 +244,6 @@ export default function HomeScreen() {
             {next ? ` · ${next.weekNumber ?? 1} week in` : ""}
             {" · Body is ready"}
           </Text>
-        </View>
-        <Line1 />
-
-        {/* ── Weekly volume ────────────────────────────────────────────── */}
-        <View style={s.section}>
-          <Text style={s.sectionLabel}>WEEKLY VOLUME</Text>
-          <View style={{ flexDirection: "row", alignItems: "flex-end", marginTop: 20 }}>
-            {/* Big number */}
-            <View style={{ flexDirection: "row", alignItems: "flex-end" }}>
-              <Text style={s.bigNum}>{pctDisplay}</Text>
-              <Text style={s.bigUnit}>%</Text>
-            </View>
-            {/* Right-side stats */}
-            <View style={{ flex: 1, alignItems: "flex-end", gap: 3, paddingBottom: 8 }}>
-              <Text style={s.statLine}>{(totalVolKg / 1000).toFixed(1).replace(/\.0$/, "")}k kg lifted</Text>
-              <Text style={s.statLine}>
-                <Text style={{ color: P.gold }}>↑ 8%</Text>
-                <Text> vs last week</Text>
-              </Text>
-              <Text style={s.statLine}>3h 20m total</Text>
-            </View>
-          </View>
-        </View>
-        <Line1 />
-
-        {/* ── Volume arc ───────────────────────────────────────────────── */}
-        <View style={s.section}>
-          <Text style={s.sectionLabel}>VOLUME ARC</Text>
-          <VolumeArc progress={volumePct} />
         </View>
         <Line1 />
 
@@ -340,28 +334,13 @@ export default function HomeScreen() {
           <Text style={s.sectionLabel}>THIS WEEK</Text>
           <View style={{ flexDirection: "row", gap: 4, marginTop: 16 }}>
             {DAY_SHORT.map((d, i) => {
-              const isDone  = sessionDays.has(i) && i < todayMon;
-              const isToday = i === todayMon;
+              const isDone   = completedDays.has(i) && i < todayMon;
+              const isToday  = i === todayMon;
               const isFuture = i > todayMon && sessionDays.has(i);
               const state = isDone ? "done" : isToday ? "today" : isFuture ? "future" : "rest";
-              const val = isDone ? "✓" : isToday ? String(new Date().getDate()) : isFuture ? String(new Date().getDate() + (i - todayMon)) : "—";
+              const val   = isDone ? "✓" : isToday ? String(new Date().getDate()) : isFuture ? String(new Date().getDate() + (i - todayMon)) : "—";
               return <WeekTile key={d} label={d} value={val} state={state} />;
             })}
-          </View>
-        </View>
-        <Line1 />
-
-        {/* ── Performance 2×2 ─────────────────────────────────────────── */}
-        <View style={s.section}>
-          <Text style={s.sectionLabel}>PERFORMANCE</Text>
-          <View style={s.grid2x2}>
-            <StatCell num="12,400" unit="kg" label="VOLUME" />
-            <View style={s.gridVDivider} />
-            <StatCell num="3h" unit="20m" label="TIME" />
-            <View style={s.gridHDivider} />
-            <StatCell num="86" unit="%" label="COMPLETION" />
-            <View style={s.gridVDivider2} />
-            <StatCell num={String(weekNum)} unit="days" label="STREAK" />
           </View>
         </View>
 

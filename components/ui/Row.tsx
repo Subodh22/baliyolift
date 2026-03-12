@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { useTheme } from "@/hooks/useTheme";
+import { P } from "@/constants/colors";
+import { OUT_L, OUT } from "@/constants/typography";
 
 interface RowProps {
   label: string;
@@ -10,18 +11,16 @@ interface RowProps {
 }
 
 export function Row({ label, value, onPress, showChevron = true, destructive = false }: RowProps) {
-  const { colors } = useTheme();
-
   const content = (
-    <View style={[styles.row, { borderBottomColor: colors.separator }]}>
-      <Text style={[styles.label, { color: destructive ? colors.accentRed : colors.label }]}>
+    <View style={styles.row}>
+      <Text style={[styles.label, { color: destructive ? P.red : P.ink }]}>
         {label}
       </Text>
       {value && (
-        <Text style={[styles.value, { color: colors.labelSecondary }]}>{value}</Text>
+        <Text style={styles.value}>{value}</Text>
       )}
       {showChevron && onPress && (
-        <Text style={{ color: colors.labelTertiary, fontSize: 16, marginLeft: 4 }}>›</Text>
+        <Text style={{ color: P.dim, fontSize: 16, marginLeft: 4 }}>›</Text>
       )}
     </View>
   );
@@ -33,9 +32,8 @@ export function Row({ label, value, onPress, showChevron = true, destructive = f
 }
 
 export function RowGroup({ children }: { children: React.ReactNode }) {
-  const { colors } = useTheme();
   return (
-    <View style={[styles.group, { backgroundColor: colors.backgroundSecondary, borderColor: colors.separator }]}>
+    <View style={styles.group}>
       {children}
     </View>
   );
@@ -47,23 +45,26 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 14,
-    borderBottomWidth: 0.5,
+    borderBottomWidth: 1,
+    borderBottomColor: P.border,
   },
   label: {
     flex: 1,
-    fontFamily: "Outfit_400Regular",
+    fontFamily: OUT,
     fontSize: 15,
     letterSpacing: -0.1,
   },
   value: {
-    fontFamily: "Outfit_300Light",
+    fontFamily: OUT_L,
     fontSize: 15,
     marginRight: 4,
+    color: P.mid,
   },
   group: {
-    borderRadius: 8,
-    overflow: "hidden",
+    backgroundColor: P.s1,
     borderWidth: 1,
+    borderColor: P.border,
+    overflow: "hidden",
     marginBottom: 8,
   },
 });

@@ -4,7 +4,7 @@ import { v } from "convex/values";
 export const savePhoto = mutation({
   args: {
     userId: v.id("users"),
-    imageUrl: v.string(),
+    imageUrl: v.string(), // Cloudflare R2 public URL
     date: v.string(), // "YYYY-MM-DD"
   },
   handler: async (ctx, { userId, imageUrl, date }) => {
@@ -46,5 +46,13 @@ export const listPhotos = query({
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .order("desc")
       .take(50);
+  },
+});
+
+export const deletePhoto = mutation({
+  args: { photoId: v.id("progressPhotos") },
+  handler: async (ctx, { photoId }) => {
+    await ctx.db.delete(photoId);
+    // Note: R2 object remains but is no longer referenced
   },
 });

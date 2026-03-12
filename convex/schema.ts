@@ -140,7 +140,7 @@ export default defineSchema({
   // --- Progress Photos ---
   progressPhotos: defineTable({
     userId: v.id("users"),
-    imageUrl: v.string(),
+    imageUrl: v.string(), // Cloudflare R2 public URL
     date: v.string(), // "YYYY-MM-DD" — one per day enforced at query level
     takenAt: v.number(),
   })
