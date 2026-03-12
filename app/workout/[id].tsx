@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect, useRef, useCallback, useMemo } from "react";
+import React, { useReducer, useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -27,6 +27,7 @@ import { MUSCLE_BADGE_COLORS } from "@/constants/colors";
 import { MUSCLE_DISPLAY_NAMES } from "@/constants/muscles";
 import { FeedbackModal } from "@/components/FeedbackModal";
 import { RestTimer } from "@/components/RestTimer";
+import { SwapSheet } from "@/components/SwapSheet";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -56,6 +57,7 @@ interface WState {
   restVisible: boolean;
   feedbackVisible: boolean;
   startTime: number;
+  swapOverrides: Record<string, { exerciseId: Id<"exercises">; exercise: { _id: Id<"exercises">; name: string; muscleGroup: string; equipment: string; sfr: string } }>;
 }
 
 type Action =
@@ -72,7 +74,8 @@ type Action =
   | { type: "SHOW_REST" }
   | { type: "HIDE_REST" }
   | { type: "SHOW_FB" }
-  | { type: "HIDE_FB" };
+  | { type: "HIDE_FB" }
+  | { type: "SWAP_LOCAL"; oldExId: string; exerciseId: Id<"exercises">; exercise: any };
 
 function mkSet(w: string, r: string, exId: string, i: number): LocalSet {
   return { localId: `${exId}_${i}_${Date.now()}`, convexSetId: null, weight: w, reps: r, rir: 2, isLogged: false, overloadIndicator: null };
@@ -136,6 +139,15 @@ function reducer(s: WState, a: Action): WState {
     case "HIDE_REST": return { ...s, restVisible: false };
     case "SHOW_FB": return { ...s, feedbackVisible: true };
     case "HIDE_FB": return { ...s, feedbackVisible: false };
+    case "SWAP_LOCAL": {
+      return {
+        ...s,
+        swapOverrides: {
+          ...s.swapOverrides,
+          [a.oldExId]: { exerciseId: a.exerciseId, exercise: a.exercise },
+        },
+      };
+    }
     default: return s;
   }
 }
@@ -196,24 +208,23 @@ function SetRow({ set, setIdx, totalSets, exId, activeCell, onFocus, onLog, onMe
 
 // ─── Exercise card ────────────────────────────────────────────────────────────
 
-function ExCard({ se, exState, suggestion, activeCell, dispatch, workoutId, userId }: {
-  se: any; exState: LocalExState | undefined; suggestion: any;
+function ExCard({ se, originalExId, exState, suggestion, activeCell, dispatch, workoutId, userId, onOpenSwap }: {
+  se: any; originalExId: string; exState: LocalExState | undefined; suggestion: any;
   activeCell: WState["activeCell"]; dispatch: React.Dispatch<Action>;
-  workoutId: Id<"workouts"> | null; userId: Id<"users"> | null;
+  workoutId: Id<"workouts"> | null; userId: Id<"users"> | null; onOpenSwap: () => void;
 }) {
   const { colors, typography } = useTheme();
   const logMut = useMutation(api.sets.logSet);
   const deleteMut = useMutation(api.sets.deleteSet);
   const ex = se.exercise;
-  const exId = ex._id as string;
 
   useEffect(() => {
     if (!exState && suggestion !== undefined) {
       const w = suggestion?.suggestedWeight?.toString() ?? "0";
       const r = suggestion?.suggestedReps?.toString() ?? se.repRangeMin.toString();
       const numSets = suggestion?.suggestedSets ?? se.targetSets;
-      const sets = Array.from({ length: numSets }, (_, i) => mkSet(w, r, exId, i));
-      dispatch({ type: "INIT_EX", exId, sets, setType: se.setType ?? "regular" });
+      const sets = Array.from({ length: numSets }, (_, i) => mkSet(w, r, originalExId, i));
+      dispatch({ type: "INIT_EX", exId: originalExId, sets, setType: se.setType ?? "regular" });
     }
   }, [suggestion, exState]);
 
@@ -222,7 +233,7 @@ function ExCard({ se, exState, suggestion, activeCell, dispatch, workoutId, user
     const set = exState.sets[setIdx];
     if (!set || !set.isLogged) return;
     if (set.convexSetId) await deleteMut({ setId: set.convexSetId });
-    dispatch({ type: "UNLOG", exId, setIdx });
+    dispatch({ type: "UNLOG", exId: originalExId, setIdx });
   }, [exState]);
 
   const handleLog = useCallback(async (setIdx: number) => {
@@ -233,14 +244,15 @@ function ExCard({ se, exState, suggestion, activeCell, dispatch, workoutId, user
     const r = parseInt(set.reps) || 0;
     if (!w || !r) { Alert.alert("Enter weight and reps first"); return; }
     impactMedium();
-    const sid = await logMut({ workoutId, exerciseId: ex._id, userId, weight: w, reps: r, rir: set.rir, targetRir: suggestion?.targetRir ?? 2, setNumber: setIdx + 1, isWarmup: false });
-    dispatch({ type: "LOG", exId, setIdx, sid, ind: suggestion?.overloadIndicator ?? "maintain" });
-  }, [workoutId, userId, exState, suggestion]);
+    // Use se.exercise._id (may be overridden) for actual DB logging
+    const sid = await logMut({ workoutId, exerciseId: se.exercise._id, userId, weight: w, reps: r, rir: set.rir, targetRir: suggestion?.targetRir ?? 2, setNumber: setIdx + 1, isWarmup: false });
+    dispatch({ type: "LOG", exId: originalExId, setIdx, sid, ind: suggestion?.overloadIndicator ?? "maintain" });
+  }, [workoutId, userId, exState, suggestion, se]);
 
   const showMenu = (setIdx: number) => {
     Alert.alert("Set options", undefined, [
-      { text: "Add set below", onPress: () => dispatch({ type: "ADD_SET", exId }) },
-      { text: "Delete", style: "destructive", onPress: () => dispatch({ type: "DEL_SET", exId, setIdx }) },
+      { text: "Add set below", onPress: () => dispatch({ type: "ADD_SET", exId: originalExId }) },
+      { text: "Delete", style: "destructive", onPress: () => dispatch({ type: "DEL_SET", exId: originalExId, setIdx }) },
       { text: "Cancel", style: "cancel" },
     ]);
   };
@@ -256,7 +268,9 @@ function ExCard({ se, exState, suggestion, activeCell, dispatch, workoutId, user
         <MuscleBadge muscle={ex.muscleGroup} />
         <View style={{ flexDirection: "row", gap: 12 }}>
           <Text style={{ color: colors.labelTertiary, fontSize: 18 }}>▷</Text>
-          <Text style={{ color: colors.labelTertiary, fontSize: 18 }}>⋯</Text>
+          <TouchableOpacity onPress={onOpenSwap}>
+            <Text style={{ color: colors.labelTertiary, fontSize: 18 }}>⋯</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -320,13 +334,13 @@ function ExCard({ se, exState, suggestion, activeCell, dispatch, workoutId, user
 
       {/* Sets */}
       {sets.map((set, idx) => (
-        <SetRow key={set.localId} set={set} setIdx={idx} totalSets={sets.length} exId={exId} activeCell={activeCell}
-          onFocus={(f) => dispatch({ type: "FOCUS", exId, setIdx: idx, field: f, val: f === "weight" ? set.weight : set.reps })}
+        <SetRow key={set.localId} set={set} setIdx={idx} totalSets={sets.length} exId={originalExId} activeCell={activeCell}
+          onFocus={(f) => dispatch({ type: "FOCUS", exId: originalExId, setIdx: idx, field: f, val: f === "weight" ? set.weight : set.reps })}
           onLog={() => set.isLogged ? handleUnlog(idx) : handleLog(idx)} onMenu={() => showMenu(idx)} colors={colors} />
       ))}
 
       {/* Add set */}
-      <TouchableOpacity onPress={() => { selectionAsync(); dispatch({ type: "ADD_SET", exId }); }} style={{ alignItems: "center", paddingVertical: 10 }}>
+      <TouchableOpacity onPress={() => { selectionAsync(); dispatch({ type: "ADD_SET", exId: originalExId }); }} style={{ alignItems: "center", paddingVertical: 10 }}>
         <Text style={[typography.subheadline, { color: colors.accent }]}>+ Add set</Text>
       </TouchableOpacity>
 
@@ -334,7 +348,7 @@ function ExCard({ se, exState, suggestion, activeCell, dispatch, workoutId, user
       <View style={[styles.setTypeRow, { borderTopColor: colors.separator }]}>
         <Text style={{ color: colors.labelTertiary, fontSize: 11, fontWeight: "600", marginRight: 8 }}>SET TYPE</Text>
         {(["regular", "myorep", "myorep_match"] as SetType[]).map((t) => (
-          <Pressable key={t} onPress={() => { selectionAsync(); dispatch({ type: "SET_TYPE", exId, st: t }); }}
+          <Pressable key={t} onPress={() => { selectionAsync(); dispatch({ type: "SET_TYPE", exId: originalExId, st: t }); }}
             style={[styles.typePill, { backgroundColor: setType === t ? colors.accent : colors.fillSecondary }]}>
             <Text style={{ color: setType === t ? "#FFF" : colors.labelSecondary, fontSize: 11, fontWeight: "600" }}>
               {t === "regular" ? "Regular" : t === "myorep" ? "Myorep" : "Myorep match"}
@@ -348,16 +362,16 @@ function ExCard({ se, exState, suggestion, activeCell, dispatch, workoutId, user
 
 // ─── Card wrapper fetching per-exercise suggestion ────────────────────────────
 
-function ExCardWithSuggestion({ se, exState, activeCell, dispatch, workoutId, userId, weekNumber, mesoId }: {
-  se: any; exState: LocalExState | undefined; activeCell: WState["activeCell"];
+function ExCardWithSuggestion({ se, originalExId, exState, activeCell, dispatch, workoutId, userId, weekNumber, mesoId, onOpenSwap }: {
+  se: any; originalExId: string; exState: LocalExState | undefined; activeCell: WState["activeCell"];
   dispatch: React.Dispatch<Action>; workoutId: Id<"workouts"> | null; userId: Id<"users"> | null;
-  weekNumber: number; mesoId: Id<"mesocycles"> | null;
+  weekNumber: number; mesoId: Id<"mesocycles"> | null; onOpenSwap: () => void;
 }) {
   const suggestion = useQuery(
     api.overload.getSuggestionV2,
     userId && mesoId ? { userId, exerciseId: se.exerciseId, mesocycleId: mesoId, weekNumber, repRangeMin: se.repRangeMin, repRangeMax: se.repRangeMax, targetSets: se.targetSets } : "skip"
   );
-  return <ExCard se={se} exState={exState} suggestion={suggestion} activeCell={activeCell} dispatch={dispatch} workoutId={workoutId} userId={userId} />;
+  return <ExCard se={se} originalExId={originalExId} exState={exState} suggestion={suggestion} activeCell={activeCell} dispatch={dispatch} workoutId={workoutId} userId={userId} onOpenSwap={onOpenSwap} />;
 }
 
 // ─── NumPad ───────────────────────────────────────────────────────────────────
@@ -392,7 +406,14 @@ export default function WorkoutScreen() {
     workoutId: existingWorkoutId,
     exStates: {}, activeCell: null, numpadVal: "0",
     restVisible: false, feedbackVisible: false, startTime: Date.now(),
+    swapOverrides: {},
   });
+
+  const [swapTarget, setSwapTarget] = useState<{
+    seId: Id<"sessionExercises"> | null;
+    exercise: { _id: Id<"exercises">; name: string; muscleGroup: string; equipment: string; sfr: string };
+    oldExId: string;
+  } | null>(null);
 
   const meso = useQuery(api.mesocycles.getActiveWithDetails, userId ? { userId } : "skip");
 
@@ -520,11 +541,34 @@ export default function WorkoutScreen() {
       {/* Scroll */}
       <ScrollView contentContainerStyle={{ paddingTop: 12, paddingBottom: 140 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets={false} automaticallyAdjustsScrollIndicatorInsets={false}>
         {!sessionExs && <View style={{ alignItems: "center", paddingTop: 80 }}><Text style={{ color: colors.labelSecondary }}>Loading…</Text></View>}
-        {(sessionExs as any[] | undefined)?.map((se: any) => (
-          <ExCardWithSuggestion key={se.exerciseId} se={se} exState={state.exStates[se.exercise._id]}
-            activeCell={state.activeCell} dispatch={dispatch} workoutId={wid} userId={userId ?? null}
-            weekNumber={weekNumber} mesoId={meso?._id ?? null} />
-        ))}
+        {(sessionExs as any[] | undefined)?.map((se: any) => {
+          const oldExId = se.exercise._id as string;
+          const override = state.swapOverrides[oldExId];
+          const effectiveSe = override
+            ? { ...se, exerciseId: override.exerciseId, exercise: { ...se.exercise, ...override.exercise } }
+            : se;
+          return (
+            <ExCardWithSuggestion
+              key={se.exerciseId}
+              se={effectiveSe}
+              originalExId={oldExId}
+              exState={state.exStates[oldExId]}
+              activeCell={state.activeCell}
+              dispatch={dispatch}
+              workoutId={wid}
+              userId={userId ?? null}
+              weekNumber={weekNumber}
+              mesoId={meso?._id ?? null}
+              onOpenSwap={() =>
+                setSwapTarget({
+                  seId: se.isLegacy ? null : se._id,
+                  exercise: se.exercise,
+                  oldExId,
+                })
+              }
+            />
+          );
+        })}
         {allLogged && (
           <TouchableOpacity style={[styles.finishBar, { backgroundColor: colors.accentGreen }]} onPress={handleFinish}>
             <Text style={{ color: "#FFF", fontSize: 17, fontWeight: "700" }}>Finish Workout ✓</Text>
@@ -562,6 +606,19 @@ export default function WorkoutScreen() {
         <FeedbackModal visible muscleGroups={trainedMuscles} workoutId={wid} userId={userId}
           onSave={() => { dispatch({ type: "HIDE_FB" }); router.replace("/(tabs)"); }}
           onCancel={() => { dispatch({ type: "HIDE_FB" }); router.replace("/(tabs)"); }} />
+      )}
+
+      {/* Swap exercise sheet */}
+      {swapTarget && (
+        <SwapSheet
+          visible={!!swapTarget}
+          currentExercise={swapTarget.exercise}
+          sessionExerciseId={swapTarget.seId}
+          onSwapLocal={(newEx) => {
+            dispatch({ type: "SWAP_LOCAL", oldExId: swapTarget.oldExId, exerciseId: newEx._id, exercise: newEx });
+          }}
+          onClose={() => setSwapTarget(null)}
+        />
       )}
     </View>
   );

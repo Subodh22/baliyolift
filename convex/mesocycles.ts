@@ -250,7 +250,8 @@ export const getSessionExercises = query({
           repRangeMax: 12,
           targetSets: 3,
           setType: "regular" as const,
-          exercise: { _id: ex!._id, name: ex!.name, muscleGroup: ex!.muscleGroup, equipment: ex!.equipment },
+          isLegacy: true,
+          exercise: { _id: ex!._id, name: ex!.name, muscleGroup: ex!.muscleGroup, equipment: ex!.equipment, sfr: ex!.sfr },
         }));
     }
 
@@ -261,8 +262,9 @@ export const getSessionExercises = query({
         const exercise = await ctx.db.get(se.exerciseId);
         return {
           ...se,
+          isLegacy: false,
           exercise: exercise
-            ? { _id: exercise._id, name: exercise.name, muscleGroup: exercise.muscleGroup, equipment: exercise.equipment }
+            ? { _id: exercise._id, name: exercise.name, muscleGroup: exercise.muscleGroup, equipment: exercise.equipment, sfr: exercise.sfr }
             : null,
         };
       })
@@ -333,5 +335,26 @@ export const getActiveWithDetails = query({
     const weekNumber = Math.min(Math.max(calendarWeek, maxLoggedWeek), meso.weeks);
 
     return { ...meso, sessions: sessionsWithDetails, weekNumber };
+  },
+});
+
+export const swapExercise = mutation({
+  args: {
+    sessionExerciseId: v.id("sessionExercises"),
+    newExerciseId: v.id("exercises"),
+  },
+  handler: async (ctx, { sessionExerciseId, newExerciseId }) => {
+    const se = await ctx.db.get(sessionExerciseId);
+    if (!se) return;
+    const oldExerciseId = se.exerciseId;
+    await ctx.db.patch(sessionExerciseId, { exerciseId: newExerciseId });
+    // Also update sessions.exerciseIds
+    const session = await ctx.db.get(se.sessionId);
+    if (session) {
+      const updated = session.exerciseIds.map((id) =>
+        (id as string) === (oldExerciseId as string) ? newExerciseId : id
+      );
+      await ctx.db.patch(se.sessionId, { exerciseIds: updated });
+    }
   },
 });
