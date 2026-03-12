@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, StyleSheet, Switch, Alert, ActivityIndicator, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, StyleSheet, Switch, Alert, ActivityIndicator, TouchableOpacity, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useState } from "react";
@@ -9,7 +9,7 @@ import { api } from "@/convex/_generated/api";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useRouter } from "expo-router";
 import { Platform } from "react-native";
-const { useAuth } = Platform.OS === "web" ? require("@clerk/clerk-react") : require("@clerk/clerk-expo");
+const { useAuth, useUser } = Platform.OS === "web" ? require("@clerk/clerk-react") : require("@clerk/clerk-expo");
 
 export default function ProfileScreen() {
   const { colors, typography } = useTheme();
@@ -17,9 +17,13 @@ export default function ProfileScreen() {
   const [notifications, setNotifications] = useState(true);
   const [resetting, setResetting] = useState(false);
   const { userId } = useCurrentUser();
+  const { user } = useUser();
   const deleteAllData = useMutation(api.users.deleteAllUserData);
   const router = useRouter();
   const authHook = useAuth();
+
+  const displayName = user?.fullName ?? user?.firstName ?? "Athlete";
+  const imageUrl = user?.imageUrl ?? null;
 
   const handleResetData = () => {
     if (!userId) {
@@ -71,13 +75,19 @@ export default function ProfileScreen() {
           entering={FadeInDown.springify()}
           style={[styles.userCard, { backgroundColor: colors.backgroundSecondary }]}
         >
-          <View style={[styles.avatar, { backgroundColor: colors.accent }]}>
-            <Text style={[typography.title2, { color: "#FFF" }]}>A</Text>
-          </View>
-          <View>
-            <Text style={[typography.title3, { color: colors.label }]}>Athlete</Text>
-            <Text style={[typography.subheadline, { color: colors.labelSecondary }]}>
-              Intermediate · 2 years
+          {imageUrl ? (
+            <Image source={{ uri: imageUrl }} style={styles.avatar} />
+          ) : (
+            <View style={[styles.avatar, { backgroundColor: colors.accent, alignItems: "center", justifyContent: "center" }]}>
+              <Text style={[typography.title2, { color: "#FFF" }]}>
+                {displayName.charAt(0).toUpperCase()}
+              </Text>
+            </View>
+          )}
+          <View style={{ flex: 1 }}>
+            <Text style={[typography.title3, { color: colors.label }]}>{displayName}</Text>
+            <Text style={[typography.subheadline, { color: colors.labelSecondary, marginTop: 2 }]}>
+              {user?.primaryEmailAddress?.emailAddress ?? ""}
             </Text>
           </View>
         </Animated.View>
@@ -178,11 +188,10 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   avatar: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    alignItems: "center",
-    justifyContent: "center",
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    overflow: "hidden",
   },
   resetBtn: {
     borderRadius: 12,
