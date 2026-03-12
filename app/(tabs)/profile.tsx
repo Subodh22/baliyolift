@@ -16,6 +16,7 @@ export default function ProfileScreen() {
   const [unit, setUnit] = useState<"kg" | "lbs">("kg");
   const [notifications, setNotifications] = useState(true);
   const [resetting, setResetting] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
   const { userId } = useCurrentUser();
   const { user } = useUser();
   const deleteAllData = useMutation(api.users.deleteAllUserData);
@@ -26,33 +27,20 @@ export default function ProfileScreen() {
   const imageUrl = user?.imageUrl ?? null;
 
   const handleResetData = () => {
-    console.log("Reset button pressed, userId:", userId);
-    if (!userId) {
-      Alert.alert("Error", `User not loaded (userId=${String(userId)}). Wait a moment and try again.`);
-      return;
+    setConfirmReset(true);
+  };
+
+  const handleConfirmReset = async () => {
+    if (!userId) return;
+    setResetting(true);
+    setConfirmReset(false);
+    try {
+      await deleteAllData({ userId });
+    } catch (e: any) {
+      console.log("Reset error:", e.message);
+    } finally {
+      setResetting(false);
     }
-    Alert.alert(
-      "Reset All Data",
-      "This will permanently delete all your workouts, mesocycles, training history, and progress photos. Cannot be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Yes, Delete Everything",
-          style: "destructive",
-          onPress: async () => {
-            setResetting(true);
-            try {
-              await deleteAllData({ userId });
-              Alert.alert("Done", "All your data has been deleted.");
-            } catch (e: any) {
-              Alert.alert("Error", e.message ?? "Failed to delete data. Try again.");
-            } finally {
-              setResetting(false);
-            }
-          },
-        },
-      ]
-    );
   };
 
   const handleSignOut = async () => {
@@ -155,21 +143,46 @@ export default function ProfileScreen() {
           <RowGroup>
             <Row label="Sign Out" onPress={handleSignOut} showChevron={false} />
           </RowGroup>
-          <Pressable
-            onPress={handleResetData}
-            style={({ pressed }) => [
-              styles.resetBtn,
-              { backgroundColor: pressed ? "#FF3B3044" : "#FF3B3022" }
-            ]}
-          >
-            {resetting ? (
-              <ActivityIndicator color="#FF3B30" />
-            ) : (
+          {confirmReset ? (
+            <View style={[styles.confirmBox, { backgroundColor: "#FF3B3015", borderColor: "#FF3B30" }]}>
+              <Text style={{ color: "#FF3B30", fontWeight: "700", fontSize: 15, marginBottom: 6 }}>
+                Delete all data?
+              </Text>
+              <Text style={[typography.caption1, { color: colors.labelSecondary, marginBottom: 16 }]}>
+                This permanently deletes all workouts, mesocycles, and progress photos. Cannot be undone.
+              </Text>
+              <View style={{ flexDirection: "row", gap: 10 }}>
+                <Pressable
+                  onPress={() => setConfirmReset(false)}
+                  style={[styles.confirmBtn, { backgroundColor: colors.fillSecondary, flex: 1 }]}
+                >
+                  <Text style={{ color: colors.label, fontWeight: "600" }}>Cancel</Text>
+                </Pressable>
+                <Pressable
+                  onPress={handleConfirmReset}
+                  style={[styles.confirmBtn, { backgroundColor: "#FF3B30", flex: 1 }]}
+                >
+                  {resetting ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={{ color: "#fff", fontWeight: "700" }}>Delete Forever</Text>
+                  )}
+                </Pressable>
+              </View>
+            </View>
+          ) : (
+            <Pressable
+              onPress={handleResetData}
+              style={({ pressed }) => [
+                styles.resetBtn,
+                { backgroundColor: pressed ? "#FF3B3044" : "#FF3B3022" }
+              ]}
+            >
               <Text style={{ color: "#FF3B30", fontWeight: "600", fontSize: 16 }}>
                 Reset All Data
               </Text>
-            )}
-          </Pressable>
+            </Pressable>
+          )}
         </View>
 
         {/* Version */}
@@ -200,6 +213,17 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: "center",
     marginBottom: 8,
+  },
+  confirmBox: {
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 16,
+    marginBottom: 8,
+  },
+  confirmBtn: {
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: "center",
   },
   switchRow: {
     flexDirection: "row",
