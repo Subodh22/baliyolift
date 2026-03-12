@@ -156,8 +156,8 @@ function MuscleBadge({ muscle }: { muscle: string }) {
 
 // ─── Set row ──────────────────────────────────────────────────────────────────
 
-function SetRow({ set, setIdx, exId, activeCell, onFocus, onLog, onMenu, colors }: {
-  set: LocalSet; setIdx: number; exId: string;
+function SetRow({ set, setIdx, totalSets, exId, activeCell, onFocus, onLog, onMenu, colors }: {
+  set: LocalSet; setIdx: number; totalSets: number; exId: string;
   activeCell: WState["activeCell"]; onFocus: (f: "weight" | "reps") => void;
   onLog: () => void; onMenu: () => void; colors: any;
 }) {
@@ -165,14 +165,17 @@ function SetRow({ set, setIdx, exId, activeCell, onFocus, onLog, onMenu, colors 
   const rActive = activeCell?.exId === exId && activeCell.setIdx === setIdx && activeCell.field === "reps";
   return (
     <View style={[styles.setRow, { backgroundColor: setIdx % 2 === 0 ? colors.setRowBg : colors.setRowAlt }]}>
-      <TouchableOpacity onPress={onMenu} hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}>
-        <Text style={{ width: 22, textAlign: "center", color: colors.labelQuaternary, fontSize: 15, fontWeight: "700" }}>⋮</Text>
+      <TouchableOpacity onPress={onMenu} hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }} style={{ width: 32, alignItems: "center" }}>
+        {set.isLogged
+          ? <Text style={{ fontSize: 12, fontWeight: "800", color: colors.loggedCheckBg }}>✓</Text>
+          : <Text style={{ fontSize: 11, fontWeight: "700", color: colors.labelTertiary }}>{setIdx + 1}/{totalSets}</Text>
+        }
       </TouchableOpacity>
       <Pressable style={[styles.cell, { backgroundColor: wActive ? colors.repRangeBg : "transparent" }]} onPress={() => onFocus("weight")}>
-        <Text style={[styles.cellNum, { color: colors.label }]}>{set.weight}</Text>
+        <Text style={[styles.cellNum, { color: set.isLogged ? colors.labelSecondary : colors.label }]}>{set.weight}</Text>
       </Pressable>
       <Pressable style={[styles.cell, { backgroundColor: rActive ? colors.repRangeBg : "transparent" }]} onPress={() => onFocus("reps")}>
-        <Text style={[styles.cellNum, { color: colors.label }]}>{set.reps}</Text>
+        <Text style={[styles.cellNum, { color: set.isLogged ? colors.labelSecondary : colors.label }]}>{set.reps}</Text>
       </Pressable>
       <Arrow ind={set.isLogged ? set.overloadIndicator : null} />
       <Pressable style={[styles.checkbox, { backgroundColor: set.isLogged ? colors.loggedCheckBg : colors.separator }]} onPress={onLog}>
@@ -243,36 +246,63 @@ function ExCard({ se, exState, suggestion, activeCell, dispatch, workoutId, user
       <Text style={[typography.title3, { color: colors.label, fontWeight: "700", marginBottom: 2 }]}>{ex.name}</Text>
       <Text style={{ color: colors.labelTertiary, fontSize: 11, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 12 }}>{ex.equipment}</Text>
 
-      {/* Rep range row */}
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+      {/* Rep range + last session */}
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
         <View style={[styles.repPill, { backgroundColor: colors.repRangeBg }]}>
           <Text style={{ color: colors.repRangeFg, fontSize: 13, marginRight: 4 }}>✎</Text>
           <Text style={{ color: colors.repRangeFg, fontSize: 15, fontWeight: "600" }}>{se.repRangeMin}–{se.repRangeMax}</Text>
         </View>
-        {suggestion?.deloadFlag && (
-          <View style={{ backgroundColor: "#E8A02025", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }}>
-            <Text style={{ color: "#E8A020", fontSize: 11, fontWeight: "700" }}>DELOAD SOON</Text>
-          </View>
-        )}
         {suggestion?.lastSession && (
           <Text style={{ color: colors.labelTertiary, fontSize: 11, marginLeft: "auto" as any }}>
-            Last: {suggestion.lastSession.weight}kg × {suggestion.lastSession.reps}
+            Last: {suggestion.lastSession.weight}kg × {suggestion.lastSession.reps} @ RIR {suggestion.lastSession.rir}
           </Text>
         )}
       </View>
 
+      {/* Today's target banner */}
+      {suggestion && (() => {
+        const cfg: Record<string, { label: string; color: string; bg: string }> = {
+          increase:  { label: "↗ Add weight",  color: "#CC2020", bg: "#CC202018" },
+          add_rep:   { label: "+1 Rep",         color: "#26A870", bg: "#26A87018" },
+          maintain:  { label: "→ Match last",   color: "#888",    bg: "#88888815" },
+          decrease:  { label: "↘ Reduce weight",color: "#999",    bg: "#99999918" },
+        };
+        const c = cfg[suggestion.overloadIndicator] ?? cfg.maintain;
+        const hasWeight = suggestion.suggestedWeight != null;
+        return (
+          <View style={[styles.targetBanner, { backgroundColor: c.bg, borderColor: c.color + "40" }]}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: c.color, fontWeight: "800", fontSize: 12, letterSpacing: 0.5 }}>
+                {c.label.toUpperCase()}
+              </Text>
+              <Text style={{ color: colors.label, fontWeight: "700", fontSize: 15, marginTop: 2 }}>
+                {hasWeight ? `${suggestion.suggestedWeight}kg × ${suggestion.suggestedReps} reps` : `${suggestion.suggestedReps} reps`}
+                <Text style={{ color: colors.labelSecondary, fontWeight: "500", fontSize: 13 }}>
+                  {`  ·  ${sets.length} sets  ·  RIR ${suggestion.targetRir}`}
+                </Text>
+              </Text>
+            </View>
+            {suggestion.deloadFlag && (
+              <View style={{ backgroundColor: "#E8A02025", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }}>
+                <Text style={{ color: "#E8A020", fontSize: 10, fontWeight: "700" }}>DELOAD{"\n"}SOON</Text>
+              </View>
+            )}
+          </View>
+        );
+      })()}
+
       {/* Table header */}
       <View style={[styles.tblHead, { borderBottomColor: colors.separator }]}>
-        <View style={{ width: 22 }} />
+        <View style={{ width: 32 }} />
         <Text style={[styles.tblHdr, { color: colors.labelTertiary }]}>WEIGHT</Text>
-        <Text style={[styles.tblHdr, { color: colors.labelTertiary }]}>REPS  ⓘ</Text>
+        <Text style={[styles.tblHdr, { color: colors.labelTertiary }]}>REPS</Text>
         <View style={{ width: 26 }} />
         <Text style={{ width: 34, textAlign: "center", fontSize: 11, fontWeight: "700", letterSpacing: 0.5, color: colors.labelTertiary }}>LOG</Text>
       </View>
 
       {/* Sets */}
       {sets.map((set, idx) => (
-        <SetRow key={set.localId} set={set} setIdx={idx} exId={exId} activeCell={activeCell}
+        <SetRow key={set.localId} set={set} setIdx={idx} totalSets={sets.length} exId={exId} activeCell={activeCell}
           onFocus={(f) => dispatch({ type: "FOCUS", exId, setIdx: idx, field: f, val: f === "weight" ? set.weight : set.reps })}
           onLog={() => handleLog(idx)} onMenu={() => showMenu(idx)} colors={colors} />
       ))}
@@ -527,6 +557,7 @@ const styles = StyleSheet.create({
   badgeText: { color: "#FFF", fontSize: 11, fontWeight: "700", letterSpacing: 0.6 },
   badgeDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "rgba(255,255,255,0.6)" },
   repPill: { flexDirection: "row", alignItems: "center", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6 },
+  targetBanner: { flexDirection: "row", alignItems: "center", borderRadius: 10, borderWidth: 1, padding: 12, marginBottom: 12 },
   tblHead: { flexDirection: "row", alignItems: "center", paddingBottom: 6, borderBottomWidth: 0.5, marginBottom: 2 },
   tblHdr: { flex: 1, textAlign: "center", fontSize: 11, fontWeight: "700", letterSpacing: 0.6 },
   setRow: { flexDirection: "row", alignItems: "center", paddingVertical: 3, paddingHorizontal: 2, minHeight: 46, borderRadius: 6 },
