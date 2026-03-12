@@ -137,6 +137,16 @@ export default defineSchema({
     .index("by_exercise_user", ["exerciseId", "userId"])
     .index("by_user_timestamp", ["userId", "timestamp"]),
 
+  // --- Progress Photos ---
+  progressPhotos: defineTable({
+    userId: v.id("users"),
+    imageUrl: v.string(),
+    date: v.string(), // "YYYY-MM-DD" — one per day enforced at query level
+    takenAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_date", ["userId", "date"]),
+
   // --- Post-workout Feedback (drives progressive overload adjustments) ---
   sessionFeedback: defineTable({
     workoutId: v.id("workouts"),

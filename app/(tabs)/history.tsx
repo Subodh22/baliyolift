@@ -7,6 +7,9 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   useWindowDimensions,
+  Modal,
+  Image,
+  Pressable,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery } from "convex/react";
@@ -25,6 +28,11 @@ function dayKey(ts: number): string {
   return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 }
 
+function toPhotoDate(year: number, month: number, day: number): string {
+  // month is 0-indexed here, photo date is YYYY-MM-DD (1-indexed, padded)
+  return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
 function formatDate(ts: number): string {
   const d = new Date(ts);
   const today = new Date();
@@ -35,18 +43,38 @@ function formatDate(ts: number): string {
   return d.toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" });
 }
 
+function formatPhotoDate(dateStr: string): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const date = new Date(y, m - 1, d);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  if (date.toDateString() === today.toDateString()) return "Today";
+  if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+  return date.toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+}
+
 // ─── Calendar Heatmap ─────────────────────────────────────────────────────────
 
-function CalendarHeatmap({ workoutDates, colors }: { workoutDates: Set<string>; colors: any }) {
+function CalendarHeatmap({
+  workoutDates,
+  photoDates,
+  colors,
+  onDayPress,
+}: {
+  workoutDates: Set<string>;
+  photoDates: Set<string>;
+  colors: any;
+  onDayPress: (photoDate: string) => void;
+}) {
   const { width } = useWindowDimensions();
   const H_GAP = 2;
   const ROW_GAP = 5;
   const LABEL_W = 26;
   const LABEL_GAP = 8;
-  // 16px screen padding each side + 14px card padding each side = 60px total
   const contentW = width - 60;
   const CELL = Math.max(6, Math.floor((contentW - LABEL_W - LABEL_GAP - 30 * H_GAP) / 31));
-  const STRIDE = CELL + H_GAP;
 
   const months = useMemo(() => {
     const today = new Date();
@@ -57,27 +85,29 @@ function CalendarHeatmap({ workoutDates, colors }: { workoutDates: Set<string>; 
       const year = base.getFullYear();
       const month = base.getMonth();
       const daysInMonth = new Date(year, month + 1, 0).getDate();
-      const days: Array<{ empty: boolean; isFuture?: boolean; hasWorkout?: boolean }> = [];
+      const days: Array<{ empty: boolean; isFuture?: boolean; hasWorkout?: boolean; hasPhoto?: boolean; photoDate?: string }> = [];
       for (let day = 1; day <= 31; day++) {
         if (day > daysInMonth) {
           days.push({ empty: true });
         } else {
           const cellDate = new Date(year, month, day);
+          const pd = toPhotoDate(year, month, day);
           days.push({
             empty: false,
             isFuture: cellDate > today,
             hasWorkout: workoutDates.has(`${year}-${month}-${day}`),
+            hasPhoto: photoDates.has(pd),
+            photoDate: pd,
           });
         }
       }
       result.push({ label: MONTH_SHORT[month], days });
     }
     return result;
-  }, [workoutDates]);
+  }, [workoutDates, photoDates]);
 
   return (
     <View>
-      {/* Day number hints — inline slots to match cell positions exactly */}
       <View style={{ flexDirection: "row", marginLeft: LABEL_W + LABEL_GAP, marginBottom: 4 }}>
         {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
           <View key={d} style={{ width: CELL, marginRight: d < 31 ? H_GAP : 0, alignItems: "center" }}>
@@ -88,7 +118,6 @@ function CalendarHeatmap({ workoutDates, colors }: { workoutDates: Set<string>; 
         ))}
       </View>
 
-      {/* Month rows */}
       {months.map((month, mi) => (
         <View
           key={mi}
@@ -97,32 +126,40 @@ function CalendarHeatmap({ workoutDates, colors }: { workoutDates: Set<string>; 
           <Text style={{ width: LABEL_W, fontSize: 10, color: colors.labelTertiary, fontWeight: "500", marginRight: LABEL_GAP }}>
             {month.label}
           </Text>
-          {month.days.map((day, di) => (
-            <View
-              key={di}
-              style={{
-                width: CELL,
-                height: CELL,
-                borderRadius: 2,
-                marginRight: di < 30 ? H_GAP : 0,
-                backgroundColor:
-                  day.empty
+          {month.days.map((day, di) => {
+            const canPress = !day.empty && !day.isFuture && (day.hasWorkout || day.hasPhoto);
+            return (
+              <TouchableOpacity
+                key={di}
+                disabled={!canPress}
+                onPress={() => canPress && day.photoDate && onDayPress(day.photoDate)}
+                activeOpacity={0.7}
+                style={{
+                  width: CELL,
+                  height: CELL,
+                  borderRadius: 2,
+                  marginRight: di < 30 ? H_GAP : 0,
+                  backgroundColor: day.empty
                     ? "transparent"
                     : day.hasWorkout
                     ? colors.accent
                     : colors.fillSecondary,
-              }}
-            />
-          ))}
+                  // dot indicator for photo
+                  ...(day.hasPhoto && !day.empty ? { borderWidth: 1.5, borderColor: "#fff" } : {}),
+                }}
+              />
+            );
+          })}
         </View>
       ))}
 
-      {/* Legend */}
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end", gap: 5, marginTop: 12 }}>
         <View style={{ width: CELL, height: CELL, borderRadius: 2, backgroundColor: colors.fillSecondary }} />
         <Text style={{ fontSize: 10, color: colors.labelTertiary }}>Rest</Text>
         <View style={{ width: CELL, height: CELL, borderRadius: 2, backgroundColor: colors.accent, marginLeft: 8 }} />
         <Text style={{ fontSize: 10, color: colors.labelTertiary }}>Trained</Text>
+        <View style={{ width: CELL, height: CELL, borderRadius: 2, backgroundColor: colors.accent, borderWidth: 1.5, borderColor: "#fff", marginLeft: 8 }} />
+        <Text style={{ fontSize: 10, color: colors.labelTertiary }}>+ Photo</Text>
       </View>
     </View>
   );
@@ -132,7 +169,19 @@ function CalendarHeatmap({ workoutDates, colors }: { workoutDates: Set<string>; 
 
 const DAY_HEADERS = ["M", "T", "W", "T", "F", "S", "S"];
 
-function MonthCalendar({ viewDate, workoutDates, colors }: { viewDate: Date; workoutDates: Set<string>; colors: any }) {
+function MonthCalendar({
+  viewDate,
+  workoutDates,
+  photoDates,
+  colors,
+  onDayPress,
+}: {
+  viewDate: Date;
+  workoutDates: Set<string>;
+  photoDates: Set<string>;
+  colors: any;
+  onDayPress: (photoDate: string) => void;
+}) {
   const { width } = useWindowDimensions();
   const GAP = 4;
   const CELL = Math.floor((width - 60 - 6 * GAP) / 7);
@@ -143,29 +192,38 @@ function MonthCalendar({ viewDate, workoutDates, colors }: { viewDate: Date; wor
     const year = viewDate.getFullYear();
     const month = viewDate.getMonth();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const startOffset = (new Date(year, month, 1).getDay() + 6) % 7; // Mon=0
+    const startOffset = (new Date(year, month, 1).getDay() + 6) % 7;
 
-    const result: Array<{ day: number | null; hasWorkout: boolean; isFuture: boolean; isToday: boolean }> = [];
-    for (let i = 0; i < startOffset; i++) result.push({ day: null, hasWorkout: false, isFuture: false, isToday: false });
+    const result: Array<{
+      day: number | null;
+      hasWorkout: boolean;
+      hasPhoto: boolean;
+      isFuture: boolean;
+      isToday: boolean;
+      photoDate: string;
+    }> = [];
+    for (let i = 0; i < startOffset; i++) result.push({ day: null, hasWorkout: false, hasPhoto: false, isFuture: false, isToday: false, photoDate: "" });
     for (let d = 1; d <= daysInMonth; d++) {
       const cellDate = new Date(year, month, d);
+      const pd = toPhotoDate(year, month, d);
       result.push({
         day: d,
         hasWorkout: workoutDates.has(`${year}-${month}-${d}`),
+        hasPhoto: photoDates.has(pd),
         isFuture: cellDate > today,
         isToday: cellDate.toDateString() === today.toDateString(),
+        photoDate: pd,
       });
     }
-    while (result.length % 7 !== 0) result.push({ day: null, hasWorkout: false, isFuture: false, isToday: false });
+    while (result.length % 7 !== 0) result.push({ day: null, hasWorkout: false, hasPhoto: false, isFuture: false, isToday: false, photoDate: "" });
     return result;
-  }, [viewDate, workoutDates, today]);
+  }, [viewDate, workoutDates, photoDates, today]);
 
   const rows: typeof cells[] = [];
   for (let i = 0; i < cells.length; i += 7) rows.push(cells.slice(i, i + 7));
 
   return (
     <View>
-      {/* Day headers */}
       <View style={{ flexDirection: "row", gap: GAP, marginBottom: GAP + 2 }}>
         {DAY_HEADERS.map((d, i) => (
           <View key={i} style={{ width: CELL, alignItems: "center" }}>
@@ -174,47 +232,160 @@ function MonthCalendar({ viewDate, workoutDates, colors }: { viewDate: Date; wor
         ))}
       </View>
 
-      {/* Weeks */}
       {rows.map((row, ri) => (
         <View key={ri} style={{ flexDirection: "row", gap: GAP, marginBottom: ri < rows.length - 1 ? GAP : 0 }}>
-          {row.map((cell, ci) => (
-            <View
-              key={ci}
-              style={{
-                width: CELL,
-                height: CELL,
-                borderRadius: 8,
-                backgroundColor: cell.day === null ? "transparent" : cell.hasWorkout ? colors.accent : colors.fillSecondary,
-                alignItems: "center",
-                justifyContent: "center",
-                borderWidth: cell.isToday ? 1.5 : 0,
-                borderColor: colors.accent,
-              }}
-            >
-              {cell.day !== null && (
-                <Text style={{
-                  fontSize: 12,
-                  fontWeight: cell.isToday ? "700" : "500",
-                  color: cell.hasWorkout ? "#fff" : cell.isFuture ? colors.labelQuaternary : colors.labelSecondary,
-                }}>
-                  {cell.day}
-                </Text>
-              )}
-            </View>
-          ))}
+          {row.map((cell, ci) => {
+            const canPress = cell.day !== null && !cell.isFuture && (cell.hasWorkout || cell.hasPhoto);
+            return (
+              <TouchableOpacity
+                key={ci}
+                disabled={!canPress}
+                onPress={() => canPress && onDayPress(cell.photoDate)}
+                activeOpacity={0.7}
+                style={{
+                  width: CELL,
+                  height: CELL,
+                  borderRadius: 8,
+                  backgroundColor: cell.day === null ? "transparent" : cell.hasWorkout ? colors.accent : colors.fillSecondary,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderWidth: cell.isToday ? 1.5 : cell.hasPhoto ? 1.5 : 0,
+                  borderColor: cell.isToday ? colors.accent : cell.hasPhoto ? "#fff" : "transparent",
+                }}
+              >
+                {cell.day !== null && (
+                  <Text style={{
+                    fontSize: 12,
+                    fontWeight: cell.isToday ? "700" : "500",
+                    color: cell.hasWorkout ? "#fff" : cell.isFuture ? colors.labelQuaternary : colors.labelSecondary,
+                  }}>
+                    {cell.day}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            );
+          })}
         </View>
       ))}
 
-      {/* Legend */}
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end", gap: 5, marginTop: 12 }}>
         <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: colors.fillSecondary }} />
         <Text style={{ fontSize: 10, color: colors.labelTertiary }}>Rest</Text>
         <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: colors.accent, marginLeft: 8 }} />
         <Text style={{ fontSize: 10, color: colors.labelTertiary }}>Trained</Text>
+        <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: colors.accent, borderWidth: 1.5, borderColor: "#fff", marginLeft: 8 }} />
+        <Text style={{ fontSize: 10, color: colors.labelTertiary }}>+ Photo</Text>
       </View>
     </View>
   );
 }
+
+// ─── Photo Modal ──────────────────────────────────────────────────────────────
+
+function PhotoModal({
+  visible,
+  dateStr,
+  userId,
+  onClose,
+  colors,
+  typography,
+}: {
+  visible: boolean;
+  dateStr: string;
+  userId: any;
+  onClose: () => void;
+  colors: any;
+  typography: any;
+}) {
+  const photo = useQuery(
+    api.progressPhotos.getTodayPhoto,
+    visible && userId && dateStr ? { userId, date: dateStr } : "skip"
+  );
+
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <Pressable style={photoModalStyles.backdrop} onPress={onClose}>
+        <Pressable style={[photoModalStyles.sheet, { backgroundColor: colors.backgroundSecondary }]} onPress={() => {}}>
+          <View style={[photoModalStyles.handle, { backgroundColor: colors.separator }]} />
+
+          <Text style={[typography.headline, { color: colors.label, marginBottom: 4 }]}>
+            Progress Photo
+          </Text>
+          <Text style={[typography.caption1, { color: colors.labelSecondary, marginBottom: 16 }]}>
+            {dateStr ? formatPhotoDate(dateStr) : ""}
+          </Text>
+
+          {photo === undefined ? (
+            <View style={{ height: 280, alignItems: "center", justifyContent: "center" }}>
+              <ActivityIndicator color={colors.accent} />
+            </View>
+          ) : photo === null ? (
+            <View style={[photoModalStyles.noPhoto, { borderColor: colors.separator }]}>
+              <Text style={{ fontSize: 40, marginBottom: 12 }}>📷</Text>
+              <Text style={[typography.subheadline, { color: colors.labelSecondary }]}>
+                No photo for this day
+              </Text>
+            </View>
+          ) : (
+            <Image
+              source={{ uri: photo.imageUrl }}
+              style={photoModalStyles.image}
+              resizeMode="cover"
+            />
+          )}
+
+          <TouchableOpacity
+            onPress={onClose}
+            style={[photoModalStyles.closeBtn, { backgroundColor: colors.fillSecondary }]}
+          >
+            <Text style={[typography.body, { color: colors.label, fontWeight: "600" }]}>Close</Text>
+          </TouchableOpacity>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
+
+const photoModalStyles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "flex-end",
+  },
+  sheet: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    paddingBottom: 36,
+  },
+  handle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    alignSelf: "center",
+    marginBottom: 20,
+  },
+  image: {
+    width: "100%",
+    height: 360,
+    borderRadius: 14,
+    marginBottom: 16,
+  },
+  noPhoto: {
+    height: 200,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderStyle: "dashed",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+  },
+  closeBtn: {
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: "center",
+  },
+});
 
 // ─── Stat Tile ────────────────────────────────────────────────────────────────
 
@@ -299,14 +470,19 @@ export default function HistoryScreen() {
   const { userId, loading } = useCurrentUser();
   const [heatmapView, setHeatmapView] = useState<"year" | "month">("year");
   const [viewMonth, setViewMonth] = useState(() => new Date());
+  const [selectedPhotoDate, setSelectedPhotoDate] = useState<string | null>(null);
 
-  // Lightweight — just dates, for heatmap + stats
   const dateSummary = useQuery(api.workouts.getWorkoutDates, userId ? { userId } : "skip");
-
-  // Full data — for recent workout cards (last 15 only)
   const recentWorkouts = useQuery(api.workouts.getHistory, userId ? { userId, limit: 15 } : "skip");
+  const allPhotos = useQuery(api.progressPhotos.listPhotos, userId ? { userId } : "skip");
 
   const isLoading = loading || dateSummary === undefined;
+
+  const photoDates = useMemo(() => {
+    const set = new Set<string>();
+    for (const p of allPhotos ?? []) set.add(p.date);
+    return set;
+  }, [allPhotos]);
 
   const { workoutDates, stats } = useMemo(() => {
     if (!dateSummary || dateSummary.length === 0) {
@@ -316,14 +492,12 @@ export default function HistoryScreen() {
     const dates = new Set<string>();
     for (const w of dateSummary) dates.add(dayKey(w.date));
 
-    // Streak
     let streak = 0;
     const check = new Date();
     check.setHours(0, 0, 0, 0);
     if (!dates.has(dayKey(check.getTime()))) check.setDate(check.getDate() - 1);
     while (dates.has(dayKey(check.getTime()))) { streak++; check.setDate(check.getDate() - 1); }
 
-    // Longest streak
     const sortedDays = [...dates]
       .map(k => { const [y, mo, d] = k.split("-").map(Number); return new Date(y, mo, d).getTime(); })
       .sort((a, b) => a - b);
@@ -333,7 +507,6 @@ export default function HistoryScreen() {
       longest = Math.max(longest, curRun);
     }
 
-    // This week / month
     const weekStart = new Date();
     weekStart.setDate(weekStart.getDate() - weekStart.getDay());
     weekStart.setHours(0, 0, 0, 0);
@@ -343,11 +516,9 @@ export default function HistoryScreen() {
     const thisWeek = dateSummary.filter(w => w.date >= weekStart.getTime()).length;
     const thisMonth = dateSummary.filter(w => w.date >= monthStart.getTime()).length;
 
-    // Avg/week (last 12 weeks)
     const twelveWeeksAgo = Date.now() - 84 * 24 * 60 * 60 * 1000;
     const avgPerWeek = (dateSummary.filter(w => w.date >= twelveWeeksAgo).length / 12).toFixed(1);
 
-    // Weekly frequency last 8 weeks
     const weeklyFrequency: number[] = [];
     for (let i = 7; i >= 0; i--) {
       const wStart = new Date();
@@ -367,7 +538,6 @@ export default function HistoryScreen() {
     };
   }, [dateSummary]);
 
-  // Volume + most trained — from the heavier query
   const { monthVolume, topMuscle } = useMemo(() => {
     if (!recentWorkouts || recentWorkouts.length === 0) return { monthVolume: 0, topMuscle: null };
     const monthStart = new Date();
@@ -418,7 +588,6 @@ export default function HistoryScreen() {
           <>
             {/* ── Heatmap ───────────────────────────────────────────── */}
             <View style={[styles.card, { backgroundColor: colors.backgroundSecondary, padding: 14, marginBottom: 8 }]}>
-              {/* Header: label + toggle */}
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                 <Text style={[styles.sectionLabel, { color: colors.labelSecondary, marginBottom: 0 }]}>
                   {heatmapView === "year" ? "12 MONTHS" : `${MONTH_SHORT[viewMonth.getMonth()].toUpperCase()} ${viewMonth.getFullYear()}`}
@@ -443,7 +612,6 @@ export default function HistoryScreen() {
                 </View>
               </View>
 
-              {/* Month nav (month view only) */}
               {heatmapView === "month" && (() => {
                 const now = new Date();
                 const atCurrent = viewMonth.getFullYear() === now.getFullYear() && viewMonth.getMonth() === now.getMonth();
@@ -469,19 +637,14 @@ export default function HistoryScreen() {
               })()}
 
               {heatmapView === "year"
-                ? <CalendarHeatmap workoutDates={workoutDates} colors={colors} />
-                : <MonthCalendar viewDate={viewMonth} workoutDates={workoutDates} colors={colors} />
+                ? <CalendarHeatmap workoutDates={workoutDates} photoDates={photoDates} colors={colors} onDayPress={setSelectedPhotoDate} />
+                : <MonthCalendar viewDate={viewMonth} workoutDates={workoutDates} photoDates={photoDates} colors={colors} onDayPress={setSelectedPhotoDate} />
               }
             </View>
 
-            {/* ── Stats (2 per row) ──────────────────────────────────── */}
+            {/* ── Stats ──────────────────────────────────────────────── */}
             <View style={styles.statRow}>
-              <StatTile
-                value={stats.streak > 0 ? `${stats.streak} 🔥` : "—"}
-                label="STREAK"
-                accent
-                colors={colors}
-              />
+              <StatTile value={stats.streak > 0 ? `${stats.streak} 🔥` : "—"} label="STREAK" accent colors={colors} />
               <StatTile value={`${stats.total}`} label="ALL TIME" colors={colors} />
             </View>
             <View style={styles.statRow}>
@@ -524,15 +687,7 @@ export default function HistoryScreen() {
                 {stats.weeklyFrequency.map((days, i) => (
                   <View key={i} style={styles.barCol}>
                     <View style={styles.barTrack}>
-                      <View
-                        style={[
-                          styles.barFill,
-                          {
-                            height: `${(days / maxFreq) * 100}%` as any,
-                            backgroundColor: days > 0 ? colors.accent : colors.fillSecondary,
-                          },
-                        ]}
-                      />
+                      <View style={[styles.barFill, { height: `${(days / maxFreq) * 100}%` as any, backgroundColor: days > 0 ? colors.accent : colors.fillSecondary }]} />
                     </View>
                     <Text style={[styles.barNum, { color: colors.labelTertiary }]}>{days}</Text>
                   </View>
@@ -558,6 +713,16 @@ export default function HistoryScreen() {
           </>
         )}
       </ScrollView>
+
+      {/* Photo Modal */}
+      <PhotoModal
+        visible={selectedPhotoDate !== null}
+        dateStr={selectedPhotoDate ?? ""}
+        userId={userId}
+        onClose={() => setSelectedPhotoDate(null)}
+        colors={colors}
+        typography={typography}
+      />
     </SafeAreaView>
   );
 }
@@ -565,113 +730,23 @@ export default function HistoryScreen() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  card: {
-    borderRadius: 16,
-    marginBottom: 0,
-  },
-  sectionLabel: {
-    fontSize: 11,
-    fontWeight: "600",
-    letterSpacing: 0.6,
-    textTransform: "uppercase",
-    marginBottom: 12,
-  },
-  statRow: {
-    flexDirection: "row",
-    gap: 8,
-    marginBottom: 8,
-  },
-  statTile: {
-    flex: 1,
-    borderRadius: 14,
-    padding: 16,
-    alignItems: "center",
-  },
-  statValue: {
-    fontSize: 28,
-    fontWeight: "800",
-    letterSpacing: -0.5,
-  },
-  statLabel: {
-    fontSize: 10,
-    fontWeight: "600",
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
-    marginTop: 4,
-  },
-  metaCell: {
-    flex: 1,
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  metaValue: {
-    fontSize: 22,
-    fontWeight: "700",
-    letterSpacing: -0.3,
-  },
-  metaLabel: {
-    fontSize: 10,
-    fontWeight: "600",
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
-    marginTop: 4,
-  },
-  pillRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 5,
-    marginTop: 6,
-  },
-  pill: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 5,
-  },
-  chipRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 4,
-  },
-  setChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    padding: 14,
-  },
-  barChart: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    height: 52,
-    gap: 4,
-  },
-  barCol: {
-    flex: 1,
-    alignItems: "center",
-    height: 64,
-    justifyContent: "flex-end",
-  },
-  barTrack: {
-    flex: 1,
-    width: "100%",
-    justifyContent: "flex-end",
-    marginBottom: 4,
-  },
-  barFill: {
-    width: "100%",
-    borderRadius: 3,
-    minHeight: 3,
-  },
-  barNum: {
-    fontSize: 10,
-    fontWeight: "600",
-  },
+  card: { borderRadius: 16, marginBottom: 0 },
+  sectionLabel: { fontSize: 11, fontWeight: "600", letterSpacing: 0.6, textTransform: "uppercase", marginBottom: 12 },
+  statRow: { flexDirection: "row", gap: 8, marginBottom: 8 },
+  statTile: { flex: 1, borderRadius: 14, padding: 16, alignItems: "center" },
+  statValue: { fontSize: 28, fontWeight: "800", letterSpacing: -0.5 },
+  statLabel: { fontSize: 10, fontWeight: "600", letterSpacing: 0.5, textTransform: "uppercase", marginTop: 4 },
+  metaCell: { flex: 1, paddingVertical: 16, paddingHorizontal: 16, alignItems: "center", justifyContent: "center" },
+  metaValue: { fontSize: 22, fontWeight: "700", letterSpacing: -0.3 },
+  metaLabel: { fontSize: 10, fontWeight: "600", letterSpacing: 0.5, textTransform: "uppercase", marginTop: 4 },
+  pillRow: { flexDirection: "row", flexWrap: "wrap", gap: 5, marginTop: 6 },
+  pill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 5 },
+  chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 4 },
+  setChip: { flexDirection: "row", alignItems: "center", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  cardHeader: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", padding: 14 },
+  barChart: { flexDirection: "row", alignItems: "flex-end", height: 52, gap: 4 },
+  barCol: { flex: 1, alignItems: "center", height: 64, justifyContent: "flex-end" },
+  barTrack: { flex: 1, width: "100%", justifyContent: "flex-end", marginBottom: 4 },
+  barFill: { width: "100%", borderRadius: 3, minHeight: 3 },
+  barNum: { fontSize: 10, fontWeight: "600" },
 });

@@ -5,17 +5,25 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  Image,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { useQuery, useMutation } from "convex/react";
 import { useState } from "react";
+import * as ImagePicker from "expo-image-picker";
 import { useTheme } from "@/hooks/useTheme";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { Button } from "@/components/ui/Button";
 import { api } from "@/convex/_generated/api";
 import { MUSCLE_DISPLAY_NAMES } from "@/constants/muscles";
+
+function todayDateString() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 
 function getDayGreeting() {
   const hour = new Date().getHours();
@@ -82,7 +90,54 @@ export default function TodayScreen() {
   const { userId, loading: userLoading } = useCurrentUser();
   const createPPL = useMutation(api.templates.createPPLTemplate);
   const createUL = useMutation(api.templates.createUpperLowerTemplate);
+  const savePhoto = useMutation(api.progressPhotos.savePhoto);
   const [templateLoading, setTemplateLoading] = useState<string | null>(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
+
+  const todayDate = todayDateString();
+  const todayPhoto = useQuery(
+    api.progressPhotos.getTodayPhoto,
+    userId ? { userId, date: todayDate } : "skip"
+  );
+
+  const handleTakePhoto = async () => {
+    if (!userId || photoUploading) return;
+
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Camera access required", "Please allow camera access in Settings.");
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.85,
+      allowsEditing: false,
+    });
+
+    if (result.canceled || !result.assets[0]) return;
+
+    setPhotoUploading(true);
+    try {
+      const asset = result.assets[0];
+      const convexSiteUrl = process.env.EXPO_PUBLIC_CONVEX_SITE_URL!;
+
+      const imageBlob = await (await fetch(asset.uri)).blob();
+      const response = await fetch(`${convexSiteUrl}/upload-photo`, {
+        method: "POST",
+        headers: { "Content-Type": "image/jpeg" },
+        body: imageBlob,
+      });
+
+      if (!response.ok) throw new Error("Upload failed");
+      const { url } = await response.json();
+      await savePhoto({ userId, imageUrl: url, date: todayDate });
+    } catch (e) {
+      Alert.alert("Upload failed", "Something went wrong. Try again.");
+    } finally {
+      setPhotoUploading(false);
+    }
+  };
 
   const handleTemplate = async (type: "ppl" | "ul") => {
     if (!userId || templateLoading) return;
@@ -384,10 +439,98 @@ export default function TodayScreen() {
             )}
           </>
         )}
+        {/* Progress Photo */}
+        {!isLoading && userId && (
+          <Animated.View
+            entering={FadeInDown.delay(200).springify()}
+            style={[styles.card, { backgroundColor: colors.backgroundSecondary, marginTop: 24 }]}
+          >
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+              <Text style={[typography.headline, { color: colors.label }]}>
+                Progress Photo
+              </Text>
+              {todayPhoto && (
+                <Text style={[typography.caption1, { color: colors.accentGreen }]}>
+                  Taken today ✓
+                </Text>
+              )}
+            </View>
+
+            {todayPhoto?.imageUrl ? (
+              <TouchableOpacity onPress={handleTakePhoto} activeOpacity={0.85} disabled={photoUploading}>
+                <Image
+                  source={{ uri: todayPhoto.imageUrl }}
+                  style={{ width: "100%", height: 220, borderRadius: 12 }}
+                  resizeMode="cover"
+                />
+                {photoUploading ? (
+                  <View style={photoStyles.uploadingOverlay}>
+                    <ActivityIndicator color="#FFF" size="large" />
+                    <Text style={[typography.caption1, { color: "#FFF", marginTop: 8, fontWeight: "600" }]}>
+                      Uploading…
+                    </Text>
+                  </View>
+                ) : (
+                  <Text style={[typography.caption1, { color: colors.labelTertiary, marginTop: 8, textAlign: "center" }]}>
+                    Tap to retake
+                  </Text>
+                )}
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                onPress={handleTakePhoto}
+                disabled={photoUploading}
+                activeOpacity={0.85}
+                style={[photoStyles.placeholder, { borderColor: colors.separator }]}
+              >
+                {photoUploading ? (
+                  <View style={{ alignItems: "center", gap: 8 }}>
+                    <ActivityIndicator color={colors.accent} size="large" />
+                    <Text style={[typography.subheadline, { color: colors.label, fontWeight: "600" }]}>
+                      Uploading…
+                    </Text>
+                    <Text style={[typography.caption1, { color: colors.labelSecondary }]}>
+                      Saving to cloud
+                    </Text>
+                  </View>
+                ) : (
+                  <>
+                    <Text style={{ fontSize: 32 }}>📷</Text>
+                    <Text style={[typography.subheadline, { color: colors.label, marginTop: 8, fontWeight: "600" }]}>
+                      Take Today's Photo
+                    </Text>
+                    <Text style={[typography.caption1, { color: colors.labelSecondary, marginTop: 4 }]}>
+                      One photo per day · saved to cloud
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            )}
+          </Animated.View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
 }
+
+const photoStyles = StyleSheet.create({
+  placeholder: {
+    height: 160,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderStyle: "dashed",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  uploadingOverlay: {
+    position: "absolute",
+    inset: 0,
+    borderRadius: 12,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});
 
 const styles = StyleSheet.create({
   card: {

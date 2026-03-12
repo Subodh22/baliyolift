@@ -9,8 +9,10 @@
  */
 
 import type * as exercises from "../exercises.js";
+import type * as http from "../http.js";
 import type * as mesocycles from "../mesocycles.js";
 import type * as overload from "../overload.js";
+import type * as progressPhotos from "../progressPhotos.js";
 import type * as seed from "../seed.js";
 import type * as sets from "../sets.js";
 import type * as templates from "../templates.js";
@@ -25,8 +27,10 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   exercises: typeof exercises;
+  http: typeof http;
   mesocycles: typeof mesocycles;
   overload: typeof overload;
+  progressPhotos: typeof progressPhotos;
   seed: typeof seed;
   sets: typeof sets;
   templates: typeof templates;
