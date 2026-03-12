@@ -1,123 +1,32 @@
-// Inter (300/400/500/600) + Playfair Display Italic for hero headline
-// Loaded in app/_layout.tsx via useFonts
+// Pulse typography system — Dark Luxury
+// Cormorant Garamond 300 (display/numbers/hero) + Outfit 200–400 (UI/labels only)
+// NEVER use bold. Section labels: 10px Outfit, 4px tracking, UPPERCASE.
 
-const EL = "Inter_200ExtraLight";
-const L  = "Inter_300Light";
-const R  = "Inter_400Regular";
-const M  = "Inter_500Medium";
-const SB = "Inter_600SemiBold";
-export const PLAYFAIR_ITALIC = "PlayfairDisplay_400Regular_Italic";
+export const CG        = "CormorantGaramond_300Light";
+export const CG_ITALIC = "CormorantGaramond_300Light_Italic";
+export const OUT_EL    = "Outfit_200ExtraLight";
+export const OUT_L     = "Outfit_300Light";
+export const OUT       = "Outfit_400Regular";
+
+// Legacy aliases (some screens still import these)
+export const DM_SERIF        = CG;
+export const DM_SERIF_ITALIC = CG_ITALIC;
 
 export const Typography = {
-  // ── Screen hero headline (Playfair italic — use ONCE per screen) ──────────
-  heroItalic: {
-    fontFamily: PLAYFAIR_ITALIC,
-    fontSize: 34,
-    fontWeight: "400" as const,
-    fontStyle: "italic" as const,
-    letterSpacing: -0.3,
-    lineHeight: 42,
-  },
-
-  // ── Display ───────────────────────────────────────────────────────────────
-  largeTitle: {
-    fontFamily: M,
-    fontSize: 30,
-    fontWeight: "500" as const,
-    letterSpacing: -0.5,
-  },
-  title1: {
-    fontFamily: M,
-    fontSize: 26,
-    fontWeight: "500" as const,
-    letterSpacing: -0.4,
-  },
-  title2: {
-    fontFamily: M,
-    fontSize: 22,
-    fontWeight: "500" as const,
-    letterSpacing: -0.3,
-  },
-  title3: {
-    fontFamily: M,
-    fontSize: 18,
-    fontWeight: "500" as const,
-    letterSpacing: -0.2,
-  },
-
-  // ── Body ──────────────────────────────────────────────────────────────────
-  headline: {
-    fontFamily: M,
-    fontSize: 16,
-    fontWeight: "500" as const,
-    letterSpacing: -0.2,
-  },
-  body: {
-    fontFamily: R,
-    fontSize: 16,
-    fontWeight: "400" as const,
-    letterSpacing: -0.2,
-  },
-  callout: {
-    fontFamily: L,
-    fontSize: 15,
-    fontWeight: "300" as const,
-    letterSpacing: -0.1,
-  },
-  subheadline: {
-    fontFamily: L,
-    fontSize: 14,
-    fontWeight: "300" as const,
-    letterSpacing: 0,
-  },
-  footnote: {
-    fontFamily: L,
-    fontSize: 13,
-    fontWeight: "300" as const,
-    letterSpacing: 0,
-  },
-  caption1: {
-    fontFamily: L,
-    fontSize: 12,
-    fontWeight: "300" as const,
-    letterSpacing: 0,
-  },
-  caption2: {
-    fontFamily: L,
-    fontSize: 11,
-    fontWeight: "300" as const,
-    letterSpacing: 0.2,
-  },
-
-  // ── Section label (ALL CAPS, spaced) ─────────────────────────────────────
-  sectionLabel: {
-    fontFamily: R,
-    fontSize: 11,
-    fontWeight: "400" as const,
-    letterSpacing: 1.2,
-    textTransform: "uppercase" as const,
-  },
-
-  // ── Numeric — stats and workout numbers ───────────────────────────────────
-  numericHero: {
-    fontFamily: SB,
-    fontSize: 60,
-    fontWeight: "600" as const,
-    letterSpacing: -2,
-    fontVariant: ["tabular-nums"] as ("tabular-nums")[],
-  },
-  numericLarge: {
-    fontFamily: SB,
-    fontSize: 38,
-    fontWeight: "600" as const,
-    letterSpacing: -1,
-    fontVariant: ["tabular-nums"] as ("tabular-nums")[],
-  },
-  numericMedium: {
-    fontFamily: SB,
-    fontSize: 26,
-    fontWeight: "600" as const,
-    letterSpacing: -0.5,
-    fontVariant: ["tabular-nums"] as ("tabular-nums")[],
-  },
+  heroItalic:    { fontFamily: CG_ITALIC, fontSize: 52, fontWeight: "300" as const, letterSpacing: -0.5, lineHeight: 58 },
+  heroRoman:     { fontFamily: CG,        fontSize: 52, fontWeight: "300" as const, letterSpacing: -0.5, lineHeight: 58 },
+  displayLarge:  { fontFamily: CG,        fontSize: 88, fontWeight: "300" as const, letterSpacing: -2 },
+  displayMedium: { fontFamily: CG,        fontSize: 48, fontWeight: "300" as const, letterSpacing: -1 },
+  displaySmall:  { fontFamily: CG,        fontSize: 32, fontWeight: "300" as const, letterSpacing: -0.5 },
+  title1:        { fontFamily: OUT,       fontSize: 18, letterSpacing: -0.2 },
+  title2:        { fontFamily: OUT,       fontSize: 15, letterSpacing: -0.1 },
+  body:          { fontFamily: OUT_L,     fontSize: 14, letterSpacing: 0 },
+  callout:       { fontFamily: OUT_L,     fontSize: 13, letterSpacing: 0 },
+  subheadline:   { fontFamily: OUT_L,     fontSize: 13, letterSpacing: 0 },
+  footnote:      { fontFamily: OUT_EL,    fontSize: 12, letterSpacing: 0 },
+  caption1:      { fontFamily: OUT_EL,    fontSize: 11, letterSpacing: 0.2 },
+  sectionLabel:  { fontFamily: OUT_L,     fontSize: 10, letterSpacing: 4, textTransform: "uppercase" as const },
+  numericHero:   { fontFamily: CG,        fontSize: 88, fontWeight: "300" as const, letterSpacing: -2 },
+  numericLarge:  { fontFamily: CG,        fontSize: 48, fontWeight: "300" as const, letterSpacing: -1 },
+  numericMedium: { fontFamily: CG,        fontSize: 32, fontWeight: "300" as const, letterSpacing: -0.5 },
 } as const;

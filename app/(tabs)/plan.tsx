@@ -42,7 +42,7 @@ export default function PlanScreen() {
           <TouchableOpacity onPress={() => router.push("/meso/new")} activeOpacity={0.7}
             style={[s.newBtn, { backgroundColor: colors.fillSecondary, borderColor: colors.separator }]}
           >
-            <Text style={{ fontFamily: "Inter_400Regular", fontSize: 13, color: colors.accent }}>+ New</Text>
+            <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 13, color: colors.accent }}>+ New</Text>
           </TouchableOpacity>
         </View>
 
@@ -54,7 +54,7 @@ export default function PlanScreen() {
             style={[s.card, { backgroundColor: colors.backgroundSecondary, borderColor: colors.separator }]}
           >
             <Text style={[s.cardTitle, { color: colors.label }]}>No active mesocycle</Text>
-            <Text style={{ fontFamily: "Inter_300Light", fontSize: 14, color: colors.labelSecondary, marginTop: 8, lineHeight: 22 }}>
+            <Text style={{ fontFamily: "Outfit_300Light", fontSize: 14, color: colors.labelSecondary, marginTop: 8, lineHeight: 22 }}>
               A mesocycle is a structured training block designed to progressively overload your muscles over 4–6 weeks.
             </Text>
             <View style={{ marginTop: 20 }}>
@@ -73,14 +73,14 @@ export default function PlanScreen() {
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <View style={{ flex: 1 }}>
                   <View style={[s.activePill, { backgroundColor: colors.accentLight }]}>
-                    <Text style={{ fontFamily: "Inter_400Regular", fontSize: 10, color: colors.accent, letterSpacing: 0.8 }}>ACTIVE</Text>
+                    <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 10, color: colors.accent, letterSpacing: 0.8 }}>ACTIVE</Text>
                   </View>
                   <Text style={[s.cardTitle, { color: colors.label, marginTop: 10 }]}>{meso.name}</Text>
-                  <Text style={{ fontFamily: "Inter_300Light", fontSize: 13, color: colors.labelSecondary, marginTop: 4 }}>
+                  <Text style={{ fontFamily: "Outfit_300Light", fontSize: 13, color: colors.labelSecondary, marginTop: 4 }}>
                     Week {meso.weekNumber} of {meso.weeks}
                   </Text>
                 </View>
-                <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 32, color: colors.label, letterSpacing: -1 }}>
+                <Text style={{ fontFamily: "CormorantGaramond_300Light", fontSize: 32, color: colors.label, letterSpacing: -1 }}>
                   {meso.weekNumber}/{meso.weeks}
                 </Text>
               </View>
@@ -103,13 +103,13 @@ export default function PlanScreen() {
                   >
                     <View style={s.sessionRow}>
                       <View style={[s.dayBadge, { backgroundColor: colors.fillSecondary }]}>
-                        <Text style={{ fontFamily: "Inter_500Medium", fontSize: 11, color: colors.labelSecondary }}>
+                        <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 11, color: colors.labelSecondary }}>
                           {DAY_LABELS[session.dayOfWeek]}
                         </Text>
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={{ fontFamily: "Inter_500Medium", fontSize: 15, color: colors.label }}>{session.name}</Text>
-                        <Text style={{ fontFamily: "Inter_300Light", fontSize: 12, color: colors.labelSecondary, marginTop: 2 }}>
+                        <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 15, color: colors.label }}>{session.name}</Text>
+                        <Text style={{ fontFamily: "Outfit_300Light", fontSize: 12, color: colors.labelSecondary, marginTop: 2 }}>
                           {session.muscleGroups.map(m => MUSCLE_DISPLAY_NAMES[m as keyof typeof MUSCLE_DISPLAY_NAMES] ?? m).join(" · ")}
                         </Text>
                       </View>
@@ -119,8 +119,8 @@ export default function PlanScreen() {
                         {session.exercises.map((ex: any, i: number) => (
                           <View key={ex.id ?? i} style={s.exRow}>
                             <View style={[s.exDot, { backgroundColor: colors.accent }]} />
-                            <Text style={{ fontFamily: "Inter_300Light", fontSize: 13, color: colors.label, flex: 1 }}>{ex.name}</Text>
-                            <Text style={{ fontFamily: "Inter_300Light", fontSize: 12, color: colors.labelTertiary }}>
+                            <Text style={{ fontFamily: "Outfit_300Light", fontSize: 13, color: colors.label, flex: 1 }}>{ex.name}</Text>
+                            <Text style={{ fontFamily: "Outfit_300Light", fontSize: 12, color: colors.labelTertiary }}>
                               {MUSCLE_DISPLAY_NAMES[ex.muscleGroup as keyof typeof MUSCLE_DISPLAY_NAMES] ?? ex.muscleGroup}
                             </Text>
                           </View>
@@ -139,15 +139,15 @@ export default function PlanScreen() {
                 <View style={[s.card, { backgroundColor: colors.backgroundSecondary, borderColor: colors.separator, marginTop: 12, gap: 14 }]}>
                   {meso.volumeTargets.map((vt) => (
                     <View key={vt.muscleGroup} style={{ flexDirection: "row", alignItems: "center" }}>
-                      <Text style={{ fontFamily: "Inter_300Light", fontSize: 14, color: colors.label, flex: 1 }}>
+                      <Text style={{ fontFamily: "Outfit_300Light", fontSize: 14, color: colors.label, flex: 1 }}>
                         {MUSCLE_DISPLAY_NAMES[vt.muscleGroup as keyof typeof MUSCLE_DISPLAY_NAMES] ?? vt.muscleGroup}
                       </Text>
                       <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
-                        <Text style={{ fontFamily: "Inter_300Light", fontSize: 12, color: colors.volumeLow }}>{vt.mev}</Text>
-                        <Text style={{ fontFamily: "Inter_300Light", fontSize: 12, color: colors.labelTertiary }}> / </Text>
-                        <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: colors.accent }}>{vt.mav}</Text>
-                        <Text style={{ fontFamily: "Inter_300Light", fontSize: 12, color: colors.labelTertiary }}> / </Text>
-                        <Text style={{ fontFamily: "Inter_300Light", fontSize: 12, color: colors.volumeHigh }}>{vt.mrv}</Text>
+                        <Text style={{ fontFamily: "Outfit_300Light", fontSize: 12, color: colors.volumeLow }}>{vt.mev}</Text>
+                        <Text style={{ fontFamily: "Outfit_300Light", fontSize: 12, color: colors.labelTertiary }}> / </Text>
+                        <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 12, color: colors.accent }}>{vt.mav}</Text>
+                        <Text style={{ fontFamily: "Outfit_300Light", fontSize: 12, color: colors.labelTertiary }}> / </Text>
+                        <Text style={{ fontFamily: "Outfit_300Light", fontSize: 12, color: colors.volumeHigh }}>{vt.mrv}</Text>
                       </View>
                     </View>
                   ))}
@@ -155,7 +155,7 @@ export default function PlanScreen() {
                     {[{ c: colors.volumeLow, l: "MEV" }, { c: colors.accent, l: "MAV" }, { c: colors.volumeHigh, l: "MRV" }].map(({ c, l }) => (
                       <View key={l} style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
                         <View style={{ width: 8, height: 2, borderRadius: 1, backgroundColor: c }} />
-                        <Text style={{ fontFamily: "Inter_300Light", fontSize: 11, color: colors.labelSecondary }}>{l}</Text>
+                        <Text style={{ fontFamily: "Outfit_300Light", fontSize: 11, color: colors.labelSecondary }}>{l}</Text>
                       </View>
                     ))}
                   </View>
@@ -167,19 +167,19 @@ export default function PlanScreen() {
             <Animated.View entering={FadeInDown.delay(240).springify()} style={{ marginTop: 28 }}>
               {confirmEnd ? (
                 <View style={[s.confirmBox, { backgroundColor: "#B8303010", borderColor: "#B8303040" }]}>
-                  <Text style={{ fontFamily: "Inter_500Medium", fontSize: 15, color: colors.label, marginBottom: 4 }}>End this mesocycle?</Text>
-                  <Text style={{ fontFamily: "Inter_300Light", fontSize: 13, color: colors.labelSecondary, marginBottom: 16, lineHeight: 20 }}>
+                  <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 15, color: colors.label, marginBottom: 4 }}>End this mesocycle?</Text>
+                  <Text style={{ fontFamily: "Outfit_300Light", fontSize: 13, color: colors.labelSecondary, marginBottom: 16, lineHeight: 20 }}>
                     Your training history is saved. You can start a new mesocycle after.
                   </Text>
                   <View style={{ flexDirection: "row", gap: 10 }}>
                     <Pressable onPress={() => setConfirmEnd(false)}
                       style={[s.confirmBtn, { backgroundColor: colors.fillSecondary, flex: 1 }]}
                     >
-                      <Text style={{ fontFamily: "Inter_400Regular", fontSize: 14, color: colors.label }}>Cancel</Text>
+                      <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 14, color: colors.label }}>Cancel</Text>
                     </Pressable>
                     <Pressable onPress={handleEndMeso} style={[s.confirmBtn, { backgroundColor: "#B83030", flex: 1 }]}>
                       {ending ? <ActivityIndicator color="#fff" /> : (
-                        <Text style={{ fontFamily: "Inter_500Medium", fontSize: 14, color: "#fff" }}>End</Text>
+                        <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 14, color: "#fff" }}>End</Text>
                       )}
                     </Pressable>
                   </View>
@@ -198,19 +198,19 @@ export default function PlanScreen() {
 const s = StyleSheet.create({
   scroll:      { paddingHorizontal: 20, paddingBottom: 100 },
   header:      { marginTop: 16, marginBottom: 32, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" },
-  screenLabel: { fontFamily: "Inter_300Light", fontSize: 13, letterSpacing: 0.1 },
-  heroItalic:  { fontFamily: "PlayfairDisplay_400Regular_Italic", fontSize: 34, fontWeight: "400", letterSpacing: -0.3, lineHeight: 42, marginTop: 6 },
-  newBtn:      { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 100, borderWidth: 1 },
-  sectionLabel:{ fontFamily: "Inter_400Regular", fontSize: 11, letterSpacing: 1.2, textTransform: "uppercase" },
-  card:        { borderRadius: 20, padding: 20, borderWidth: 1 },
-  cardTitle:   { fontFamily: "Inter_500Medium", fontSize: 18, letterSpacing: -0.2 },
-  activePill:  { alignSelf: "flex-start", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100 },
-  sessionCard: { borderRadius: 16, overflow: "hidden", borderWidth: 1 },
+  screenLabel: { fontFamily: "Outfit_300Light", fontSize: 10, letterSpacing: 3, textTransform: "uppercase" },
+  heroItalic:  { fontFamily: "CormorantGaramond_300Light_Italic", fontSize: 52, fontWeight: "300", letterSpacing: -0.5, lineHeight: 58, marginTop: 10 },
+  newBtn:      { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 4, borderWidth: 1 },
+  sectionLabel:{ fontFamily: "Outfit_300Light", fontSize: 10, letterSpacing: 3, textTransform: "uppercase" },
+  card:        { borderRadius: 4, padding: 20, borderWidth: 1 },
+  cardTitle:   { fontFamily: "Outfit_400Regular", fontSize: 18, letterSpacing: -0.2 },
+  activePill:  { alignSelf: "flex-start", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4 },
+  sessionCard: { borderRadius: 4, overflow: "hidden", borderWidth: 1 },
   sessionRow:  { flexDirection: "row", alignItems: "center", gap: 12, padding: 14 },
   dayBadge:    { width: 40, height: 40, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   exerciseList:{ borderTopWidth: 0.5, paddingHorizontal: 14, paddingTop: 10, paddingBottom: 12, gap: 8 },
   exRow:       { flexDirection: "row", alignItems: "center", gap: 10 },
   exDot:       { width: 4, height: 4, borderRadius: 2 },
-  confirmBox:  { borderRadius: 16, borderWidth: 1, padding: 20 },
-  confirmBtn:  { borderRadius: 100, paddingVertical: 13, alignItems: "center" },
+  confirmBox:  { borderRadius: 4, borderWidth: 1, padding: 20 },
+  confirmBtn:  { borderRadius: 4, paddingVertical: 13, alignItems: "center" },
 });

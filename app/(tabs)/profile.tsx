@@ -60,14 +60,14 @@ export default function ProfileScreen() {
             <Image source={{ uri: imageUrl }} style={s.avatar} />
           ) : (
             <View style={[s.avatar, { backgroundColor: colors.accentLight, alignItems: "center", justifyContent: "center" }]}>
-              <Text style={{ fontFamily: "Inter_500Medium", fontSize: 20, color: colors.accent }}>
+              <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 20, color: colors.accent }}>
                 {displayName.charAt(0).toUpperCase()}
               </Text>
             </View>
           )}
           <View style={{ flex: 1 }}>
-            <Text style={{ fontFamily: "Inter_500Medium", fontSize: 17, color: colors.label }}>{displayName}</Text>
-            <Text style={{ fontFamily: "Inter_300Light", fontSize: 13, color: colors.labelSecondary, marginTop: 2 }}>
+            <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 17, color: colors.label }}>{displayName}</Text>
+            <Text style={{ fontFamily: "Outfit_300Light", fontSize: 13, color: colors.labelSecondary, marginTop: 2 }}>
               {user?.primaryEmailAddress?.emailAddress ?? ""}
             </Text>
           </View>
@@ -96,7 +96,7 @@ export default function ProfileScreen() {
         <Animated.View entering={FadeInDown.delay(180).springify()}>
           <Text style={[s.sectionLabel, { color: colors.labelSecondary }]}>Notifications</Text>
           <View style={[s.switchRow, { backgroundColor: colors.backgroundSecondary, borderColor: colors.separator }]}>
-            <Text style={{ fontFamily: "Inter_400Regular", fontSize: 15, color: colors.label }}>Workout reminders</Text>
+            <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 15, color: colors.label }}>Workout reminders</Text>
             <Switch
               value={notifications}
               onValueChange={setNotifications}
@@ -124,19 +124,19 @@ export default function ProfileScreen() {
 
           {confirmReset ? (
             <View style={[s.confirmBox, { backgroundColor: "#B8303010", borderColor: "#B8303040" }]}>
-              <Text style={{ fontFamily: "Inter_500Medium", fontSize: 15, color: colors.label, marginBottom: 6 }}>Delete all data?</Text>
-              <Text style={{ fontFamily: "Inter_300Light", fontSize: 13, color: colors.labelSecondary, marginBottom: 20, lineHeight: 20 }}>
+              <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 15, color: colors.label, marginBottom: 6 }}>Delete all data?</Text>
+              <Text style={{ fontFamily: "Outfit_300Light", fontSize: 13, color: colors.labelSecondary, marginBottom: 20, lineHeight: 20 }}>
                 This permanently deletes all workouts, mesocycles, and progress photos. Cannot be undone.
               </Text>
               <View style={{ flexDirection: "row", gap: 10 }}>
                 <Pressable onPress={() => setConfirmReset(false)}
                   style={[s.confirmBtn, { backgroundColor: colors.fillSecondary, flex: 1 }]}
                 >
-                  <Text style={{ fontFamily: "Inter_400Regular", fontSize: 14, color: colors.label }}>Cancel</Text>
+                  <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 14, color: colors.label }}>Cancel</Text>
                 </Pressable>
                 <Pressable onPress={handleConfirmReset} style={[s.confirmBtn, { backgroundColor: "#B83030", flex: 1 }]}>
                   {resetting ? <ActivityIndicator color="#fff" /> : (
-                    <Text style={{ fontFamily: "Inter_500Medium", fontSize: 14, color: "#fff" }}>Delete forever</Text>
+                    <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 14, color: "#fff" }}>Delete forever</Text>
                   )}
                 </Pressable>
               </View>
@@ -145,12 +145,12 @@ export default function ProfileScreen() {
             <Pressable onPress={() => setConfirmReset(true)}
               style={({ pressed }) => [s.resetBtn, { backgroundColor: pressed ? "#B8303030" : "#B8303015" }]}
             >
-              <Text style={{ fontFamily: "Inter_400Regular", fontSize: 15, color: "#B83030" }}>Reset all data</Text>
+              <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 15, color: "#B83030" }}>Reset all data</Text>
             </Pressable>
           )}
         </Animated.View>
 
-        <Text style={{ fontFamily: "Inter_300Light", fontSize: 11, color: colors.labelQuaternary, textAlign: "center", marginTop: 32 }}>
+        <Text style={{ fontFamily: "Outfit_300Light", fontSize: 11, color: colors.labelQuaternary, textAlign: "center", marginTop: 32 }}>
           BaliYoLift v1.0.0
         </Text>
       </ScrollView>
@@ -161,13 +161,13 @@ export default function ProfileScreen() {
 const s = StyleSheet.create({
   scroll:      { paddingHorizontal: 20, paddingBottom: 100, gap: 24 },
   header:      { marginTop: 16 },
-  screenLabel: { fontFamily: "Inter_300Light", fontSize: 13, letterSpacing: 0.1 },
-  heroItalic:  { fontFamily: "PlayfairDisplay_400Regular_Italic", fontSize: 34, fontWeight: "400", letterSpacing: -0.3, lineHeight: 42, marginTop: 6 },
-  sectionLabel:{ fontFamily: "Inter_400Regular", fontSize: 11, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 10 },
-  userCard:    { borderRadius: 20, padding: 20, flexDirection: "row", alignItems: "center", gap: 16, borderWidth: 1 },
-  avatar:      { width: 52, height: 52, borderRadius: 26, overflow: "hidden" },
-  switchRow:   { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 16, borderRadius: 16, borderWidth: 1 },
-  confirmBox:  { borderRadius: 16, borderWidth: 1, padding: 20 },
-  confirmBtn:  { borderRadius: 100, paddingVertical: 13, alignItems: "center" },
-  resetBtn:    { borderRadius: 16, paddingVertical: 16, alignItems: "center", marginTop: 8 },
+  screenLabel: { fontFamily: "Outfit_300Light", fontSize: 10, letterSpacing: 3, textTransform: "uppercase" },
+  heroItalic:  { fontFamily: "CormorantGaramond_300Light_Italic", fontSize: 52, fontWeight: "300", letterSpacing: -0.5, lineHeight: 58, marginTop: 10 },
+  sectionLabel:{ fontFamily: "Outfit_300Light", fontSize: 10, letterSpacing: 3, textTransform: "uppercase", marginBottom: 10 },
+  userCard:    { borderRadius: 4, padding: 20, flexDirection: "row", alignItems: "center", gap: 16, borderWidth: 1 },
+  avatar:      { width: 52, height: 52, borderRadius: 4, overflow: "hidden" },
+  switchRow:   { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 16, borderRadius: 4, borderWidth: 1 },
+  confirmBox:  { borderRadius: 4, borderWidth: 1, padding: 20 },
+  confirmBtn:  { borderRadius: 4, paddingVertical: 13, alignItems: "center" },
+  resetBtn:    { borderRadius: 4, paddingVertical: 16, alignItems: "center", marginTop: 8 },
 });

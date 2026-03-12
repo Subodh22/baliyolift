@@ -8,10 +8,16 @@ import { api } from "@/convex/_generated/api";
 import { tokenCache } from "@/utils/tokenCache";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useFonts,
-  Inter_200ExtraLight, Inter_300Light, Inter_400Regular,
-  Inter_500Medium, Inter_600SemiBold,
-} from "@expo-google-fonts/inter";
-import { PlayfairDisplay_400Regular_Italic } from "@expo-google-fonts/playfair-display";
+  CormorantGaramond_300Light,
+  CormorantGaramond_300Light_Italic,
+  CormorantGaramond_400Regular,
+  CormorantGaramond_400Regular_Italic,
+} from "@expo-google-fonts/cormorant-garamond";
+import {
+  Outfit_200ExtraLight,
+  Outfit_300Light,
+  Outfit_400Regular,
+} from "@expo-google-fonts/outfit";
 
 const CONVEX_URL = process.env.EXPO_PUBLIC_CONVEX_URL ?? "";
 const CLERK_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
@@ -123,15 +129,16 @@ export default function RootLayout() {
   const scheme = useColorScheme();
 
   const [fontsLoaded] = useFonts({
-    Inter_200ExtraLight,
-    Inter_300Light,
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
-    PlayfairDisplay_400Regular_Italic,
+    CormorantGaramond_300Light,
+    CormorantGaramond_300Light_Italic,
+    CormorantGaramond_400Regular,
+    CormorantGaramond_400Regular_Italic,
+    Outfit_200ExtraLight,
+    Outfit_300Light,
+    Outfit_400Regular,
   });
 
-  if (!fontsLoaded) return <View style={{ flex: 1, backgroundColor: "#F2EFE9" }} />;
+  if (!fontsLoaded) return <View style={{ flex: 1, backgroundColor: "#0A0A0B" }} />;
 
   if (Platform.OS === "web") {
     const { ClerkProvider } = require("@clerk/clerk-react");

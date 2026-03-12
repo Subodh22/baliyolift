@@ -9,13 +9,13 @@ import { api } from "@/convex/_generated/api";
 function bfCategory(sex: "male" | "female", bf: number): { label: string; color: string } {
   if (sex === "male") {
     if (bf < 6)  return { label: "Essential", color: "#5AC8FA" };
-    if (bf < 14) return { label: "Athletic",  color: "#2D5A3D" };
+    if (bf < 14) return { label: "Athletic",  color: "#3A7D5A" };
     if (bf < 18) return { label: "Fitness",   color: "#C87820" };
     if (bf < 25) return { label: "Average",   color: "#C87820" };
     return { label: "Obese", color: "#B83030" };
   } else {
     if (bf < 14) return { label: "Essential", color: "#5AC8FA" };
-    if (bf < 21) return { label: "Athletic",  color: "#2D5A3D" };
+    if (bf < 21) return { label: "Athletic",  color: "#3A7D5A" };
     if (bf < 25) return { label: "Fitness",   color: "#C87820" };
     if (bf < 32) return { label: "Average",   color: "#C87820" };
     return { label: "Obese", color: "#B83030" };
@@ -36,16 +36,16 @@ function BfZoneBar({ sex, current, target, colors }: any) {
   const currentPct = Math.min(Math.max((current - minBf) / range, 0), 1);
   const targetPct  = Math.min(Math.max((target  - minBf) / range, 0), 1);
   const zones = sex === "male"
-    ? [{ end: 6, c: "#5AC8FA" }, { end: 14, c: "#2D5A3D" }, { end: 18, c: "#C8BE50" }, { end: 25, c: "#C87820" }, { end: 40, c: "#B83030" }]
-    : [{ end: 14, c: "#5AC8FA" }, { end: 21, c: "#2D5A3D" }, { end: 25, c: "#C8BE50" }, { end: 32, c: "#C87820" }, { end: 40, c: "#B83030" }];
+    ? [{ end: 6, c: "#5AC8FA" }, { end: 14, c: "#3A7D5A" }, { end: 18, c: "#C8BE50" }, { end: 25, c: "#C87820" }, { end: 40, c: "#B83030" }]
+    : [{ end: 14, c: "#5AC8FA" }, { end: 21, c: "#3A7D5A" }, { end: 25, c: "#C8BE50" }, { end: 32, c: "#C87820" }, { end: 40, c: "#B83030" }];
   const cat = bfCategory(sex, current);
 
   return (
     <View>
       <View style={{ flexDirection: "row", alignItems: "baseline", gap: 10, marginBottom: 20 }}>
-        <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 48, color: cat.color, letterSpacing: -2 }}>{current}%</Text>
-        <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100, backgroundColor: cat.color + "20" }}>
-          <Text style={{ fontFamily: "Inter_400Regular", fontSize: 11, color: cat.color, letterSpacing: 0.5 }}>{cat.label}</Text>
+        <Text style={{ fontFamily: "CormorantGaramond_300Light", fontSize: 52, color: cat.color, letterSpacing: -1 }}>{current}%</Text>
+        <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4, backgroundColor: cat.color + "20" }}>
+          <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 11, color: cat.color, letterSpacing: 0.5 }}>{cat.label}</Text>
         </View>
       </View>
 
@@ -61,22 +61,22 @@ function BfZoneBar({ sex, current, target, colors }: any) {
       <View style={{ position: "relative", height: 24, marginBottom: 8 }}>
         <View style={{ position: "absolute", left: `${currentPct * 88}%` as any, alignItems: "center" }}>
           <View style={{ width: 1, height: 8, backgroundColor: colors.label }} />
-          <Text style={{ fontFamily: "Inter_400Regular", fontSize: 10, color: colors.label, marginTop: 2 }}>Now</Text>
+          <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 10, color: colors.label, marginTop: 2 }}>Now</Text>
         </View>
         <View style={{ position: "absolute", left: `${targetPct * 88}%` as any, alignItems: "center" }}>
           <View style={{ width: 1, height: 8, backgroundColor: colors.accent }} />
-          <Text style={{ fontFamily: "Inter_400Regular", fontSize: 10, color: colors.accent, marginTop: 2 }}>Goal</Text>
+          <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 10, color: colors.accent, marginTop: 2 }}>Goal</Text>
         </View>
       </View>
 
       <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 8 }}>
         <View>
-          <Text style={{ fontFamily: "Inter_300Light", fontSize: 11, color: colors.labelSecondary }}>Now</Text>
-          <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 18, color: colors.label }}>{current}%</Text>
+          <Text style={{ fontFamily: "Outfit_300Light", fontSize: 11, color: colors.labelSecondary }}>Now</Text>
+          <Text style={{ fontFamily: "CormorantGaramond_300Light", fontSize: 18, color: colors.label }}>{current}%</Text>
         </View>
         <View style={{ alignItems: "flex-end" }}>
-          <Text style={{ fontFamily: "Inter_300Light", fontSize: 11, color: colors.labelSecondary }}>Goal</Text>
-          <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 18, color: colors.accent }}>{target}%</Text>
+          <Text style={{ fontFamily: "Outfit_300Light", fontSize: 11, color: colors.labelSecondary }}>Goal</Text>
+          <Text style={{ fontFamily: "CormorantGaramond_300Light", fontSize: 18, color: colors.accent }}>{target}%</Text>
         </View>
       </View>
     </View>
@@ -104,7 +104,7 @@ function E1RMChart({ points, colors }: any) {
       </View>
       <View style={{ flexDirection: "row", marginTop: 6, gap: 4 }}>
         {points.map((p: any, i: number) => (
-          <Text key={i} style={{ fontFamily: "Inter_300Light", fontSize: 10, color: colors.labelTertiary, flex: 1, textAlign: "center" }}>
+          <Text key={i} style={{ fontFamily: "Outfit_300Light", fontSize: 10, color: colors.labelTertiary, flex: 1, textAlign: "center" }}>
             W{p.weekNumber ?? i + 1}
           </Text>
         ))}
@@ -136,7 +136,7 @@ export default function ProgressScreen() {
         {/* Header */}
         <View style={s.header}>
           <Text style={[s.screenLabel, { color: colors.labelSecondary }]}>Your journey</Text>
-          <Text style={[s.heroItalic, { color: colors.label }]}>Progress over time.</Text>
+          <Text style={[s.heroItalic, { color: colors.accent }]}>Progress.</Text>
         </View>
 
         {isLoading && <ActivityIndicator color={colors.accent} style={{ marginTop: 40 }} />}
@@ -153,8 +153,8 @@ export default function ProgressScreen() {
                   <BfZoneBar sex={profile.sex} current={profile.currentBf} target={profile.targetBf} colors={colors} />
                 </View>
                 <View style={[s.divRow, { borderTopColor: colors.separator }]}>
-                  <Text style={{ fontFamily: "Inter_300Light", fontSize: 13, color: colors.labelSecondary }}>Estimated time to goal</Text>
-                  <Text style={{ fontFamily: "Inter_500Medium", fontSize: 14, color: colors.accent }}>
+                  <Text style={{ fontFamily: "Outfit_300Light", fontSize: 13, color: colors.labelSecondary }}>Estimated time to goal</Text>
+                  <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 14, color: colors.accent }}>
                     {estimateMonths(profile.currentBf, profile.targetBf, profile.weeklyGoal)}
                   </Text>
                 </View>
@@ -168,7 +168,7 @@ export default function ProgressScreen() {
               >
                 <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                   <Text style={[s.sectionLabel, { color: colors.labelSecondary }]}>This week</Text>
-                  <Text style={{ fontFamily: "Inter_300Light", fontSize: 12, color: colors.labelSecondary }}>
+                  <Text style={{ fontFamily: "Outfit_300Light", fontSize: 12, color: colors.labelSecondary }}>
                     {weeklyCount}/{profile.weeklyGoal} sessions
                   </Text>
                 </View>
@@ -186,10 +186,10 @@ export default function ProgressScreen() {
                 style={[s.card, { backgroundColor: colors.backgroundSecondary, borderColor: colors.separator }]}
               >
                 <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                  <Text style={{ fontFamily: "Inter_500Medium", fontSize: 15, color: colors.label }} numberOfLines={1}>
+                  <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 15, color: colors.label }} numberOfLines={1}>
                     {dashboard.chart.exerciseName}
                   </Text>
-                  <Text style={{ fontFamily: "Inter_300Light", fontSize: 12, color: colors.labelSecondary }}>est. 1RM (kg)</Text>
+                  <Text style={{ fontFamily: "Outfit_300Light", fontSize: 12, color: colors.labelSecondary }}>est. 1RM (kg)</Text>
                 </View>
 
                 {dashboard.chart.points.length > 1 ? (
@@ -209,8 +209,8 @@ export default function ProgressScreen() {
                             { v: String(last.weight), l: "top set kg", color: colors.accent },
                           ].map(({ v, l, color }) => (
                             <View key={l} style={s.statItem}>
-                              <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 22, color, letterSpacing: -0.5 }}>{v}</Text>
-                              <Text style={{ fontFamily: "Inter_300Light", fontSize: 11, color: colors.labelSecondary, marginTop: 3 }}>{l}</Text>
+                              <Text style={{ fontFamily: "CormorantGaramond_300Light", fontSize: 22, color, letterSpacing: -0.5 }}>{v}</Text>
+                              <Text style={{ fontFamily: "Outfit_300Light", fontSize: 11, color: colors.labelSecondary, marginTop: 3 }}>{l}</Text>
                             </View>
                           ))}
                         </View>
@@ -218,7 +218,7 @@ export default function ProgressScreen() {
                     })()}
                   </>
                 ) : (
-                  <Text style={{ fontFamily: "Inter_300Light", fontSize: 14, color: colors.labelSecondary, marginTop: 12 }}>
+                  <Text style={{ fontFamily: "Outfit_300Light", fontSize: 14, color: colors.labelSecondary, marginTop: 12 }}>
                     Complete more sessions to see your strength chart.
                   </Text>
                 )}
@@ -235,14 +235,14 @@ export default function ProgressScreen() {
                       style={[s.prCard, { backgroundColor: colors.backgroundSecondary, borderColor: colors.separator }]}
                     >
                       <View style={{ flex: 1 }}>
-                        <Text style={{ fontFamily: "Inter_500Medium", fontSize: 14, color: colors.label }} numberOfLines={1}>{pr.name}</Text>
-                        <Text style={{ fontFamily: "Inter_300Light", fontSize: 12, color: colors.labelSecondary, marginTop: 2 }}>
+                        <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 14, color: colors.label }} numberOfLines={1}>{pr.name}</Text>
+                        <Text style={{ fontFamily: "Outfit_300Light", fontSize: 12, color: colors.labelSecondary, marginTop: 2 }}>
                           {pr.weight} kg × {pr.reps} reps
                         </Text>
                       </View>
                       <View style={{ alignItems: "flex-end" }}>
-                        <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 20, color: colors.accent, letterSpacing: -0.5 }}>{pr.e1rm}</Text>
-                        <Text style={{ fontFamily: "Inter_300Light", fontSize: 10, color: colors.labelTertiary, marginTop: 2 }}>est. 1RM</Text>
+                        <Text style={{ fontFamily: "CormorantGaramond_300Light", fontSize: 20, color: colors.accent, letterSpacing: -0.5 }}>{pr.e1rm}</Text>
+                        <Text style={{ fontFamily: "Outfit_300Light", fontSize: 10, color: colors.labelTertiary, marginTop: 2 }}>est. 1RM</Text>
                       </View>
                     </View>
                   ))}
@@ -264,8 +264,8 @@ export default function ProgressScreen() {
                       { v: formatVol(dashboard.summary.totalVolume), l: "kg volume" },
                     ].map(({ v, l }) => (
                       <View key={l} style={s.statItem}>
-                        <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 22, color: colors.label, letterSpacing: -0.5 }}>{v}</Text>
-                        <Text style={{ fontFamily: "Inter_300Light", fontSize: 11, color: colors.labelSecondary, marginTop: 3 }}>{l}</Text>
+                        <Text style={{ fontFamily: "CormorantGaramond_300Light", fontSize: 22, color: colors.label, letterSpacing: -0.5 }}>{v}</Text>
+                        <Text style={{ fontFamily: "Outfit_300Light", fontSize: 11, color: colors.labelSecondary, marginTop: 3 }}>{l}</Text>
                       </View>
                     ))}
                   </View>
@@ -283,8 +283,8 @@ export default function ProgressScreen() {
                         { v: formatVol(dashboard.summary.mesoVolume), l: "kg volume" },
                       ].map(({ v, l }, i) => (
                         <View key={l} style={s.statItem}>
-                          <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 22, color: i === 2 ? colors.accent : colors.label, letterSpacing: -0.5 }}>{v}</Text>
-                          <Text style={{ fontFamily: "Inter_300Light", fontSize: 11, color: colors.labelSecondary, marginTop: 3 }}>{l}</Text>
+                          <Text style={{ fontFamily: "CormorantGaramond_300Light", fontSize: 22, color: i === 2 ? colors.accent : colors.label, letterSpacing: -0.5 }}>{v}</Text>
+                          <Text style={{ fontFamily: "Outfit_300Light", fontSize: 11, color: colors.labelSecondary, marginTop: 3 }}>{l}</Text>
                         </View>
                       ))}
                     </View>
@@ -297,8 +297,8 @@ export default function ProgressScreen() {
               <Animated.View entering={FadeInDown.springify()}
                 style={[s.card, { backgroundColor: colors.backgroundSecondary, borderColor: colors.separator }]}
               >
-                <Text style={{ fontFamily: "Inter_500Medium", fontSize: 17, color: colors.label }}>No data yet</Text>
-                <Text style={{ fontFamily: "Inter_300Light", fontSize: 14, color: colors.labelSecondary, marginTop: 8, lineHeight: 22 }}>
+                <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 17, color: colors.label }}>No data yet</Text>
+                <Text style={{ fontFamily: "Outfit_300Light", fontSize: 14, color: colors.labelSecondary, marginTop: 8, lineHeight: 22 }}>
                   Complete your first workout to see strength progress and personal records here.
                 </Text>
               </Animated.View>
@@ -313,12 +313,12 @@ export default function ProgressScreen() {
 const s = StyleSheet.create({
   scroll:      { paddingHorizontal: 20, paddingBottom: 100, gap: 12 },
   header:      { marginTop: 16, marginBottom: 32 },
-  screenLabel: { fontFamily: "Inter_300Light", fontSize: 13, letterSpacing: 0.1 },
-  heroItalic:  { fontFamily: "PlayfairDisplay_400Regular_Italic", fontSize: 34, fontWeight: "400", letterSpacing: -0.3, lineHeight: 42, marginTop: 6 },
-  sectionLabel:{ fontFamily: "Inter_400Regular", fontSize: 11, letterSpacing: 1.2, textTransform: "uppercase" },
-  card:        { borderRadius: 20, padding: 20, borderWidth: 1 },
+  screenLabel: { fontFamily: "Outfit_300Light", fontSize: 10, letterSpacing: 3, textTransform: "uppercase" },
+  heroItalic:  { fontFamily: "CormorantGaramond_300Light_Italic", fontSize: 52, fontWeight: "300", letterSpacing: -0.5, lineHeight: 46, marginTop: 10 },
+  sectionLabel:{ fontFamily: "Outfit_300Light", fontSize: 10, letterSpacing: 3, textTransform: "uppercase" },
+  card:        { borderRadius: 4, padding: 20, borderWidth: 1 },
   divRow:      { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 20, paddingTop: 16, borderTopWidth: 0.5 },
   statRow:     { flexDirection: "row", justifyContent: "space-around" },
   statItem:    { alignItems: "center" },
-  prCard:      { flexDirection: "row", alignItems: "center", borderRadius: 16, padding: 16, borderWidth: 1 },
+  prCard:      { flexDirection: "row", alignItems: "center", borderRadius: 4, padding: 16, borderWidth: 1 },
 });

@@ -66,7 +66,7 @@ function CalendarHeatmap({ workoutDates, photoDates, colors, onDayPress }: {
     <View>
       {months.map((month, mi) => (
         <View key={mi} style={{ flexDirection: "row", alignItems: "center", marginBottom: mi < 11 ? ROW_GAP : 0 }}>
-          <Text style={{ width: LABEL_W, fontSize: 9, color: colors.labelTertiary, fontFamily: "Inter_300Light", marginRight: LABEL_GAP }}>
+          <Text style={{ width: LABEL_W, fontSize: 9, color: colors.labelTertiary, fontFamily: "Outfit_300Light", marginRight: LABEL_GAP }}>
             {month.label}
           </Text>
           {month.days.map((day, di) => {
@@ -88,9 +88,9 @@ function CalendarHeatmap({ workoutDates, photoDates, colors, onDayPress }: {
       ))}
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end", gap: 5, marginTop: 10 }}>
         <View style={{ width: CELL, height: CELL, borderRadius: 1.5, backgroundColor: colors.fillSecondary }} />
-        <Text style={{ fontFamily: "Inter_300Light", fontSize: 9, color: colors.labelTertiary }}>Rest</Text>
+        <Text style={{ fontFamily: "Outfit_300Light", fontSize: 9, color: colors.labelTertiary }}>Rest</Text>
         <View style={{ width: CELL, height: CELL, borderRadius: 1.5, backgroundColor: colors.accent, marginLeft: 8 }} />
-        <Text style={{ fontFamily: "Inter_300Light", fontSize: 9, color: colors.labelTertiary }}>Trained</Text>
+        <Text style={{ fontFamily: "Outfit_300Light", fontSize: 9, color: colors.labelTertiary }}>Trained</Text>
       </View>
     </View>
   );
@@ -125,7 +125,7 @@ function MonthCalendar({ viewDate, workoutDates, photoDates, colors, onDayPress 
       <View style={{ flexDirection: "row", gap: GAP, marginBottom: GAP + 2 }}>
         {DAY_HEADERS.map((d, i) => (
           <View key={i} style={{ width: CELL, alignItems: "center" }}>
-            <Text style={{ fontFamily: "Inter_300Light", fontSize: 11, color: colors.labelTertiary }}>{d}</Text>
+            <Text style={{ fontFamily: "Outfit_300Light", fontSize: 11, color: colors.labelTertiary }}>{d}</Text>
           </View>
         ))}
       </View>
@@ -135,10 +135,10 @@ function MonthCalendar({ viewDate, workoutDates, photoDates, colors, onDayPress 
             const canPress = cell.day !== null && !cell.isFuture && (cell.hasWorkout || cell.hasPhoto);
             return (
               <TouchableOpacity key={ci} disabled={!canPress} onPress={() => canPress && onDayPress(cell.photoDate)} activeOpacity={0.7}
-                style={{ width: CELL, height: CELL, borderRadius: 8, backgroundColor: cell.day === null ? "transparent" : cell.hasWorkout ? colors.accent : colors.fillSecondary, alignItems: "center", justifyContent: "center", borderWidth: cell.isToday ? 1.5 : 0, borderColor: colors.accent }}
+                style={{ width: CELL, height: CELL, borderRadius: 4, backgroundColor: cell.day === null ? "transparent" : cell.hasWorkout ? colors.accent : colors.fillSecondary, alignItems: "center", justifyContent: "center", borderWidth: cell.isToday ? 1.5 : 0, borderColor: colors.accent }}
               >
                 {cell.day !== null && (
-                  <Text style={{ fontFamily: cell.isToday ? "Inter_500Medium" : "Inter_300Light", fontSize: 12, color: cell.hasWorkout ? "#fff" : cell.isFuture ? colors.labelQuaternary : colors.labelSecondary }}>
+                  <Text style={{ fontFamily: cell.isToday ? "Outfit_400Regular" : "Outfit_300Light", fontSize: 12, color: cell.hasWorkout ? "#fff" : cell.isFuture ? colors.labelQuaternary : colors.labelSecondary }}>
                     {cell.day}
                   </Text>
                 )}
@@ -159,8 +159,8 @@ function PhotoModal({ visible, dateStr, userId, onClose, colors }: any) {
       <Pressable style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" }} onPress={onClose}>
         <Pressable style={[s.photoSheet, { backgroundColor: colors.backgroundSecondary }]} onPress={() => {}}>
           <View style={[s.handle, { backgroundColor: colors.separator }]} />
-          <Text style={{ fontFamily: "Inter_500Medium", fontSize: 16, color: colors.label, marginBottom: 4 }}>Progress Photo</Text>
-          <Text style={{ fontFamily: "Inter_300Light", fontSize: 12, color: colors.labelSecondary, marginBottom: 16 }}>
+          <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 16, color: colors.label, marginBottom: 4 }}>Progress Photo</Text>
+          <Text style={{ fontFamily: "Outfit_300Light", fontSize: 12, color: colors.labelSecondary, marginBottom: 16 }}>
             {dateStr ? formatPhotoDate(dateStr) : ""}
           </Text>
           {photo === undefined ? (
@@ -169,13 +169,13 @@ function PhotoModal({ visible, dateStr, userId, onClose, colors }: any) {
             </View>
           ) : photo === null ? (
             <View style={[s.noPhoto, { borderColor: colors.separator }]}>
-              <Text style={{ fontFamily: "Inter_300Light", fontSize: 14, color: colors.labelSecondary }}>No photo for this day</Text>
+              <Text style={{ fontFamily: "Outfit_300Light", fontSize: 14, color: colors.labelSecondary }}>No photo for this day</Text>
             </View>
           ) : (
             <Image source={{ uri: photo.imageUrl }} style={s.photoImg} resizeMode="cover" />
           )}
           <TouchableOpacity onPress={onClose} style={[s.closeBtn, { backgroundColor: colors.fillSecondary }]}>
-            <Text style={{ fontFamily: "Inter_400Regular", fontSize: 15, color: colors.label }}>Close</Text>
+            <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 15, color: colors.label }}>Close</Text>
           </TouchableOpacity>
         </Pressable>
       </Pressable>
@@ -192,14 +192,14 @@ function WorkoutCard({ workout, colors }: { workout: any; colors: any }) {
       <TouchableOpacity onPress={() => setExpanded(v => !v)} activeOpacity={0.75}>
         <View style={s.wCardHeader}>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontFamily: "Inter_300Light", fontSize: 11, color: colors.labelTertiary, textTransform: "uppercase", letterSpacing: 0.6 }}>
+            <Text style={{ fontFamily: "Outfit_300Light", fontSize: 11, color: colors.labelTertiary, textTransform: "uppercase", letterSpacing: 0.6 }}>
               {formatDate(workout.date)}{workout.weekNumber ? `  ·  Wk ${workout.weekNumber}` : ""}
             </Text>
-            <Text style={{ fontFamily: "Inter_500Medium", fontSize: 15, color: colors.label, marginTop: 3 }}>{workout.sessionName}</Text>
+            <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 15, color: colors.label, marginTop: 3 }}>{workout.sessionName}</Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 5, marginTop: 6 }}>
               {muscles.map(m => (
-                <View key={m} style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 100, backgroundColor: (MUSCLE_BADGE_COLORS[m] ?? "#555") + "18" }}>
-                  <Text style={{ fontFamily: "Inter_400Regular", fontSize: 10, color: MUSCLE_BADGE_COLORS[m] ?? "#555" }}>
+                <View key={m} style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4, backgroundColor: (MUSCLE_BADGE_COLORS[m] ?? "#555") + "18" }}>
+                  <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 10, color: MUSCLE_BADGE_COLORS[m] ?? "#555" }}>
                     {(MUSCLE_DISPLAY_NAMES as any)[m] ?? m}
                   </Text>
                 </View>
@@ -208,7 +208,7 @@ function WorkoutCard({ workout, colors }: { workout: any; colors: any }) {
           </View>
           <View style={{ alignItems: "flex-end", gap: 4 }}>
             {!!workout.durationMin && (
-              <Text style={{ fontFamily: "Inter_300Light", fontSize: 12, color: colors.labelSecondary }}>{workout.durationMin}m</Text>
+              <Text style={{ fontFamily: "Outfit_300Light", fontSize: 12, color: colors.labelSecondary }}>{workout.durationMin}m</Text>
             )}
             <Text style={{ color: colors.labelTertiary, fontSize: 14 }}>{expanded ? "−" : "+"}</Text>
           </View>
@@ -219,12 +219,12 @@ function WorkoutCard({ workout, colors }: { workout: any; colors: any }) {
         <View style={{ marginTop: 8, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.separator, gap: 10 }}>
           {workout.exercises.map((ex: any) => (
             <View key={ex.name}>
-              <Text style={{ fontFamily: "Inter_400Regular", fontSize: 13, color: colors.label, marginBottom: 5 }}>{ex.name}</Text>
+              <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 13, color: colors.label, marginBottom: 5 }}>{ex.name}</Text>
               <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4 }}>
                 {ex.sets.map((set: any, i: number) => (
-                  <View key={i} style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 100, backgroundColor: colors.fillSecondary }}>
-                    <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: colors.label }}>{set.weight}kg × {set.reps}</Text>
-                    <Text style={{ fontFamily: "Inter_300Light", fontSize: 10, color: colors.labelTertiary, marginLeft: 4 }}>RIR {set.rir}</Text>
+                  <View key={i} style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, backgroundColor: colors.fillSecondary }}>
+                    <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 12, color: colors.label }}>{set.weight}kg × {set.reps}</Text>
+                    <Text style={{ fontFamily: "Outfit_300Light", fontSize: 10, color: colors.labelTertiary, marginLeft: 4 }}>RIR {set.rir}</Text>
                   </View>
                 ))}
               </View>
@@ -328,8 +328,8 @@ export default function HistoryScreen() {
 
         {!isLoading && !dateSummary?.length && (
           <View style={[s.card, { backgroundColor: colors.backgroundSecondary, borderColor: colors.separator }]}>
-            <Text style={{ fontFamily: "Inter_500Medium", fontSize: 17, color: colors.label }}>No workouts yet</Text>
-            <Text style={{ fontFamily: "Inter_300Light", fontSize: 14, color: colors.labelSecondary, marginTop: 8, lineHeight: 22 }}>
+            <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 17, color: colors.label }}>No workouts yet</Text>
+            <Text style={{ fontFamily: "Outfit_300Light", fontSize: 14, color: colors.labelSecondary, marginTop: 8, lineHeight: 22 }}>
               Complete a workout to see your heatmap, streaks, and stats here.
             </Text>
           </View>
@@ -343,12 +343,12 @@ export default function HistoryScreen() {
                 <Text style={[s.sectionLabel, { color: colors.labelSecondary }]}>
                   {heatmapView === "year" ? "12 months" : `${MONTH_SHORT[viewMonth.getMonth()]} ${viewMonth.getFullYear()}`}
                 </Text>
-                <View style={{ flexDirection: "row", backgroundColor: colors.fillSecondary, borderRadius: 100, padding: 2 }}>
+                <View style={{ flexDirection: "row", backgroundColor: colors.fillSecondary, borderRadius: 4, padding: 2 }}>
                   {(["month","year"] as const).map(v => (
                     <TouchableOpacity key={v} onPress={() => setHeatmapView(v)}
-                      style={{ paddingHorizontal: 14, paddingVertical: 5, borderRadius: 100, backgroundColor: heatmapView === v ? colors.backgroundSecondary : "transparent" }}
+                      style={{ paddingHorizontal: 14, paddingVertical: 5, borderRadius: 4, backgroundColor: heatmapView === v ? colors.backgroundSecondary : "transparent" }}
                     >
-                      <Text style={{ fontFamily: heatmapView === v ? "Inter_400Regular" : "Inter_300Light", fontSize: 12, color: heatmapView === v ? colors.label : colors.labelTertiary }}>
+                      <Text style={{ fontFamily: heatmapView === v ? "Outfit_400Regular" : "Outfit_300Light", fontSize: 12, color: heatmapView === v ? colors.label : colors.labelTertiary }}>
                         {v === "month" ? "Month" : "Year"}
                       </Text>
                     </TouchableOpacity>
@@ -364,7 +364,7 @@ export default function HistoryScreen() {
                     <TouchableOpacity onPress={() => setViewMonth(d => new Date(d.getFullYear(), d.getMonth() - 1, 1))}>
                       <Text style={{ fontSize: 20, color: colors.labelSecondary }}>‹</Text>
                     </TouchableOpacity>
-                    <Text style={{ fontFamily: "Inter_400Regular", fontSize: 14, color: colors.label }}>
+                    <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 14, color: colors.label }}>
                       {MONTH_SHORT[viewMonth.getMonth()]} {viewMonth.getFullYear()}
                     </Text>
                     <TouchableOpacity onPress={() => !atCurrent && setViewMonth(d => new Date(d.getFullYear(), d.getMonth() + 1, 1))}>
@@ -384,8 +384,8 @@ export default function HistoryScreen() {
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
               {statTiles.map(({ v, l, accent }) => (
                 <View key={l} style={[s.statTile, { backgroundColor: colors.backgroundSecondary, borderColor: colors.separator }]}>
-                  <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 24, color: accent ? colors.accent : colors.label, letterSpacing: -0.5 }}>{v}</Text>
-                  <Text style={{ fontFamily: "Inter_300Light", fontSize: 10, color: colors.labelTertiary, marginTop: 4, letterSpacing: 0.5, textTransform: "uppercase" }}>{l}</Text>
+                  <Text style={{ fontFamily: "CormorantGaramond_300Light", fontSize: 24, color: accent ? colors.accent : colors.label, letterSpacing: -0.5 }}>{v}</Text>
+                  <Text style={{ fontFamily: "Outfit_300Light", fontSize: 10, color: colors.labelTertiary, marginTop: 4, letterSpacing: 0.5, textTransform: "uppercase" }}>{l}</Text>
                 </View>
               ))}
             </View>
@@ -395,20 +395,20 @@ export default function HistoryScreen() {
               <View style={[s.card, { backgroundColor: colors.backgroundSecondary, borderColor: colors.separator, flexDirection: "row", padding: 0, overflow: "hidden" }]}>
                 {monthVolume > 0 && (
                   <View style={[s.metaCell, { borderRightWidth: topMuscle ? 0.5 : 0, borderRightColor: colors.separator }]}>
-                    <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 20, color: colors.label, letterSpacing: -0.5 }}>
+                    <Text style={{ fontFamily: "CormorantGaramond_300Light", fontSize: 20, color: colors.label, letterSpacing: -0.5 }}>
                       {monthVolume >= 1000 ? `${(monthVolume/1000).toFixed(1)}t` : `${monthVolume.toLocaleString()}kg`}
                     </Text>
-                    <Text style={{ fontFamily: "Inter_300Light", fontSize: 10, color: colors.labelTertiary, marginTop: 4, letterSpacing: 0.5, textTransform: "uppercase" }}>Volume / month</Text>
+                    <Text style={{ fontFamily: "Outfit_300Light", fontSize: 10, color: colors.labelTertiary, marginTop: 4, letterSpacing: 0.5, textTransform: "uppercase" }}>Volume / month</Text>
                   </View>
                 )}
                 {topMuscle && (
                   <View style={s.metaCell}>
-                    <View style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 100, backgroundColor: (MUSCLE_BADGE_COLORS[topMuscle] ?? colors.accent) + "18" }}>
-                      <Text style={{ fontFamily: "Inter_400Regular", fontSize: 13, color: MUSCLE_BADGE_COLORS[topMuscle] ?? colors.accent }}>
+                    <View style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 4, backgroundColor: (MUSCLE_BADGE_COLORS[topMuscle] ?? colors.accent) + "18" }}>
+                      <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 13, color: MUSCLE_BADGE_COLORS[topMuscle] ?? colors.accent }}>
                         {(MUSCLE_DISPLAY_NAMES as any)[topMuscle] ?? topMuscle}
                       </Text>
                     </View>
-                    <Text style={{ fontFamily: "Inter_300Light", fontSize: 10, color: colors.labelTertiary, marginTop: 6, letterSpacing: 0.5, textTransform: "uppercase" }}>Most trained</Text>
+                    <Text style={{ fontFamily: "Outfit_300Light", fontSize: 10, color: colors.labelTertiary, marginTop: 6, letterSpacing: 0.5, textTransform: "uppercase" }}>Most trained</Text>
                   </View>
                 )}
               </View>
@@ -421,13 +421,13 @@ export default function HistoryScreen() {
                 {stats.weeklyFrequency.map((days, i) => (
                   <View key={i} style={{ flex: 1, alignItems: "center", height: 60, justifyContent: "flex-end" }}>
                     <View style={{ width: "100%", height: Math.max(2, (days / maxFreq) * 48), backgroundColor: days > 0 ? colors.accent : colors.fillSecondary, borderRadius: 2 }} />
-                    <Text style={{ fontFamily: "Inter_300Light", fontSize: 9, color: colors.labelTertiary, marginTop: 4 }}>{days}</Text>
+                    <Text style={{ fontFamily: "Outfit_300Light", fontSize: 9, color: colors.labelTertiary, marginTop: 4 }}>{days}</Text>
                   </View>
                 ))}
               </View>
               <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 2 }}>
-                <Text style={{ fontFamily: "Inter_300Light", fontSize: 9, color: colors.labelTertiary }}>8 wks ago</Text>
-                <Text style={{ fontFamily: "Inter_300Light", fontSize: 9, color: colors.labelTertiary }}>This week</Text>
+                <Text style={{ fontFamily: "Outfit_300Light", fontSize: 9, color: colors.labelTertiary }}>8 wks ago</Text>
+                <Text style={{ fontFamily: "Outfit_300Light", fontSize: 9, color: colors.labelTertiary }}>This week</Text>
               </View>
             </View>
 
@@ -451,17 +451,17 @@ export default function HistoryScreen() {
 const s = StyleSheet.create({
   scroll:      { paddingHorizontal: 20, paddingBottom: 100, gap: 12 },
   header:      { marginTop: 16, marginBottom: 32 },
-  screenLabel: { fontFamily: "Inter_300Light", fontSize: 13, letterSpacing: 0.1 },
-  heroItalic:  { fontFamily: "PlayfairDisplay_400Regular_Italic", fontSize: 34, fontWeight: "400", letterSpacing: -0.3, lineHeight: 42, marginTop: 6 },
-  sectionLabel:{ fontFamily: "Inter_400Regular", fontSize: 11, letterSpacing: 1.2, textTransform: "uppercase" },
-  card:        { borderRadius: 20, padding: 20, borderWidth: 1 },
-  statTile:    { width: "48%", borderRadius: 16, padding: 16, borderWidth: 1 },
+  screenLabel: { fontFamily: "Outfit_300Light", fontSize: 10, letterSpacing: 3, textTransform: "uppercase" },
+  heroItalic:  { fontFamily: "CormorantGaramond_300Light_Italic", fontSize: 52, fontWeight: "300", letterSpacing: -0.5, lineHeight: 58, marginTop: 10 },
+  sectionLabel:{ fontFamily: "Outfit_300Light", fontSize: 10, letterSpacing: 3, textTransform: "uppercase" },
+  card:        { borderRadius: 4, padding: 20, borderWidth: 1 },
+  statTile:    { width: "48%", borderRadius: 4, padding: 16, borderWidth: 1 },
   metaCell:    { flex: 1, paddingVertical: 20, paddingHorizontal: 16, alignItems: "center" },
-  wCard:       { borderRadius: 16, borderWidth: 1, overflow: "hidden", marginBottom: 0 },
+  wCard:       { borderRadius: 4, borderWidth: 1, overflow: "hidden", marginBottom: 0 },
   wCardHeader: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", padding: 16 },
   photoSheet:  { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 36 },
   handle:      { width: 36, height: 4, borderRadius: 2, alignSelf: "center", marginBottom: 20 },
-  noPhoto:     { height: 160, borderRadius: 16, borderWidth: 1, borderStyle: "dashed", alignItems: "center", justifyContent: "center", marginBottom: 16 },
-  photoImg:    { width: "100%", height: 320, borderRadius: 14, marginBottom: 16 },
-  closeBtn:    { paddingVertical: 14, borderRadius: 100, alignItems: "center" },
+  noPhoto:     { height: 160, borderRadius: 4, borderWidth: 1, borderStyle: "dashed", alignItems: "center", justifyContent: "center", marginBottom: 16 },
+  photoImg:    { width: "100%", height: 320, borderRadius: 4, marginBottom: 16 },
+  closeBtn:    { paddingVertical: 14, borderRadius: 4, alignItems: "center" },
 });

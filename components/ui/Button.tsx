@@ -67,7 +67,7 @@ export function Button({
         {loading ? (
           <ActivityIndicator color={labelColor} />
         ) : (
-          <Text style={{ fontFamily: "Inter_500Medium", fontSize, color: labelColor, letterSpacing: 0.1 }}>
+          <Text style={{ fontFamily: "Outfit_400Regular", fontSize, color: labelColor, letterSpacing: 0.1 }}>
             {label}
           </Text>
         )}
@@ -78,7 +78,7 @@ export function Button({
 
 const styles = StyleSheet.create({
   button: {
-    borderRadius: 100,
+    borderRadius: 4,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 24,

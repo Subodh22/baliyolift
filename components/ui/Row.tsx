@@ -51,17 +51,17 @@ const styles = StyleSheet.create({
   },
   label: {
     flex: 1,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Outfit_400Regular",
     fontSize: 15,
     letterSpacing: -0.1,
   },
   value: {
-    fontFamily: "Inter_300Light",
+    fontFamily: "Outfit_300Light",
     fontSize: 15,
     marginRight: 4,
   },
   group: {
-    borderRadius: 16,
+    borderRadius: 8,
     overflow: "hidden",
     borderWidth: 1,
     marginBottom: 8,

@@ -238,5 +238,5 @@ const styles = StyleSheet.create({
   mainBtn: { height: 48, paddingHorizontal: 28, borderRadius: 24, alignItems: "center", justifyContent: "center" },
   secondaryBtn: { height: 48, paddingHorizontal: 20, borderRadius: 24, alignItems: "center", justifyContent: "center" },
   presets: { flexDirection: "row", gap: 8 },
-  presetPill: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20 },
+  presetPill: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8 },
 });

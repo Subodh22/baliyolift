@@ -156,18 +156,19 @@ function reducer(s: WState, a: Action): WState {
 
 // ─── Overload arrow ───────────────────────────────────────────────────────────
 
-function Arrow({ ind }: { ind: OverloadIndicator | null }) {
+function Arrow({ ind, colors }: { ind: OverloadIndicator | null; colors: any }) {
   if (!ind) return <View style={{ width: 26 }} />;
   const cfg: Record<OverloadIndicator, [string, string]> = {
-    increase: ["↗", "#CC2020"], decrease: ["↘", "#999"], maintain: ["→", "#AAA"], add_rep: ["+1", "#26A870"],
+    increase: ["↗", colors.accentRed], decrease: ["↘", colors.labelTertiary], maintain: ["→", colors.labelTertiary], add_rep: ["+1", colors.accentGreen],
   };
-  return <View style={styles.arrowCell}><Text style={{ fontSize: 13, fontWeight: "800", color: cfg[ind][1] }}>{cfg[ind][0]}</Text></View>;
+  return <View style={styles.arrowCell}><Text style={{ fontSize: 13, fontFamily: "Outfit_400Regular", color: cfg[ind][1] }}>{cfg[ind][0]}</Text></View>;
 }
 
 // ─── Muscle badge ─────────────────────────────────────────────────────────────
 
 function MuscleBadge({ muscle }: { muscle: string }) {
-  const c = MUSCLE_BADGE_COLORS[muscle] ?? "#CC2020";
+  const { colors } = useTheme();
+  const c = MUSCLE_BADGE_COLORS[muscle] ?? colors.accentRed;
   const label = (MUSCLE_DISPLAY_NAMES as any)[muscle] ?? muscle;
   return (
     <View style={[styles.badge, { backgroundColor: c }]}>
@@ -190,8 +191,8 @@ function SetRow({ set, setIdx, totalSets, exId, activeCell, onFocus, onLog, onMe
     <View style={[styles.setRow, { backgroundColor: setIdx % 2 === 0 ? colors.setRowBg : colors.setRowAlt }]}>
       <TouchableOpacity onPress={onMenu} hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }} style={{ width: 32, alignItems: "center" }}>
         {set.isLogged
-          ? <Text style={{ fontSize: 12, fontWeight: "800", color: colors.loggedCheckBg }}>✓</Text>
-          : <Text style={{ fontSize: 11, fontWeight: "700", color: colors.labelTertiary }}>{setIdx + 1}/{totalSets}</Text>
+          ? <Text style={{ fontSize: 12, fontFamily: "Outfit_400Regular", color: colors.loggedCheckBg }}>✓</Text>
+          : <Text style={{ fontSize: 11, fontFamily: "Outfit_400Regular", color: colors.labelTertiary }}>{setIdx + 1}/{totalSets}</Text>
         }
       </TouchableOpacity>
       <Pressable style={[styles.cell, { backgroundColor: wActive ? colors.repRangeBg : "transparent" }]} onPress={() => onFocus("weight")}>
@@ -200,9 +201,9 @@ function SetRow({ set, setIdx, totalSets, exId, activeCell, onFocus, onLog, onMe
       <Pressable style={[styles.cell, { backgroundColor: rActive ? colors.repRangeBg : "transparent" }]} onPress={() => onFocus("reps")}>
         <Text style={[styles.cellNum, { color: set.isLogged ? colors.labelSecondary : colors.label }]}>{set.reps}</Text>
       </Pressable>
-      <Arrow ind={set.isLogged ? set.overloadIndicator : null} />
+      <Arrow ind={set.isLogged ? set.overloadIndicator : null} colors={colors} />
       <Pressable style={[styles.checkbox, { backgroundColor: set.isLogged ? colors.loggedCheckBg : colors.separator }]} onPress={onLog}>
-        {set.isLogged && <Text style={{ color: "#FFF", fontWeight: "800", fontSize: 14 }}>✓</Text>}
+        {set.isLogged && <Text style={{ color: "#FFF", fontFamily: "Outfit_400Regular", fontSize: 14 }}>✓</Text>}
       </Pressable>
     </View>
   );
@@ -264,7 +265,7 @@ function ExCard({ se, originalExId, exState, suggestion, activeCell, dispatch, w
   const setType = exState?.setType ?? "regular";
 
   return (
-    <Animated.View entering={FadeInDown.springify().damping(20)} style={[styles.card, { backgroundColor: colors.background }]}>
+    <Animated.View entering={FadeInDown.springify().damping(20)} style={[styles.card, { backgroundColor: colors.backgroundSecondary }]}>
       {/* Top row */}
       <View style={styles.cardTop}>
         <MuscleBadge muscle={ex.muscleGroup} />
@@ -279,14 +280,14 @@ function ExCard({ se, originalExId, exState, suggestion, activeCell, dispatch, w
       </View>
 
       {/* Name + equipment */}
-      <Text style={[typography.title3, { color: colors.label, fontWeight: "700", marginBottom: 2 }]}>{ex.name}</Text>
-      <Text style={{ color: colors.labelTertiary, fontSize: 11, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 12 }}>{ex.equipment}</Text>
+      <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 17, letterSpacing: -0.2, color: colors.label, marginBottom: 2 }}>{ex.name}</Text>
+      <Text style={{ fontFamily: "Outfit_300Light", color: colors.labelTertiary, fontSize: 11, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 12 }}>{ex.equipment}</Text>
 
       {/* Rep range + last session */}
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
         <View style={[styles.repPill, { backgroundColor: colors.repRangeBg }]}>
           <Text style={{ color: colors.repRangeFg, fontSize: 13, marginRight: 4 }}>✎</Text>
-          <Text style={{ color: colors.repRangeFg, fontSize: 15, fontWeight: "600" }}>{se.repRangeMin}–{se.repRangeMax}</Text>
+          <Text style={{ color: colors.repRangeFg, fontSize: 15, fontFamily: "Outfit_400Regular" }}>{se.repRangeMin}–{se.repRangeMax}</Text>
         </View>
         {suggestion?.lastSession && (
           <Text style={{ color: colors.labelTertiary, fontSize: 11, marginLeft: "auto" as any }}>
@@ -298,29 +299,29 @@ function ExCard({ se, originalExId, exState, suggestion, activeCell, dispatch, w
       {/* Today's target banner */}
       {suggestion && (() => {
         const cfg: Record<string, { label: string; color: string; bg: string }> = {
-          increase:  { label: "↗ Add weight",  color: "#CC2020", bg: "#CC202018" },
-          add_rep:   { label: "+1 Rep",         color: "#26A870", bg: "#26A87018" },
-          maintain:  { label: "→ Match last",   color: "#888",    bg: "#88888815" },
-          decrease:  { label: "↘ Reduce weight",color: "#999",    bg: "#99999918" },
+          increase:  { label: "↗ Add weight",   color: colors.accentRed,   bg: colors.accentRed + "18" },
+          add_rep:   { label: "+1 Rep",          color: colors.accentGreen, bg: colors.accentGreen + "18" },
+          maintain:  { label: "→ Match last",    color: colors.labelTertiary, bg: colors.fillSecondary },
+          decrease:  { label: "↘ Reduce weight", color: colors.labelTertiary, bg: colors.fillSecondary },
         };
         const c = cfg[suggestion.overloadIndicator] ?? cfg.maintain;
         const hasWeight = suggestion.suggestedWeight != null;
         return (
           <View style={[styles.targetBanner, { backgroundColor: c.bg, borderColor: c.color + "40" }]}>
             <View style={{ flex: 1 }}>
-              <Text style={{ color: c.color, fontWeight: "800", fontSize: 12, letterSpacing: 0.5 }}>
+              <Text style={{ color: c.color, fontFamily: "Outfit_400Regular", fontSize: 12, letterSpacing: 0.5 }}>
                 {c.label.toUpperCase()}
               </Text>
-              <Text style={{ color: colors.label, fontWeight: "700", fontSize: 15, marginTop: 2 }}>
+              <Text style={{ color: colors.label, fontFamily: "Outfit_400Regular", fontSize: 15, marginTop: 2 }}>
                 {hasWeight ? `${suggestion.suggestedWeight}kg × ${suggestion.suggestedReps} reps` : `${suggestion.suggestedReps} reps`}
-                <Text style={{ color: colors.labelSecondary, fontWeight: "500", fontSize: 13 }}>
+                <Text style={{ color: colors.labelSecondary, fontFamily: "Outfit_400Regular", fontSize: 13 }}>
                   {`  ·  ${sets.length} sets  ·  RIR ${suggestion.targetRir}`}
                 </Text>
               </Text>
             </View>
             {suggestion.deloadFlag && (
-              <View style={{ backgroundColor: "#E8A02025", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }}>
-                <Text style={{ color: "#E8A020", fontSize: 10, fontWeight: "700" }}>DELOAD{"\n"}SOON</Text>
+              <View style={{ backgroundColor: colors.accentOrange + "25", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }}>
+                <Text style={{ color: colors.accentOrange, fontSize: 10, fontFamily: "Outfit_400Regular" }}>DELOAD{"\n"}SOON</Text>
               </View>
             )}
           </View>
@@ -333,7 +334,7 @@ function ExCard({ se, originalExId, exState, suggestion, activeCell, dispatch, w
         <Text style={[styles.tblHdr, { color: colors.labelTertiary }]}>WEIGHT</Text>
         <Text style={[styles.tblHdr, { color: colors.labelTertiary }]}>REPS</Text>
         <View style={{ width: 26 }} />
-        <Text style={{ width: 34, textAlign: "center", fontSize: 11, fontWeight: "700", letterSpacing: 0.5, color: colors.labelTertiary }}>LOG</Text>
+        <Text style={{ width: 34, textAlign: "center", fontSize: 11, fontFamily: "Outfit_400Regular", letterSpacing: 0.5, color: colors.labelTertiary }}>LOG</Text>
       </View>
 
       {/* Sets */}
@@ -350,11 +351,11 @@ function ExCard({ se, originalExId, exState, suggestion, activeCell, dispatch, w
 
       {/* Set type */}
       <View style={[styles.setTypeRow, { borderTopColor: colors.separator }]}>
-        <Text style={{ color: colors.labelTertiary, fontSize: 11, fontWeight: "600", marginRight: 8 }}>SET TYPE</Text>
+        <Text style={{ color: colors.labelTertiary, fontSize: 11, fontFamily: "Outfit_400Regular", letterSpacing: 0.8, marginRight: 8 }}>SET TYPE</Text>
         {(["regular", "myorep", "myorep_match"] as SetType[]).map((t) => (
           <Pressable key={t} onPress={() => { selectionAsync(); dispatch({ type: "SET_TYPE", exId: originalExId, st: t }); }}
             style={[styles.typePill, { backgroundColor: setType === t ? colors.accent : colors.fillSecondary }]}>
-            <Text style={{ color: setType === t ? "#FFF" : colors.labelSecondary, fontSize: 11, fontWeight: "600" }}>
+            <Text style={{ color: setType === t ? "#FFF" : colors.labelSecondary, fontSize: 11, fontFamily: "Outfit_400Regular" }}>
               {t === "regular" ? "Regular" : t === "myorep" ? "Myorep" : "Myorep match"}
             </Text>
           </Pressable>
@@ -386,7 +387,7 @@ function NumPad({ onKey, colors }: { onKey: (k: string) => void; colors: any }) 
       {["1","2","3","4","5","6","7","8","9",".","0","⌫"].map((k) => (
         <TouchableOpacity key={k} style={[styles.numKey, { backgroundColor: colors.backgroundTertiary }]}
           onPress={() => { impactLight(); onKey(k); }} activeOpacity={0.55}>
-          <Text style={{ fontSize: 20, fontWeight: "500", color: colors.label }}>{k}</Text>
+          <Text style={{ fontSize: 20, fontFamily: "Outfit_400Regular", color: colors.label }}>{k}</Text>
         </TouchableOpacity>
       ))}
     </View>
@@ -528,17 +529,17 @@ export default function WorkoutScreen() {
       <View style={[styles.headerWrap, { backgroundColor: colors.headerBg, paddingTop: insets.top + 8 }]}>
         <View style={[styles.header, { backgroundColor: colors.headerBg }]}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.hSub}>{meso?.name?.toUpperCase() ?? "WORKOUT"}</Text>
-            <Text style={styles.hTitle}>WEEK {weekNumber}  DAY {dayNum}  {weekday}</Text>
+            <Text style={{ fontFamily: "Outfit_300Light", color: colors.labelSecondary, fontSize: 11, letterSpacing: 1 }}>{meso?.name?.toUpperCase() ?? "WORKOUT"}</Text>
+            <Text style={{ fontFamily: "Outfit_400Regular", color: "#FFF", fontSize: 16, marginTop: 2, letterSpacing: -0.2 }}>WEEK {weekNumber}  DAY {dayNum}  {weekday}</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
             {allLogged ? (
               <TouchableOpacity style={[styles.finishPill, { backgroundColor: colors.accentGreen }]} onPress={handleFinish}>
-                <Text style={{ color: "#FFF", fontWeight: "700", fontSize: 13 }}>FINISH ✓</Text>
+                <Text style={{ color: "#FFF", fontFamily: "Outfit_400Regular", fontSize: 13 }}>FINISH ✓</Text>
               </TouchableOpacity>
             ) : null}
             <TouchableOpacity onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-              <Text style={{ color: "#888", fontSize: 20 }}>✕</Text>
+              <Text style={{ color: colors.labelTertiary, fontSize: 20 }}>✕</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -581,7 +582,7 @@ export default function WorkoutScreen() {
         })}
         {allLogged && (
           <TouchableOpacity style={[styles.finishBar, { backgroundColor: colors.accentGreen }]} onPress={handleFinish}>
-            <Text style={{ color: "#FFF", fontSize: 17, fontWeight: "700" }}>Finish Workout ✓</Text>
+            <Text style={{ color: "#FFF", fontSize: 17, fontFamily: "Outfit_400Regular" }}>Finish Workout ✓</Text>
           </TouchableOpacity>
         )}
       </ScrollView>
@@ -589,12 +590,12 @@ export default function WorkoutScreen() {
       {/* Numpad */}
       <Animated.View style={[styles.numWrap, { backgroundColor: colors.backgroundSecondary }, numStyle]}>
         <View style={[styles.numTop, { borderBottomColor: colors.separator }]}>
-          <Text style={{ color: colors.labelSecondary, fontSize: 12, fontWeight: "600" }}>
+          <Text style={{ color: colors.labelSecondary, fontSize: 12, fontFamily: "Outfit_400Regular", letterSpacing: 0.8 }}>
             {state.activeCell?.field === "weight" ? "WEIGHT (kg)" : "REPS"}
           </Text>
-          <Text style={{ color: colors.label, fontSize: 22, fontWeight: "700", marginLeft: 14, flex: 1 }}>{state.numpadVal}</Text>
+          <Text style={{ color: colors.label, fontSize: 22, fontFamily: "Outfit_400Regular", marginLeft: 14, flex: 1 }}>{state.numpadVal}</Text>
           <TouchableOpacity style={[styles.doneBtn, { backgroundColor: colors.accent }]} onPress={() => dispatch({ type: "BLUR" })}>
-            <Text style={{ color: "#FFF", fontWeight: "700" }}>Done</Text>
+            <Text style={{ color: "#FFF", fontFamily: "Outfit_400Regular" }}>Done</Text>
           </TouchableOpacity>
         </View>
         <NumPad onKey={(k) => dispatch({ type: "KEY", key: k })} colors={colors} />
@@ -606,7 +607,7 @@ export default function WorkoutScreen() {
           <Text style={{ fontSize: 18 }}>⏱</Text>
           <RestTimer defaultSeconds={90} compact onComplete={() => dispatch({ type: "HIDE_REST" })} />
           <TouchableOpacity onPress={() => dispatch({ type: "HIDE_REST" })} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-            <Text style={{ color: "#888", fontSize: 16 }}>✕</Text>
+            <Text style={{ color: colors.labelTertiary, fontSize: 16 }}>✕</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -650,30 +651,30 @@ const styles = StyleSheet.create({
   screen: { flex: 1 },
   headerWrap: { paddingBottom: 12 },
   header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 18, paddingTop: 4 },
-  hSub: { color: "#777", fontSize: 11, fontWeight: "700", letterSpacing: 1 },
-  hTitle: { color: "#FFF", fontSize: 16, fontWeight: "800", marginTop: 2 },
-  finishPill: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
+  hSub: { fontSize: 11, letterSpacing: 1 },
+  hTitle: { fontSize: 16, marginTop: 2 },
+  finishPill: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 4 },
   card: { marginHorizontal: 12, marginBottom: 12, borderRadius: 16, padding: 16, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 6, elevation: 2 },
   cardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
   badge: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6 },
-  badgeText: { color: "#FFF", fontSize: 11, fontWeight: "700", letterSpacing: 0.6 },
+  badgeText: { color: "#FFF", fontSize: 11, fontFamily: "Outfit_400Regular", letterSpacing: 0.6 },
   badgeDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "rgba(255,255,255,0.6)" },
   repPill: { flexDirection: "row", alignItems: "center", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6 },
-  targetBanner: { flexDirection: "row", alignItems: "center", borderRadius: 10, borderWidth: 1, padding: 12, marginBottom: 12 },
+  targetBanner: { flexDirection: "row", alignItems: "center", borderRadius: 4, borderWidth: 1, padding: 12, marginBottom: 12 },
   tblHead: { flexDirection: "row", alignItems: "center", paddingBottom: 6, borderBottomWidth: 0.5, marginBottom: 2 },
-  tblHdr: { flex: 1, textAlign: "center", fontSize: 11, fontWeight: "700", letterSpacing: 0.6 },
+  tblHdr: { flex: 1, textAlign: "center", fontSize: 11, fontFamily: "Outfit_400Regular", letterSpacing: 0.6 },
   setRow: { flexDirection: "row", alignItems: "center", paddingVertical: 3, paddingHorizontal: 2, minHeight: 46, borderRadius: 6 },
   cell: { flex: 1, height: 40, borderRadius: 6, alignItems: "center", justifyContent: "center", marginHorizontal: 2 },
-  cellNum: { fontSize: 17, fontWeight: "600" },
+  cellNum: { fontSize: 17, fontFamily: "CormorantGaramond_300Light" },
   arrowCell: { width: 26, alignItems: "center", justifyContent: "center" },
-  checkbox: { width: 34, height: 34, borderRadius: 7, alignItems: "center", justifyContent: "center", marginLeft: 2 },
+  checkbox: { width: 34, height: 34, borderRadius: 4, alignItems: "center", justifyContent: "center", marginLeft: 2 },
   setTypeRow: { flexDirection: "row", alignItems: "center", paddingTop: 10, borderTopWidth: 0.5, gap: 6, flexWrap: "wrap" },
-  typePill: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 14 },
+  typePill: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 4 },
   numWrap: { position: "absolute", bottom: 0, left: 0, right: 0, borderTopLeftRadius: 18, borderTopRightRadius: 18, shadowColor: "#000", shadowOffset: { width: 0, height: -2 }, shadowOpacity: 0.12, shadowRadius: 8, elevation: 10 },
   numTop: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 0.5 },
   doneBtn: { paddingHorizontal: 16, paddingVertical: 7, borderRadius: 8 },
   numGrid: { flexDirection: "row", flexWrap: "wrap", padding: 8, gap: 6 },
-  numKey: { width: "30%", height: 52, borderRadius: 10, alignItems: "center", justifyContent: "center", flexGrow: 1 },
+  numKey: { width: "30%", height: 52, borderRadius: 4, alignItems: "center", justifyContent: "center", flexGrow: 1 },
   restBar: { position: "absolute", bottom: 0, left: 0, right: 0, flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 20, paddingVertical: 14, paddingBottom: 28, borderTopLeftRadius: 16, borderTopRightRadius: 16 },
-  finishBar: { marginHorizontal: 16, height: 56, borderRadius: 14, alignItems: "center", justifyContent: "center", marginTop: 8 },
+  finishBar: { marginHorizontal: 16, height: 56, borderRadius: 4, alignItems: "center", justifyContent: "center", marginTop: 8 },
 });

@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
   closeBtn: {
     paddingHorizontal: 14,
     paddingVertical: 7,
-    borderRadius: 20,
+    borderRadius: 8,
   },
   playerWrapper: {
     width: SCREEN_WIDTH,

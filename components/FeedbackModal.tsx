@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   section: {
-    borderRadius: 16,
+    borderRadius: 8,
     padding: 16,
   },
   muscleBadge: {
