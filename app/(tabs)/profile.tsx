@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, StyleSheet, Switch, Alert, ActivityIndicator, TouchableOpacity, Image } from "react-native";
+import { View, Text, ScrollView, StyleSheet, Switch, Alert, ActivityIndicator, TouchableOpacity, Image, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useState } from "react";
@@ -26,8 +26,9 @@ export default function ProfileScreen() {
   const imageUrl = user?.imageUrl ?? null;
 
   const handleResetData = () => {
+    console.log("Reset button pressed, userId:", userId);
     if (!userId) {
-      Alert.alert("Error", `User not loaded yet (userId=${userId}). Please wait a moment and try again.`);
+      Alert.alert("Error", `User not loaded (userId=${String(userId)}). Wait a moment and try again.`);
       return;
     }
     Alert.alert(
@@ -154,11 +155,12 @@ export default function ProfileScreen() {
           <RowGroup>
             <Row label="Sign Out" onPress={handleSignOut} showChevron={false} />
           </RowGroup>
-          <TouchableOpacity
+          <Pressable
             onPress={handleResetData}
-            disabled={resetting}
-            activeOpacity={0.7}
-            style={[styles.resetBtn, { backgroundColor: "#FF3B3022" }]}
+            style={({ pressed }) => [
+              styles.resetBtn,
+              { backgroundColor: pressed ? "#FF3B3044" : "#FF3B3022" }
+            ]}
           >
             {resetting ? (
               <ActivityIndicator color="#FF3B30" />
@@ -167,7 +169,7 @@ export default function ProfileScreen() {
                 Reset All Data
               </Text>
             )}
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
         {/* Version */}
