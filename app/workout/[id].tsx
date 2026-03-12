@@ -28,6 +28,8 @@ import { MUSCLE_DISPLAY_NAMES } from "@/constants/muscles";
 import { FeedbackModal } from "@/components/FeedbackModal";
 import { RestTimer } from "@/components/RestTimer";
 import { SwapSheet } from "@/components/SwapSheet";
+import { VideoModal } from "@/components/VideoModal";
+import { getVideoId } from "@/data/exerciseVideos";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -208,10 +210,10 @@ function SetRow({ set, setIdx, totalSets, exId, activeCell, onFocus, onLog, onMe
 
 // ─── Exercise card ────────────────────────────────────────────────────────────
 
-function ExCard({ se, originalExId, exState, suggestion, activeCell, dispatch, workoutId, userId, onOpenSwap }: {
+function ExCard({ se, originalExId, exState, suggestion, activeCell, dispatch, workoutId, userId, onOpenSwap, onOpenVideo }: {
   se: any; originalExId: string; exState: LocalExState | undefined; suggestion: any;
   activeCell: WState["activeCell"]; dispatch: React.Dispatch<Action>;
-  workoutId: Id<"workouts"> | null; userId: Id<"users"> | null; onOpenSwap: () => void;
+  workoutId: Id<"workouts"> | null; userId: Id<"users"> | null; onOpenSwap: () => void; onOpenVideo: () => void;
 }) {
   const { colors, typography } = useTheme();
   const logMut = useMutation(api.sets.logSet);
@@ -267,7 +269,9 @@ function ExCard({ se, originalExId, exState, suggestion, activeCell, dispatch, w
       <View style={styles.cardTop}>
         <MuscleBadge muscle={ex.muscleGroup} />
         <View style={{ flexDirection: "row", gap: 12 }}>
-          <Text style={{ color: colors.labelTertiary, fontSize: 18 }}>▷</Text>
+          <TouchableOpacity onPress={onOpenVideo}>
+            <Text style={{ color: colors.labelTertiary, fontSize: 18 }}>▷</Text>
+          </TouchableOpacity>
           <TouchableOpacity onPress={onOpenSwap}>
             <Text style={{ color: colors.labelTertiary, fontSize: 18 }}>⋯</Text>
           </TouchableOpacity>
@@ -362,16 +366,16 @@ function ExCard({ se, originalExId, exState, suggestion, activeCell, dispatch, w
 
 // ─── Card wrapper fetching per-exercise suggestion ────────────────────────────
 
-function ExCardWithSuggestion({ se, originalExId, exState, activeCell, dispatch, workoutId, userId, weekNumber, mesoId, onOpenSwap }: {
+function ExCardWithSuggestion({ se, originalExId, exState, activeCell, dispatch, workoutId, userId, weekNumber, mesoId, onOpenSwap, onOpenVideo }: {
   se: any; originalExId: string; exState: LocalExState | undefined; activeCell: WState["activeCell"];
   dispatch: React.Dispatch<Action>; workoutId: Id<"workouts"> | null; userId: Id<"users"> | null;
-  weekNumber: number; mesoId: Id<"mesocycles"> | null; onOpenSwap: () => void;
+  weekNumber: number; mesoId: Id<"mesocycles"> | null; onOpenSwap: () => void; onOpenVideo: () => void;
 }) {
   const suggestion = useQuery(
     api.overload.getSuggestionV2,
     userId && mesoId ? { userId, exerciseId: se.exerciseId, mesocycleId: mesoId, weekNumber, repRangeMin: se.repRangeMin, repRangeMax: se.repRangeMax, targetSets: se.targetSets } : "skip"
   );
-  return <ExCard se={se} originalExId={originalExId} exState={exState} suggestion={suggestion} activeCell={activeCell} dispatch={dispatch} workoutId={workoutId} userId={userId} onOpenSwap={onOpenSwap} />;
+  return <ExCard se={se} originalExId={originalExId} exState={exState} suggestion={suggestion} activeCell={activeCell} dispatch={dispatch} workoutId={workoutId} userId={userId} onOpenSwap={onOpenSwap} onOpenVideo={onOpenVideo} />;
 }
 
 // ─── NumPad ───────────────────────────────────────────────────────────────────
@@ -414,6 +418,8 @@ export default function WorkoutScreen() {
     exercise: { _id: Id<"exercises">; name: string; muscleGroup: string; equipment: string; sfr: string };
     oldExId: string;
   } | null>(null);
+
+  const [videoTarget, setVideoTarget] = useState<{ name: string; videoId: string } | null>(null);
 
   const meso = useQuery(api.mesocycles.getActiveWithDetails, userId ? { userId } : "skip");
 
@@ -566,6 +572,10 @@ export default function WorkoutScreen() {
                   oldExId,
                 })
               }
+              onOpenVideo={() => {
+                const vid = getVideoId(effectiveSe.exercise?.name ?? "");
+                if (vid) setVideoTarget({ name: effectiveSe.exercise?.name ?? "", videoId: vid });
+              }}
             />
           );
         })}
@@ -618,6 +628,16 @@ export default function WorkoutScreen() {
             dispatch({ type: "SWAP_LOCAL", oldExId: swapTarget.oldExId, exerciseId: newEx._id, exercise: newEx });
           }}
           onClose={() => setSwapTarget(null)}
+        />
+      )}
+
+      {/* Exercise video modal */}
+      {videoTarget && (
+        <VideoModal
+          visible
+          exerciseName={videoTarget.name}
+          videoId={videoTarget.videoId}
+          onClose={() => setVideoTarget(null)}
         />
       )}
     </View>
