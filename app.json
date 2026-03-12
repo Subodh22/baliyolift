@@ -33,14 +33,15 @@
       "favicon": "./assets/favicon.png",
       "bundler": "metro",
       "output": "static",
-      "name": "BaliYoLift",
-      "shortName": "BaliYoLift",
-      "themeColor": "#CC2020",
-      "backgroundColor": "#000000",
+      "name": "Baliyo",
+      "shortName": "Baliyo",
+      "themeColor": "#0A0A0B",
+      "backgroundColor": "#0A0A0B",
       "startUrl": "/",
       "display": "standalone",
       "orientation": "portrait",
-      "description": "RP-style hypertrophy training tracker"
+      "description": "RP-style hypertrophy training tracker",
+      "icon": "./assets/pwa-icon-512.png"
     },
     "extra": {
       "eas": {

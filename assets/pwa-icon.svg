@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="115" fill="#0A0A0B"/>
+
+  <!-- Gem facets -->
+  <!-- Top-left -->
+  <polygon points="256,98 124,252 256,252" fill="#111109"/>
+  <!-- Top-right -->
+  <polygon points="256,98 256,252 388,252" fill="#3A3318"/>
+  <!-- Bottom-left -->
+  <polygon points="124,252 256,414 256,252" fill="#272410"/>
+  <!-- Bottom-right -->
+  <polygon points="256,252 256,414 388,252" fill="#302B14"/>
+
+  <!-- Gold outline -->
+  <polygon points="256,98 388,252 256,414 124,252" fill="none" stroke="#C9A84C" stroke-width="4" stroke-linejoin="round"/>
+  <!-- Center vertical -->
+  <line x1="256" y1="98" x2="256" y2="414" stroke="#C9A84C" stroke-width="1.8"/>
+  <!-- Center horizontal -->
+  <line x1="124" y1="252" x2="388" y2="252" stroke="#C9A84C" stroke-width="1.8"/>
+</svg>
