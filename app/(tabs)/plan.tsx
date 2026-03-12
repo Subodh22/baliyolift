@@ -5,9 +5,11 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  Pressable,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import { useState } from "react";
 import { router } from "expo-router";
 import { useQuery, useMutation } from "convex/react";
 import { notificationSuccess } from "@/utils/haptics";
@@ -57,20 +59,22 @@ export default function PlanScreen() {
   );
 
   const completeMeso = useMutation(api.mesocycles.complete);
-  const deleteAllMesos = useMutation(api.mesocycles.deleteAllForUser);
+
+  const [confirmEnd, setConfirmEnd] = useState(false);
+  const [ending, setEnding] = useState(false);
 
   const isLoading = userLoading || meso === undefined;
 
   const handleEndMeso = async () => {
-    if (!meso) return;
-    notificationSuccess();
-    await completeMeso({ mesocycleId: meso._id });
-  };
-
-  const handleReset = async () => {
-    if (!userId) return;
-    notificationSuccess();
-    await deleteAllMesos({ userId });
+    if (!meso || ending) return;
+    setEnding(true);
+    try {
+      notificationSuccess();
+      await completeMeso({ mesocycleId: meso._id });
+    } finally {
+      setEnding(false);
+      setConfirmEnd(false);
+    }
   };
 
   return (
@@ -235,16 +239,36 @@ export default function PlanScreen() {
 
             {/* Actions */}
             <Animated.View entering={FadeInDown.delay(240).springify()} style={{ marginTop: 24, gap: 10 }}>
-              <Button label="End Mesocycle" onPress={handleEndMeso} variant="secondary" />
-              <TouchableOpacity
-                onPress={handleReset}
-                style={{ alignItems: "center", paddingVertical: 12 }}
-                activeOpacity={0.7}
-              >
-                <Text style={[typography.caption1, { color: colors.labelTertiary }]}>
-                  Delete & start over with a template
-                </Text>
-              </TouchableOpacity>
+              {confirmEnd ? (
+                <View style={[styles.confirmBox, { backgroundColor: "#FF3B3012", borderColor: "#FF3B3040" }]}>
+                  <Text style={[typography.subheadline, { color: colors.label, fontWeight: "700", marginBottom: 4 }]}>
+                    End this mesocycle?
+                  </Text>
+                  <Text style={[typography.caption1, { color: colors.labelSecondary, marginBottom: 16 }]}>
+                    Your training history is saved. You can start a new mesocycle after.
+                  </Text>
+                  <View style={{ flexDirection: "row", gap: 10 }}>
+                    <Pressable
+                      onPress={() => setConfirmEnd(false)}
+                      style={[styles.confirmBtn, { backgroundColor: colors.fillSecondary, flex: 1 }]}
+                    >
+                      <Text style={[typography.subheadline, { color: colors.label, fontWeight: "600" }]}>Cancel</Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={handleEndMeso}
+                      style={[styles.confirmBtn, { backgroundColor: "#FF3B30", flex: 1 }]}
+                    >
+                      {ending ? (
+                        <ActivityIndicator color="#fff" />
+                      ) : (
+                        <Text style={[typography.subheadline, { color: "#fff", fontWeight: "700" }]}>End Mesocycle</Text>
+                      )}
+                    </Pressable>
+                  </View>
+                </View>
+              ) : (
+                <Button label="End Mesocycle" onPress={() => setConfirmEnd(true)} variant="secondary" />
+              )}
             </Animated.View>
           </>
         )}
@@ -254,6 +278,16 @@ export default function PlanScreen() {
 }
 
 const styles = StyleSheet.create({
+  confirmBox: {
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 16,
+  },
+  confirmBtn: {
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
   header: {
     marginTop: 8,
     marginBottom: 24,
