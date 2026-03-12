@@ -20,7 +20,7 @@ export function Button({
   loading = false,
   disabled = false,
 }: ButtonProps) {
-  const { colors, typography } = useTheme();
+  const { colors } = useTheme();
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -39,7 +39,7 @@ export function Button({
 
   const bgColor = {
     primary:     colors.accent,
-    secondary:   colors.fillPrimary,
+    secondary:   colors.fillSecondary,
     ghost:       "transparent",
     destructive: colors.accentRed,
   }[variant];
@@ -51,16 +51,15 @@ export function Button({
     destructive: "#FFFFFF",
   }[variant];
 
-  const height = { lg: 52, md: 44, sm: 36 }[size];
-  const radius = { lg: 14, md: 12, sm: 10 }[size];
-  const textStyle = size === "lg" ? typography.headline : typography.subheadline;
+  const height   = { lg: 52, md: 44, sm: 36 }[size];
+  const fontSize = { lg: 15, md: 14, sm: 13 }[size];
 
   return (
     <Animated.View style={animatedStyle}>
       <TouchableOpacity
         style={[
           styles.button,
-          { backgroundColor: bgColor, height, borderRadius: radius, opacity: disabled ? 0.4 : 1 },
+          { backgroundColor: bgColor, height, opacity: disabled ? 0.4 : 1 },
         ]}
         onPress={handlePress}
         activeOpacity={0.85}
@@ -68,7 +67,9 @@ export function Button({
         {loading ? (
           <ActivityIndicator color={labelColor} />
         ) : (
-          <Text style={[textStyle, { color: labelColor }]}>{label}</Text>
+          <Text style={{ fontFamily: "Inter_500Medium", fontSize, color: labelColor, letterSpacing: 0.1 }}>
+            {label}
+          </Text>
         )}
       </TouchableOpacity>
     </Animated.View>
@@ -77,8 +78,9 @@ export function Button({
 
 const styles = StyleSheet.create({
   button: {
+    borderRadius: 100,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
   },
 });

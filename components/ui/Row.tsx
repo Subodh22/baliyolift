@@ -10,32 +10,25 @@ interface RowProps {
 }
 
 export function Row({ label, value, onPress, showChevron = true, destructive = false }: RowProps) {
-  const { colors, typography } = useTheme();
+  const { colors } = useTheme();
 
   const content = (
     <View style={[styles.row, { borderBottomColor: colors.separator }]}>
-      <Text style={[typography.body, { color: destructive ? colors.accentRed : colors.label, flex: 1 }]}>
+      <Text style={[styles.label, { color: destructive ? colors.accentRed : colors.label }]}>
         {label}
       </Text>
       {value && (
-        <Text style={[typography.body, { color: colors.labelSecondary, marginRight: 6 }]}>
-          {value}
-        </Text>
+        <Text style={[styles.value, { color: colors.labelSecondary }]}>{value}</Text>
       )}
       {showChevron && onPress && (
-        <Text style={[typography.body, { color: colors.labelTertiary }]}>›</Text>
+        <Text style={{ color: colors.labelTertiary, fontSize: 16, marginLeft: 4 }}>›</Text>
       )}
     </View>
   );
 
   if (onPress) {
-    return (
-      <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
-        {content}
-      </TouchableOpacity>
-    );
+    return <TouchableOpacity onPress={onPress} activeOpacity={0.65}>{content}</TouchableOpacity>;
   }
-
   return content;
 }
 
@@ -53,12 +46,24 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingVertical: 13,
+    paddingVertical: 14,
     borderBottomWidth: 0.5,
   },
+  label: {
+    flex: 1,
+    fontFamily: "Inter_400Regular",
+    fontSize: 15,
+    letterSpacing: -0.1,
+  },
+  value: {
+    fontFamily: "Inter_300Light",
+    fontSize: 15,
+    marginRight: 4,
+  },
   group: {
-    borderRadius: 12,
+    borderRadius: 16,
     overflow: "hidden",
+    borderWidth: 1,
     marginBottom: 8,
   },
 });

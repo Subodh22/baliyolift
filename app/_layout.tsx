@@ -1,12 +1,17 @@
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Platform, useColorScheme } from "react-native";
+import { Platform, useColorScheme, View } from "react-native";
 import { ConvexProvider, ConvexReactClient, useMutation, useQuery } from "convex/react";
 import { useEffect } from "react";
 import { WorkoutProvider } from "@/hooks/useWorkoutStore";
 import { api } from "@/convex/_generated/api";
 import { tokenCache } from "@/utils/tokenCache";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useFonts,
+  Inter_200ExtraLight, Inter_300Light, Inter_400Regular,
+  Inter_500Medium, Inter_600SemiBold,
+} from "@expo-google-fonts/inter";
+import { PlayfairDisplay_400Regular_Italic } from "@expo-google-fonts/playfair-display";
 
 const CONVEX_URL = process.env.EXPO_PUBLIC_CONVEX_URL ?? "";
 const CLERK_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
@@ -116,6 +121,17 @@ function WebLayout() {
 
 export default function RootLayout() {
   const scheme = useColorScheme();
+
+  const [fontsLoaded] = useFonts({
+    Inter_200ExtraLight,
+    Inter_300Light,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    PlayfairDisplay_400Regular_Italic,
+  });
+
+  if (!fontsLoaded) return <View style={{ flex: 1, backgroundColor: "#F2EFE9" }} />;
 
   if (Platform.OS === "web") {
     const { ClerkProvider } = require("@clerk/clerk-react");

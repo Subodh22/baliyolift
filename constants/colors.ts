@@ -1,98 +1,90 @@
-// RP Hypertrophy color system — deep red accent, light theme primary
-// Never hardcode hex in components — use these tokens via useTheme()
+// Forest Green design system
+// bg #F2EFE9 · card #FAFAF7 · charcoal #2C2C2A · mid #8A8880 · faint #C8C5BE · accent #2D5A3D · accent-light #EAF0EB
 
 export const Colors = {
   light: {
-    // Backgrounds
-    background: "#FFFFFF",
-    backgroundSecondary: "#F2F2F2",
-    backgroundTertiary: "#E8E8E8",
+    background:          "#F2EFE9",
+    backgroundSecondary: "#FAFAF7",
+    backgroundTertiary:  "#F5F2EC",
 
-    // Labels
-    label: "#111111",
-    labelSecondary: "#555555",
-    labelTertiary: "#999999",
-    labelQuaternary: "#BBBBBB",
+    label:          "#2C2C2A",
+    labelSecondary: "#8A8880",
+    labelTertiary:  "#C8C5BE",
+    labelQuaternary:"#DDD9D1",
 
-    // Separators
-    separator: "#E0E0E0",
-    separatorOpaque: "#D0D0D0",
+    separator:      "#E8E4DC",
+    separatorOpaque:"#E0DCD4",
 
-    // Fills
-    fillPrimary: "#78788033",
-    fillSecondary: "#EBEBEB",
-    fillTertiary: "#F5F5F5",
+    fillPrimary:    "#2C2C2A14",
+    fillSecondary:  "#EDE9E2",
+    fillTertiary:   "#F2EFE9",
 
-    // RP Brand — deep red primary, green for success
-    accent: "#CC2020",
-    accentGreen: "#26A870",
-    accentRed: "#CC2020",
-    accentOrange: "#E8A020",
+    accent:       "#2D5A3D",
+    accentGreen:  "#2D5A3D",
+    accentLight:  "#EAF0EB",
+    accentRed:    "#B83030",
+    accentOrange: "#C87820",
 
-    // Volume zones (MEV → MAV → MRV)
-    volumeLow: "#26A870",
-    volumeMid: "#E8A020",
-    volumeHigh: "#CC2020",
+    volumeLow:  "#2D5A3D",
+    volumeMid:  "#C87820",
+    volumeHigh: "#B83030",
 
-    // Workout runner tokens
-    headerBg: "#1A1A1A",
-    repRangeBg: "#EDE0C8",
-    repRangeFg: "#5A4525",
-    loggedCheckBg: "#26A870",
-    setRowBg: "#FFFFFF",
-    setRowAlt: "#F9F9F9",
+    headerBg:       "#2C2C2A",
+    repRangeBg:     "#EAF0EB",
+    repRangeFg:     "#2D5A3D",
+    loggedCheckBg:  "#2D5A3D",
+    setRowBg:       "#FAFAF7",
+    setRowAlt:      "#F5F2EC",
   },
   dark: {
-    background: "#111111",
-    backgroundSecondary: "#1E1E1E",
-    backgroundTertiary: "#2A2A2A",
+    background:          "#141412",
+    backgroundSecondary: "#1C1B18",
+    backgroundTertiary:  "#232220",
 
-    label: "#FFFFFF",
-    labelSecondary: "#ABABAB",
-    labelTertiary: "#707070",
-    labelQuaternary: "#444444",
+    label:          "#F0EDE8",
+    labelSecondary: "#9A9790",
+    labelTertiary:  "#605E58",
+    labelQuaternary:"#3A3830",
 
-    separator: "#333333",
-    separatorOpaque: "#3A3A3A",
+    separator:      "#2C2A25",
+    separatorOpaque:"#333028",
 
-    fillPrimary: "#7878805C",
-    fillSecondary: "#2C2C2C",
-    fillTertiary: "#242424",
+    fillPrimary:    "#F0EDE840",
+    fillSecondary:  "#252320",
+    fillTertiary:   "#1E1D1A",
 
-    accent: "#E03030",
-    accentGreen: "#26A870",
-    accentRed: "#E03030",
-    accentOrange: "#E8A020",
+    accent:       "#4A8A60",
+    accentGreen:  "#4A8A60",
+    accentLight:  "#1A3028",
+    accentRed:    "#CC4040",
+    accentOrange: "#D08830",
 
-    volumeLow: "#26A870",
-    volumeMid: "#E8A020",
-    volumeHigh: "#E03030",
+    volumeLow:  "#4A8A60",
+    volumeMid:  "#D08830",
+    volumeHigh: "#CC4040",
 
-    headerBg: "#0A0A0A",
-    repRangeBg: "#3A3020",
-    repRangeFg: "#C8A870",
-    loggedCheckBg: "#26A870",
-    setRowBg: "#1E1E1E",
-    setRowAlt: "#242424",
+    headerBg:       "#0A0A08",
+    repRangeBg:     "#1A3028",
+    repRangeFg:     "#4A8A60",
+    loggedCheckBg:  "#4A8A60",
+    setRowBg:       "#1C1B18",
+    setRowAlt:      "#232220",
   },
 } as const;
 
 export type ColorScheme = keyof typeof Colors;
 export type ColorToken = keyof typeof Colors.light;
 
-// ─── Muscle badge colors ─────────────────────────────────────────────────────
-// Used directly (not via useTheme) so muscle pills are consistent everywhere.
-
 export const MUSCLE_BADGE_COLORS: Record<string, string> = {
-  chest:       "#CC4020",
-  back:        "#2060CC",
-  shoulders:   "#8040C0",
-  biceps:      "#C07020",
-  triceps:     "#20A090",
-  quads:       "#CC2020",
-  hamstrings:  "#208040",
-  glutes:      "#C03070",
-  calves:      "#608020",
-  abs:         "#C0A020",
-  forearms:    "#906030",
+  chest:      "#A03820",
+  back:       "#205090",
+  shoulders:  "#6A30A0",
+  biceps:     "#A06020",
+  triceps:    "#1A8878",
+  quads:      "#A02020",
+  hamstrings: "#1A7040",
+  glutes:     "#A02860",
+  calves:     "#507020",
+  abs:        "#A08820",
+  forearms:   "#785028",
 };
