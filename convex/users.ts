@@ -103,6 +103,13 @@ export const deleteAllUserData = mutation({
       .withIndex("by_user", (q) => q.eq("userId", uid))
       .collect();
     for (const p of photos) await ctx.db.delete(p._id);
+
+    // 6. User profile (goals / onboarding data)
+    const profiles = await ctx.db
+      .query("userProfile")
+      .withIndex("by_user", (q) => q.eq("userId", uid))
+      .collect();
+    for (const p of profiles) await ctx.db.delete(p._id);
   },
 });
 

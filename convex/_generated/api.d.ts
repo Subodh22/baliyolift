@@ -12,10 +12,12 @@ import type * as exercises from "../exercises.js";
 import type * as http from "../http.js";
 import type * as mesocycles from "../mesocycles.js";
 import type * as overload from "../overload.js";
+import type * as progress from "../progress.js";
 import type * as progressPhotos from "../progressPhotos.js";
 import type * as seed from "../seed.js";
 import type * as sets from "../sets.js";
 import type * as templates from "../templates.js";
+import type * as userProfile from "../userProfile.js";
 import type * as users from "../users.js";
 import type * as workouts from "../workouts.js";
 
@@ -30,10 +32,12 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   mesocycles: typeof mesocycles;
   overload: typeof overload;
+  progress: typeof progress;
   progressPhotos: typeof progressPhotos;
   seed: typeof seed;
   sets: typeof sets;
   templates: typeof templates;
+  userProfile: typeof userProfile;
   users: typeof users;
   workouts: typeof workouts;
 }>;

@@ -159,4 +159,19 @@ export default defineSchema({
   })
     .index("by_workout", ["workoutId"])
     .index("by_user_muscle", ["userId", "muscleGroup"]),
+
+  // --- User Profile / Goal Campaign ---
+  userProfile: defineTable({
+    userId: v.id("users"),
+    sex: v.union(v.literal("male"), v.literal("female")),
+    age: v.number(),
+    heightCm: v.number(),
+    weightKg: v.number(),
+    neckCm: v.optional(v.number()),
+    waistCm: v.optional(v.number()),
+    hipCm: v.optional(v.number()), // women only
+    currentBf: v.number(),         // Navy formula result at onboarding
+    targetBf: v.number(),
+    weeklyGoal: v.number(),        // workouts per week commitment
+  }).index("by_user", ["userId"]),
 });

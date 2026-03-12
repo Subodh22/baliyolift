@@ -1,11 +1,12 @@
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Platform, useColorScheme } from "react-native";
-import { ConvexProvider, ConvexReactClient, useMutation } from "convex/react";
+import { ConvexProvider, ConvexReactClient, useMutation, useQuery } from "convex/react";
 import { useEffect } from "react";
 import { WorkoutProvider } from "@/hooks/useWorkoutStore";
 import { api } from "@/convex/_generated/api";
 import { tokenCache } from "@/utils/tokenCache";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 const CONVEX_URL = process.env.EXPO_PUBLIC_CONVEX_URL ?? "";
 const CLERK_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
@@ -22,12 +23,37 @@ function SeedOnMount() {
   return null;
 }
 
+function ProfileGate() {
+  const { userId, loading: userLoading } = useCurrentUser();
+  const profile = useQuery(
+    api.userProfile.getByUser,
+    userId ? { userId } : "skip"
+  );
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (userLoading || profile === undefined) return;
+    if (!userId) return;
+    const inOnboarding = segments[0] === "onboarding";
+    const inSignIn = segments[0] === "sign-in";
+    const inSso = segments[0] === "sso-callback";
+    if (inSignIn || inSso) return;
+    if (profile === null && !inOnboarding) {
+      router.replace("/onboarding");
+    }
+  }, [userId, userLoading, profile, segments]);
+
+  return null;
+}
+
 function AppStack() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="sign-in" />
       <Stack.Screen name="sso-callback" />
+      <Stack.Screen name="onboarding" options={{ animation: "fade" }} />
       <Stack.Screen
         name="workout/[id]"
         options={{ presentation: "fullScreenModal", animation: "slide_from_bottom" }}
@@ -58,7 +84,12 @@ function NativeLayout() {
     else if (isSignedIn && onSignIn) router.replace("/(tabs)");
   }, [isLoaded, isSignedIn, segments]);
 
-  return <AppStack />;
+  return (
+    <>
+      <ProfileGate />
+      <AppStack />
+    </>
+  );
 }
 
 function WebLayout() {
@@ -75,7 +106,12 @@ function WebLayout() {
     else if (isSignedIn && onSignIn) router.replace("/(tabs)");
   }, [isLoaded, isSignedIn, segments]);
 
-  return <AppStack />;
+  return (
+    <>
+      <ProfileGate />
+      <AppStack />
+    </>
+  );
 }
 
 export default function RootLayout() {

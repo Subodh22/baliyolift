@@ -65,6 +65,7 @@ type Action =
   | { type: "KEY"; key: string }
   | { type: "BLUR" }
   | { type: "LOG"; exId: string; setIdx: number; sid: Id<"sets">; ind: OverloadIndicator }
+  | { type: "UNLOG"; exId: string; setIdx: number }
   | { type: "ADD_SET"; exId: string }
   | { type: "DEL_SET"; exId: string; setIdx: number }
   | { type: "SET_TYPE"; exId: string; st: SetType }
@@ -105,6 +106,14 @@ function reducer(s: WState, a: Action): WState {
       return {
         ...s, activeCell: null, restVisible: true,
         exStates: { ...s.exStates, [a.exId]: { ...ex, sets: ex.sets.map((set, i) => i === a.setIdx ? { ...set, isLogged: true, convexSetId: a.sid, overloadIndicator: a.ind } : set) } },
+      };
+    }
+    case "UNLOG": {
+      const ex = s.exStates[a.exId];
+      if (!ex) return s;
+      return {
+        ...s,
+        exStates: { ...s.exStates, [a.exId]: { ...ex, sets: ex.sets.map((set, i) => i === a.setIdx ? { ...set, isLogged: false, convexSetId: null, overloadIndicator: null } : set) } },
       };
     }
     case "ADD_SET": {
@@ -194,6 +203,7 @@ function ExCard({ se, exState, suggestion, activeCell, dispatch, workoutId, user
 }) {
   const { colors, typography } = useTheme();
   const logMut = useMutation(api.sets.logSet);
+  const deleteMut = useMutation(api.sets.deleteSet);
   const ex = se.exercise;
   const exId = ex._id as string;
 
@@ -206,6 +216,14 @@ function ExCard({ se, exState, suggestion, activeCell, dispatch, workoutId, user
       dispatch({ type: "INIT_EX", exId, sets, setType: se.setType ?? "regular" });
     }
   }, [suggestion, exState]);
+
+  const handleUnlog = useCallback(async (setIdx: number) => {
+    if (!exState) return;
+    const set = exState.sets[setIdx];
+    if (!set || !set.isLogged) return;
+    if (set.convexSetId) await deleteMut({ setId: set.convexSetId });
+    dispatch({ type: "UNLOG", exId, setIdx });
+  }, [exState]);
 
   const handleLog = useCallback(async (setIdx: number) => {
     if (!workoutId || !userId || !exState) return;
@@ -304,7 +322,7 @@ function ExCard({ se, exState, suggestion, activeCell, dispatch, workoutId, user
       {sets.map((set, idx) => (
         <SetRow key={set.localId} set={set} setIdx={idx} totalSets={sets.length} exId={exId} activeCell={activeCell}
           onFocus={(f) => dispatch({ type: "FOCUS", exId, setIdx: idx, field: f, val: f === "weight" ? set.weight : set.reps })}
-          onLog={() => handleLog(idx)} onMenu={() => showMenu(idx)} colors={colors} />
+          onLog={() => set.isLogged ? handleUnlog(idx) : handleLog(idx)} onMenu={() => showMenu(idx)} colors={colors} />
       ))}
 
       {/* Add set */}
@@ -408,17 +426,24 @@ export default function WorkoutScreen() {
     for (const se of sessionExs as any[]) {
       const exId = se.exercise._id as string;
       const logged = (setsByEx[exId] ?? []).sort((a: any, b: any) => a.setNumber - b.setNumber);
-      const sets: LocalSet[] = logged.length > 0
-        ? logged.map((s: any, i: number) => ({
-            localId: `resume_${exId}_${i}`,
-            convexSetId: s._id,
-            weight: s.weight.toString(),
-            reps: s.reps.toString(),
-            rir: s.rir,
-            isLogged: true,
-            overloadIndicator: null,
-          }))
-        : [mkSet("0", se.repRangeMin.toString(), exId, 0)];
+      const loggedSets: LocalSet[] = logged.map((s: any, i: number) => ({
+        localId: `resume_${exId}_${i}`,
+        convexSetId: s._id,
+        weight: s.weight.toString(),
+        reps: s.reps.toString(),
+        rir: s.rir,
+        isLogged: true,
+        overloadIndicator: null,
+      }));
+      const lastLogged = logged[logged.length - 1];
+      const pendingCount = Math.max(0, se.targetSets - logged.length);
+      const pendingW = lastLogged ? lastLogged.weight.toString() : "0";
+      const pendingR = lastLogged ? lastLogged.reps.toString() : se.repRangeMin.toString();
+      const pendingSets: LocalSet[] = Array.from({ length: pendingCount }, (_, i) =>
+        mkSet(pendingW, pendingR, exId, logged.length + i)
+      );
+      const sets: LocalSet[] = [...loggedSets, ...pendingSets];
+      if (sets.length === 0) sets.push(mkSet("0", se.repRangeMin.toString(), exId, 0));
       dispatch({ type: "INIT_EX", exId, sets, setType: se.setType ?? "regular" });
     }
   }, [existingWorkoutId, existingWorkout, sessionExs]);
