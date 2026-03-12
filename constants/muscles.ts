@@ -12,7 +12,8 @@ export type MuscleGroup =
   | "glutes"
   | "calves"
   | "abs"
-  | "forearms";
+  | "forearms"
+  | "cardio";
 
 export interface VolumeDefaults {
   mev: number;
@@ -94,9 +95,14 @@ export const MUSCLE_DISPLAY_NAMES: Record<MuscleGroup, string> = {
   calves:     "Calves",
   abs:        "Abs",
   forearms:   "Forearms",
+  cardio:     "Cardio",
 };
 
 export const ALL_MUSCLE_GROUPS: MuscleGroup[] = [
   "chest", "back", "shoulders", "biceps", "triceps",
   "quads", "hamstrings", "glutes", "calves", "abs", "forearms",
+];
+
+export const ALL_MUSCLE_GROUPS_WITH_CARDIO: MuscleGroup[] = [
+  ...ALL_MUSCLE_GROUPS, "cardio",
 ];

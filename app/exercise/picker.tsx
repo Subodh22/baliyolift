@@ -19,12 +19,15 @@ import Animated, {
 import { impactLight, selectionAsync } from "@/utils/haptics";
 import { router } from "expo-router";
 import { useTheme } from "@/hooks/useTheme";
-import { EXERCISE_SEED_DATA, type Exercise } from "@/data/exercises";
+import { EXERCISE_SEED_DATA, CARDIO_EXERCISE_SEED_DATA, type Exercise } from "@/data/exercises";
 import {
   ALL_MUSCLE_GROUPS,
+  ALL_MUSCLE_GROUPS_WITH_CARDIO,
   MUSCLE_DISPLAY_NAMES,
   type MuscleGroup,
 } from "@/constants/muscles";
+
+const ALL_EXERCISES: Exercise[] = [...EXERCISE_SEED_DATA, ...CARDIO_EXERCISE_SEED_DATA];
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -236,7 +239,7 @@ export default function ExercisePicker() {
   // ── Filtering logic ─────────────────────────────────────────────────────
 
   const filtered = useMemo<Exercise[]>(() => {
-    let results = EXERCISE_SEED_DATA;
+    let results = ALL_EXERCISES;
 
     // Muscle group filter
     if (activeFilter !== "all") {
@@ -266,7 +269,7 @@ export default function ExercisePicker() {
       // Group by muscle group in ALL_MUSCLE_GROUPS order
       const grouped: ListItem[] = [];
 
-      ALL_MUSCLE_GROUPS.forEach((muscle) => {
+      ALL_MUSCLE_GROUPS_WITH_CARDIO.forEach((muscle) => {
         const exercises = filtered
           .filter((e) => e.muscleGroup === muscle)
           .sort((a, b) => a.name.localeCompare(b.name));
@@ -362,7 +365,7 @@ export default function ExercisePicker() {
 
   const filterPills: Array<{ id: FilterPill; label: string }> = [
     { id: "all", label: "All" },
-    ...ALL_MUSCLE_GROUPS.map((m) => ({ id: m as FilterPill, label: MUSCLE_DISPLAY_NAMES[m] })),
+    ...ALL_MUSCLE_GROUPS_WITH_CARDIO.map((m) => ({ id: m as FilterPill, label: MUSCLE_DISPLAY_NAMES[m] })),
   ];
 
   return (

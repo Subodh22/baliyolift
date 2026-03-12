@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as cardioSets from "../cardioSets.js";
 import type * as exercises from "../exercises.js";
 import type * as http from "../http.js";
 import type * as mesocycles from "../mesocycles.js";
@@ -28,6 +29,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  cardioSets: typeof cardioSets;
   exercises: typeof exercises;
   http: typeof http;
   mesocycles: typeof mesocycles;

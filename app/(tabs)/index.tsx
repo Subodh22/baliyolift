@@ -226,7 +226,7 @@ export default function HomeScreen() {
 
         {/* ── Status bar ──────────────────────────────────────────────── */}
         <View style={s.statusBar}>
-          <Text style={s.statusTime}>{new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</Text>
+          <Text style={s.statusTime}>{new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })}</Text>
           <Text style={s.brandText}>B A L I Y O</Text>
           <Text style={s.statusIcon}>◎</Text>
         </View>

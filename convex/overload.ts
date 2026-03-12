@@ -218,6 +218,117 @@ export const getSuggestionV2 = query({
   },
 });
 
+// ─── Cardio Suggestion ────────────────────────────────────────────────────────
+
+/**
+ * Progressive overload for cardio — duration-first, then pace/distance.
+ *
+ * Algorithm:
+ * 1. Duration-first: if current duration < target duration → suggest +5 min
+ * 2. Once target duration hit: suggest more distance (same time = faster pace)
+ *    or maintain and reduce RPE target
+ * 3. RPE target increases each week: 6 → 7 → 7 → 8
+ * 4. Intervals: increase rounds each week (1 per week), then tighten rest
+ */
+export const getCardioSuggestion = query({
+  args: {
+    userId: v.id("users"),
+    exerciseId: v.id("exercises"),
+    weekNumber: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const targetRpe = args.weekNumber <= 1 ? 6 : args.weekNumber === 2 ? 7 : 8;
+
+    const history = await ctx.db
+      .query("cardioSets")
+      .withIndex("by_exercise_user", (q) =>
+        q.eq("exerciseId", args.exerciseId).eq("userId", args.userId)
+      )
+      .order("desc")
+      .take(10);
+
+    if (history.length === 0) {
+      return {
+        suggestedDurationSec: 20 * 60, // 20 min starting point
+        suggestedDistanceM: null,
+        suggestedIntervalCount: null,
+        suggestedIntervalWorkSec: 30,
+        suggestedIntervalRestSec: 60,
+        targetRpe,
+        overloadIndicator: "maintain" as const,
+        reason: "No history — start with a comfortable duration.",
+        lastSession: null,
+      };
+    }
+
+    const last = history[0];
+    const lastDuration = last.durationSec;
+    const lastDistance = last.distanceM ?? null;
+    const lastRpe = last.rpe;
+
+    // Interval mode
+    if (last.intervalCount != null) {
+      const lastCount = last.intervalCount;
+      const suggestedCount = lastRpe <= targetRpe ? lastCount + 1 : lastCount;
+      return {
+        suggestedDurationSec: lastDuration,
+        suggestedDistanceM: null,
+        suggestedIntervalCount: suggestedCount,
+        suggestedIntervalWorkSec: last.intervalWorkSec ?? 30,
+        suggestedIntervalRestSec: last.intervalRestSec ?? 60,
+        targetRpe,
+        overloadIndicator: suggestedCount > lastCount ? "increase" as const : "maintain" as const,
+        reason: suggestedCount > lastCount
+          ? `Hit RPE ${lastRpe} last session. Add 1 round.`
+          : `RPE ${lastRpe} — maintain ${lastCount} rounds.`,
+        lastSession: { durationSec: lastDuration, intervalCount: lastCount, rpe: lastRpe },
+      };
+    }
+
+    // Duration-pace mode: progress by adding 5 min, then increase distance
+    const TARGET_DURATION_MIN = 45;
+    const targetDurationSec = TARGET_DURATION_MIN * 60;
+
+    if (lastDuration < targetDurationSec) {
+      const addSec = lastRpe <= targetRpe + 1 ? 5 * 60 : 0;
+      return {
+        suggestedDurationSec: lastDuration + addSec,
+        suggestedDistanceM: lastDistance,
+        suggestedIntervalCount: null,
+        suggestedIntervalWorkSec: null,
+        suggestedIntervalRestSec: null,
+        targetRpe,
+        overloadIndicator: addSec > 0 ? "increase" as const : "maintain" as const,
+        reason: addSec > 0
+          ? `Add 5 min — building toward ${TARGET_DURATION_MIN} min.`
+          : `RPE ${lastRpe} too high. Hold duration, reduce effort.`,
+        lastSession: { durationSec: lastDuration, distanceM: lastDistance, rpe: lastRpe },
+      };
+    }
+
+    // At target duration — progress by increasing distance (faster pace)
+    const distanceIncrease = lastDistance != null ? Math.round(lastDistance * 0.05) : null;
+    const suggestedDistance = lastDistance != null && lastRpe <= targetRpe
+      ? lastDistance + (distanceIncrease ?? 0)
+      : lastDistance;
+    const didIncrease = suggestedDistance != null && lastDistance != null && suggestedDistance > lastDistance;
+
+    return {
+      suggestedDurationSec: lastDuration,
+      suggestedDistanceM: suggestedDistance,
+      suggestedIntervalCount: null,
+      suggestedIntervalWorkSec: null,
+      suggestedIntervalRestSec: null,
+      targetRpe,
+      overloadIndicator: didIncrease ? "increase" as const : "maintain" as const,
+      reason: didIncrease
+        ? `Duration target met. Cover more ground in ${TARGET_DURATION_MIN} min.`
+        : `Maintain pace — aim for RPE ${targetRpe}.`,
+      lastSession: { durationSec: lastDuration, distanceM: lastDistance, rpe: lastRpe },
+    };
+  },
+});
+
 /**
  * Legacy query — kept for backward compat with any existing consumers.
  */

@@ -12,7 +12,8 @@ const muscleGroupValidator = v.union(
   v.literal("glutes"),
   v.literal("calves"),
   v.literal("abs"),
-  v.literal("forearms")
+  v.literal("forearms"),
+  v.literal("cardio")
 );
 
 const equipmentValidator = v.union(
@@ -86,6 +87,14 @@ export const listCustom = query({
       .query("exercises")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
+  },
+});
+
+export const listAll = query({
+  args: {},
+  handler: async (ctx) => {
+    const exercises = await ctx.db.query("exercises").collect();
+    return exercises.sort((a, b) => a.name.localeCompare(b.name));
   },
 });
 

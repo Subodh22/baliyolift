@@ -29,12 +29,26 @@ import { FeedbackModal } from "@/components/FeedbackModal";
 import { RestTimer } from "@/components/RestTimer";
 import { SwapSheet } from "@/components/SwapSheet";
 import { VideoModal } from "@/components/VideoModal";
+import { AddExSheet, type PickedExercise } from "@/components/AddExSheet";
+import { ExMenuSheet } from "@/components/ExMenuSheet";
 import { getVideoId } from "@/data/exerciseVideos";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type SetType = "regular" | "myorep" | "myorep_match";
 type OverloadIndicator = "increase" | "decrease" | "maintain" | "add_rep";
+type CardioMode = "duration_pace" | "duration_only" | "intervals";
+
+interface LocalCardioState {
+  durationMin: number;
+  distanceKm: number | null;  // null for duration_only
+  rpe: number;
+  intervalCount: number | null;
+  intervalWorkSec: number;
+  intervalRestSec: number;
+  isLogged: boolean;
+  convexSetId: Id<"cardioSets"> | null;
+}
 
 interface LocalSet {
   localId: string;
@@ -51,9 +65,23 @@ interface LocalExState {
   setType: SetType;
 }
 
+interface ExtraExercise {
+  _id: Id<"exercises">;
+  seId: Id<"sessionExercises"> | null; // set after addExerciseToSession resolves
+  name: string;
+  muscleGroup: string;
+  equipment: string;
+  sfr: string;
+  category?: string;
+  cardioMode?: string;
+}
+
 interface WState {
   workoutId: Id<"workouts"> | null;
   exStates: Record<string, LocalExState>;
+  cardioStates: Record<string, LocalCardioState>;
+  hiddenExIds: string[];       // exercises removed "just today"
+  extraExercises: ExtraExercise[]; // exercises added during this workout
   activeCell: { exId: string; setIdx: number; field: "weight" | "reps" } | null;
   numpadVal: string;
   restVisible: boolean;
@@ -65,6 +93,7 @@ interface WState {
 type Action =
   | { type: "SET_WID"; wid: Id<"workouts"> }
   | { type: "INIT_EX"; exId: string; sets: LocalSet[]; setType: SetType }
+  | { type: "INIT_CARDIO"; exId: string; state: LocalCardioState }
   | { type: "FOCUS"; exId: string; setIdx: number; field: "weight" | "reps"; val: string }
   | { type: "KEY"; key: string }
   | { type: "BLUR" }
@@ -73,11 +102,17 @@ type Action =
   | { type: "ADD_SET"; exId: string }
   | { type: "DEL_SET"; exId: string; setIdx: number }
   | { type: "SET_TYPE"; exId: string; st: SetType }
+  | { type: "SET_CARDIO"; exId: string; patch: Partial<LocalCardioState> }
+  | { type: "LOG_CARDIO"; exId: string; sid: Id<"cardioSets"> }
+  | { type: "UNLOG_CARDIO"; exId: string }
   | { type: "SHOW_REST" }
   | { type: "HIDE_REST" }
   | { type: "SHOW_FB" }
   | { type: "HIDE_FB" }
-  | { type: "SWAP_LOCAL"; oldExId: string; exerciseId: Id<"exercises">; exercise: any };
+  | { type: "SWAP_LOCAL"; oldExId: string; exerciseId: Id<"exercises">; exercise: any }
+  | { type: "HIDE_EX"; exId: string }
+  | { type: "ADD_EXTRA_EX"; exercise: ExtraExercise }
+  | { type: "SET_EXTRA_SEID"; exId: string; seId: Id<"sessionExercises"> };
 
 function mkSet(w: string, r: string, exId: string, i: number): LocalSet {
   return { localId: `${exId}_${i}_${Date.now()}`, convexSetId: null, weight: w, reps: r, rir: 2, isLogged: false, overloadIndicator: null };
@@ -89,6 +124,24 @@ function reducer(s: WState, a: Action): WState {
     case "INIT_EX":
       if (s.exStates[a.exId]) return s;
       return { ...s, exStates: { ...s.exStates, [a.exId]: { sets: a.sets, setType: a.setType } } };
+    case "INIT_CARDIO":
+      if (s.cardioStates[a.exId]) return s;
+      return { ...s, cardioStates: { ...s.cardioStates, [a.exId]: a.state } };
+    case "SET_CARDIO": {
+      const prev = s.cardioStates[a.exId];
+      if (!prev) return s;
+      return { ...s, cardioStates: { ...s.cardioStates, [a.exId]: { ...prev, ...a.patch } } };
+    }
+    case "LOG_CARDIO": {
+      const prev = s.cardioStates[a.exId];
+      if (!prev) return s;
+      return { ...s, restVisible: true, cardioStates: { ...s.cardioStates, [a.exId]: { ...prev, isLogged: true, convexSetId: a.sid } } };
+    }
+    case "UNLOG_CARDIO": {
+      const prev = s.cardioStates[a.exId];
+      if (!prev) return s;
+      return { ...s, cardioStates: { ...s.cardioStates, [a.exId]: { ...prev, isLogged: false, convexSetId: null } } };
+    }
     case "FOCUS": return { ...s, activeCell: { exId: a.exId, setIdx: a.setIdx, field: a.field }, numpadVal: a.val };
     case "BLUR": return { ...s, activeCell: null };
     case "KEY": {
@@ -150,6 +203,13 @@ function reducer(s: WState, a: Action): WState {
         },
       };
     }
+    case "HIDE_EX":
+      return { ...s, hiddenExIds: [...s.hiddenExIds, a.exId] };
+    case "ADD_EXTRA_EX":
+      if (s.extraExercises.some((e) => (e._id as string) === (a.exercise._id as string))) return s;
+      return { ...s, extraExercises: [...s.extraExercises, a.exercise] };
+    case "SET_EXTRA_SEID":
+      return { ...s, extraExercises: s.extraExercises.map((e) => (e._id as string) === a.exId ? { ...e, seId: a.seId } : e) };
     default: return s;
   }
 }
@@ -211,10 +271,10 @@ function SetRow({ set, setIdx, totalSets, exId, activeCell, onFocus, onLog, onMe
 
 // ─── Exercise card ────────────────────────────────────────────────────────────
 
-function ExCard({ se, originalExId, exState, suggestion, activeCell, dispatch, workoutId, userId, onOpenSwap, onOpenVideo }: {
+function ExCard({ se, originalExId, exState, suggestion, activeCell, dispatch, workoutId, userId, onOpenSwap, onOpenVideo, onDelete }: {
   se: any; originalExId: string; exState: LocalExState | undefined; suggestion: any;
   activeCell: WState["activeCell"]; dispatch: React.Dispatch<Action>;
-  workoutId: Id<"workouts"> | null; userId: Id<"users"> | null; onOpenSwap: () => void; onOpenVideo: () => void;
+  workoutId: Id<"workouts"> | null; userId: Id<"users"> | null; onOpenSwap: () => void; onOpenVideo: () => void; onDelete: (scope: "today" | "meso") => void;
 }) {
   const { colors, typography } = useTheme();
   const logMut = useMutation(api.sets.logSet);
@@ -264,8 +324,29 @@ function ExCard({ se, originalExId, exState, suggestion, activeCell, dispatch, w
   const sets = exState?.sets ?? [];
   const setType = exState?.setType ?? "regular";
 
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
   return (
     <Animated.View entering={FadeInDown.springify().damping(20)} style={[styles.card, { backgroundColor: colors.backgroundSecondary }]}>
+      <ExMenuSheet
+        visible={menuOpen}
+        title={ex.name}
+        onClose={() => setMenuOpen(false)}
+        options={[
+          { label: "Replace exercise", onPress: onOpenSwap },
+          { label: "Delete exercise", destructive: true, onPress: () => setDeleteOpen(true) },
+        ]}
+      />
+      <ExMenuSheet
+        visible={deleteOpen}
+        title="Remove from…"
+        onClose={() => setDeleteOpen(false)}
+        options={[
+          { label: "Just today", onPress: () => onDelete("today") },
+          { label: "All workouts in mesocycle", destructive: true, onPress: () => onDelete("meso") },
+        ]}
+      />
       {/* Top row */}
       <View style={styles.cardTop}>
         <MuscleBadge muscle={ex.muscleGroup} />
@@ -273,8 +354,8 @@ function ExCard({ se, originalExId, exState, suggestion, activeCell, dispatch, w
           <TouchableOpacity onPress={onOpenVideo}>
             <Text style={{ color: colors.labelTertiary, fontSize: 18 }}>▷</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={onOpenSwap}>
-            <Text style={{ color: colors.labelTertiary, fontSize: 18 }}>⋯</Text>
+          <TouchableOpacity onPress={() => setMenuOpen(true)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <Text style={{ color: colors.labelTertiary, fontSize: 20 }}>⋯</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -367,16 +448,268 @@ function ExCard({ se, originalExId, exState, suggestion, activeCell, dispatch, w
 
 // ─── Card wrapper fetching per-exercise suggestion ────────────────────────────
 
-function ExCardWithSuggestion({ se, originalExId, exState, activeCell, dispatch, workoutId, userId, weekNumber, mesoId, onOpenSwap, onOpenVideo }: {
+function ExCardWithSuggestion({ se, originalExId, exState, activeCell, dispatch, workoutId, userId, weekNumber, mesoId, onOpenSwap, onOpenVideo, onDelete }: {
   se: any; originalExId: string; exState: LocalExState | undefined; activeCell: WState["activeCell"];
   dispatch: React.Dispatch<Action>; workoutId: Id<"workouts"> | null; userId: Id<"users"> | null;
-  weekNumber: number; mesoId: Id<"mesocycles"> | null; onOpenSwap: () => void; onOpenVideo: () => void;
+  weekNumber: number; mesoId: Id<"mesocycles"> | null; onOpenSwap: () => void; onOpenVideo: () => void; onDelete: (scope: "today" | "meso") => void;
 }) {
   const suggestion = useQuery(
     api.overload.getSuggestionV2,
     userId && mesoId ? { userId, exerciseId: se.exerciseId, mesocycleId: mesoId, weekNumber, repRangeMin: se.repRangeMin, repRangeMax: se.repRangeMax, targetSets: se.targetSets } : "skip"
   );
-  return <ExCard se={se} originalExId={originalExId} exState={exState} suggestion={suggestion} activeCell={activeCell} dispatch={dispatch} workoutId={workoutId} userId={userId} onOpenSwap={onOpenSwap} onOpenVideo={onOpenVideo} />;
+  return <ExCard se={se} originalExId={originalExId} exState={exState} suggestion={suggestion} activeCell={activeCell} dispatch={dispatch} workoutId={workoutId} userId={userId} onOpenSwap={onOpenSwap} onOpenVideo={onOpenVideo} onDelete={onDelete} />;
+}
+
+// ─── Cardio Exercise Card ─────────────────────────────────────────────────────
+
+function fmtDuration(min: number): string {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return h > 0 ? `${h}h ${m}m` : `${m} min`;
+}
+
+function fmtDistance(km: number): string {
+  return `${km.toFixed(1)} km`;
+}
+
+function CardioExCard({ se, exId, cardioState, suggestion, dispatch, workoutId, userId, onDelete }: {
+  se: any; exId: string; cardioState: LocalCardioState | undefined;
+  suggestion: any; dispatch: React.Dispatch<Action>;
+  workoutId: Id<"workouts"> | null; userId: Id<"users"> | null; onDelete: (scope: "today" | "meso") => void;
+}) {
+  const { colors } = useTheme();
+  const logMut = useMutation(api.cardioSets.logCardioSet);
+  const deleteMut = useMutation(api.cardioSets.deleteCardioSet);
+  const ex = se.exercise;
+  const mode: CardioMode = ex.cardioMode ?? "duration_only";
+
+  // Initialize cardio state from suggestion on first render
+  useEffect(() => {
+    if (!cardioState && suggestion !== undefined) {
+      const sugDurMin = suggestion?.suggestedDurationSec
+        ? Math.round(suggestion.suggestedDurationSec / 60)
+        : 20;
+      const sugDistKm = suggestion?.suggestedDistanceM != null
+        ? Math.round(suggestion.suggestedDistanceM / 100) / 10
+        : mode === "duration_pace" ? 3.0 : null;
+      dispatch({
+        type: "INIT_CARDIO", exId,
+        state: {
+          durationMin: sugDurMin,
+          distanceKm: sugDistKm,
+          rpe: suggestion?.targetRpe ?? 6,
+          intervalCount: suggestion?.suggestedIntervalCount ?? (mode === "intervals" ? 8 : null),
+          intervalWorkSec: suggestion?.suggestedIntervalWorkSec ?? 30,
+          intervalRestSec: suggestion?.suggestedIntervalRestSec ?? 60,
+          isLogged: false,
+          convexSetId: null,
+        },
+      });
+    }
+  }, [suggestion, cardioState]);
+
+  const handleLog = useCallback(async () => {
+    if (!workoutId || !userId || !cardioState) return;
+    if (cardioState.isLogged) {
+      if (cardioState.convexSetId) await deleteMut({ setId: cardioState.convexSetId });
+      dispatch({ type: "UNLOG_CARDIO", exId });
+      return;
+    }
+    impactMedium();
+    const sid = await logMut({
+      workoutId,
+      exerciseId: ex._id,
+      userId,
+      setNumber: 1,
+      durationSec: cardioState.durationMin * 60,
+      distanceM: cardioState.distanceKm != null ? Math.round(cardioState.distanceKm * 1000) : undefined,
+      rpe: cardioState.rpe,
+      targetRpe: suggestion?.targetRpe,
+      intervalCount: cardioState.intervalCount ?? undefined,
+      intervalWorkSec: mode === "intervals" ? cardioState.intervalWorkSec : undefined,
+      intervalRestSec: mode === "intervals" ? cardioState.intervalRestSec : undefined,
+    });
+    dispatch({ type: "LOG_CARDIO", exId, sid });
+  }, [workoutId, userId, cardioState, suggestion, ex]);
+
+  if (!ex) return null;
+  const cs = cardioState;
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
+  const overloadColor = suggestion?.overloadIndicator === "increase" ? colors.accentGreen : colors.labelTertiary;
+  const overloadBg = suggestion?.overloadIndicator === "increase" ? colors.accentGreen + "18" : colors.fillSecondary;
+
+  return (
+    <Animated.View entering={FadeInDown.springify().damping(20)} style={[styles.card, { backgroundColor: colors.backgroundSecondary }]}>
+      <ExMenuSheet
+        visible={menuOpen}
+        title={ex.name}
+        onClose={() => setMenuOpen(false)}
+        options={[
+          { label: "Delete exercise", destructive: true, onPress: () => setDeleteOpen(true) },
+        ]}
+      />
+      <ExMenuSheet
+        visible={deleteOpen}
+        title="Remove from…"
+        onClose={() => setDeleteOpen(false)}
+        options={[
+          { label: "Just today", onPress: () => onDelete("today") },
+          { label: "All workouts in mesocycle", destructive: true, onPress: () => onDelete("meso") },
+        ]}
+      />
+      {/* Top row */}
+      <View style={styles.cardTop}>
+        <View style={[styles.badge, { backgroundColor: "#1A3A2A" }]}>
+          <Text style={styles.badgeText}>CARDIO</Text>
+          <View style={[styles.badgeDot, { backgroundColor: "#4ADE80" }]} />
+        </View>
+        <TouchableOpacity onPress={() => setMenuOpen(true)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <Text style={{ color: colors.labelTertiary, fontSize: 20 }}>⋯</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Name + equipment */}
+      <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 17, letterSpacing: -0.2, color: colors.label, marginBottom: 2 }}>{ex.name}</Text>
+      <Text style={{ fontFamily: "Outfit_300Light", color: colors.labelTertiary, fontSize: 11, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 12 }}>
+        {mode === "duration_pace" ? "duration · pace" : mode === "intervals" ? "intervals" : "duration"}
+      </Text>
+
+      {/* Suggestion banner */}
+      {suggestion && (
+        <View style={[styles.targetBanner, { backgroundColor: overloadBg, borderColor: overloadColor + "40" }]}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: overloadColor, fontFamily: "Outfit_400Regular", fontSize: 12, letterSpacing: 0.5 }}>
+              {suggestion.overloadIndicator === "increase" ? "↗ PROGRESS" : "→ MAINTAIN"}
+            </Text>
+            <Text style={{ color: colors.label, fontFamily: "Outfit_400Regular", fontSize: 14, marginTop: 2 }}>
+              {suggestion.reason}
+            </Text>
+            <Text style={{ color: colors.labelSecondary, fontFamily: "Outfit_400Regular", fontSize: 12, marginTop: 1 }}>
+              Target RPE {suggestion.targetRpe}
+            </Text>
+          </View>
+        </View>
+      )}
+
+      {/* Interval mode UI */}
+      {mode === "intervals" && cs && (
+        <View style={{ gap: 10, marginBottom: 12 }}>
+          <Text style={{ color: colors.labelTertiary, fontSize: 10, fontFamily: "Outfit_300Light", letterSpacing: 2 }}>ROUNDS</Text>
+          <View style={styles.stepperRow}>
+            <TouchableOpacity style={[styles.stepBtn, { backgroundColor: colors.fillSecondary }]} onPress={() => { selectionAsync(); dispatch({ type: "SET_CARDIO", exId, patch: { intervalCount: Math.max(1, (cs.intervalCount ?? 8) - 1) } }); }}>
+              <Text style={{ color: colors.label, fontSize: 20 }}>−</Text>
+            </TouchableOpacity>
+            <Text style={styles.stepVal}>{cs.intervalCount ?? 8}</Text>
+            <TouchableOpacity style={[styles.stepBtn, { backgroundColor: colors.fillSecondary }]} onPress={() => { selectionAsync(); dispatch({ type: "SET_CARDIO", exId, patch: { intervalCount: (cs.intervalCount ?? 8) + 1 } }); }}>
+              <Text style={{ color: colors.label, fontSize: 20 }}>+</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={{ flexDirection: "row", gap: 12 }}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: colors.labelTertiary, fontSize: 10, fontFamily: "Outfit_300Light", letterSpacing: 2, marginBottom: 6 }}>WORK</Text>
+              <View style={styles.stepperRow}>
+                <TouchableOpacity style={[styles.stepBtn, { backgroundColor: colors.fillSecondary }]} onPress={() => { selectionAsync(); dispatch({ type: "SET_CARDIO", exId, patch: { intervalWorkSec: Math.max(10, cs.intervalWorkSec - 10) } }); }}>
+                  <Text style={{ color: colors.label, fontSize: 18 }}>−</Text>
+                </TouchableOpacity>
+                <Text style={[styles.stepVal, { fontSize: 14 }]}>{cs.intervalWorkSec}s</Text>
+                <TouchableOpacity style={[styles.stepBtn, { backgroundColor: colors.fillSecondary }]} onPress={() => { selectionAsync(); dispatch({ type: "SET_CARDIO", exId, patch: { intervalWorkSec: cs.intervalWorkSec + 10 } }); }}>
+                  <Text style={{ color: colors.label, fontSize: 18 }}>+</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: colors.labelTertiary, fontSize: 10, fontFamily: "Outfit_300Light", letterSpacing: 2, marginBottom: 6 }}>REST</Text>
+              <View style={styles.stepperRow}>
+                <TouchableOpacity style={[styles.stepBtn, { backgroundColor: colors.fillSecondary }]} onPress={() => { selectionAsync(); dispatch({ type: "SET_CARDIO", exId, patch: { intervalRestSec: Math.max(10, cs.intervalRestSec - 10) } }); }}>
+                  <Text style={{ color: colors.label, fontSize: 18 }}>−</Text>
+                </TouchableOpacity>
+                <Text style={[styles.stepVal, { fontSize: 14 }]}>{cs.intervalRestSec}s</Text>
+                <TouchableOpacity style={[styles.stepBtn, { backgroundColor: colors.fillSecondary }]} onPress={() => { selectionAsync(); dispatch({ type: "SET_CARDIO", exId, patch: { intervalRestSec: cs.intervalRestSec + 10 } }); }}>
+                  <Text style={{ color: colors.label, fontSize: 18 }}>+</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      )}
+
+      {/* Duration stepper */}
+      {cs && (
+        <View style={{ marginBottom: 12 }}>
+          <Text style={{ color: colors.labelTertiary, fontSize: 10, fontFamily: "Outfit_300Light", letterSpacing: 2, marginBottom: 6 }}>
+            {mode === "intervals" ? "TOTAL TIME" : "DURATION"}
+          </Text>
+          <View style={styles.stepperRow}>
+            <TouchableOpacity style={[styles.stepBtn, { backgroundColor: colors.fillSecondary }]} onPress={() => { selectionAsync(); dispatch({ type: "SET_CARDIO", exId, patch: { durationMin: Math.max(5, cs.durationMin - 5) } }); }}>
+              <Text style={{ color: colors.label, fontSize: 20 }}>−</Text>
+            </TouchableOpacity>
+            <Text style={styles.stepVal}>{fmtDuration(cs.durationMin)}</Text>
+            <TouchableOpacity style={[styles.stepBtn, { backgroundColor: colors.fillSecondary }]} onPress={() => { selectionAsync(); dispatch({ type: "SET_CARDIO", exId, patch: { durationMin: cs.durationMin + 5 } }); }}>
+              <Text style={{ color: colors.label, fontSize: 20 }}>+</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* Distance stepper (duration_pace only) */}
+      {cs && mode === "duration_pace" && (
+        <View style={{ marginBottom: 12 }}>
+          <Text style={{ color: colors.labelTertiary, fontSize: 10, fontFamily: "Outfit_300Light", letterSpacing: 2, marginBottom: 6 }}>DISTANCE</Text>
+          <View style={styles.stepperRow}>
+            <TouchableOpacity style={[styles.stepBtn, { backgroundColor: colors.fillSecondary }]} onPress={() => { selectionAsync(); dispatch({ type: "SET_CARDIO", exId, patch: { distanceKm: Math.max(0.5, Math.round(((cs.distanceKm ?? 0) - 0.5) * 10) / 10) } }); }}>
+              <Text style={{ color: colors.label, fontSize: 20 }}>−</Text>
+            </TouchableOpacity>
+            <Text style={styles.stepVal}>{fmtDistance(cs.distanceKm ?? 0)}</Text>
+            <TouchableOpacity style={[styles.stepBtn, { backgroundColor: colors.fillSecondary }]} onPress={() => { selectionAsync(); dispatch({ type: "SET_CARDIO", exId, patch: { distanceKm: Math.round(((cs.distanceKm ?? 0) + 0.5) * 10) / 10 } }); }}>
+              <Text style={{ color: colors.label, fontSize: 20 }}>+</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* RPE selector */}
+      {cs && (
+        <View style={{ marginBottom: 14 }}>
+          <Text style={{ color: colors.labelTertiary, fontSize: 10, fontFamily: "Outfit_300Light", letterSpacing: 2, marginBottom: 8 }}>RPE</Text>
+          <View style={{ flexDirection: "row", gap: 4 }}>
+            {[1,2,3,4,5,6,7,8,9,10].map((v) => (
+              <Pressable key={v} onPress={() => { selectionAsync(); dispatch({ type: "SET_CARDIO", exId, patch: { rpe: v } }); }}
+                style={{ flex: 1, height: 34, borderRadius: 4, alignItems: "center", justifyContent: "center",
+                  backgroundColor: cs.rpe === v ? colors.accent : colors.fillSecondary }}>
+                <Text style={{ fontSize: 12, fontFamily: "Outfit_400Regular", color: cs.rpe === v ? "#FFF" : colors.labelSecondary }}>{v}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      )}
+
+      {/* Log button */}
+      <TouchableOpacity onPress={handleLog}
+        style={{ backgroundColor: cs?.isLogged ? colors.accentGreen : colors.accent, paddingVertical: 14, borderRadius: 4, alignItems: "center" }}>
+        <Text style={{ color: "#FFF", fontFamily: "Outfit_400Regular", fontSize: 15 }}>
+          {cs?.isLogged ? "✓ LOGGED" : "LOG SESSION"}
+        </Text>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+}
+
+function CardioExCardWithSuggestion({ se, exId, cardioState, dispatch, workoutId, userId, weekNumber, onDelete }: {
+  se: any; exId: string; cardioState: LocalCardioState | undefined;
+  dispatch: React.Dispatch<Action>; workoutId: Id<"workouts"> | null;
+  userId: Id<"users"> | null; weekNumber: number; onDelete: (scope: "today" | "meso") => void;
+}) {
+  const suggestion = useQuery(
+    api.overload.getCardioSuggestion,
+    userId ? { userId, exerciseId: se.exerciseId, weekNumber } : "skip"
+  );
+  return (
+    <CardioExCard se={se} exId={exId} cardioState={cardioState} suggestion={suggestion}
+      dispatch={dispatch} workoutId={workoutId} userId={userId} onDelete={onDelete} />
+  );
 }
 
 // ─── NumPad ───────────────────────────────────────────────────────────────────
@@ -403,16 +736,22 @@ export default function WorkoutScreen() {
   const insets = useSafeAreaInsets();
   const startMut = useMutation(api.workouts.startWorkout);
   const completeMut = useMutation(api.workouts.completeWorkout);
+  const removeExMut = useMutation(api.mesocycles.removeExerciseFromSession);
+  const removeExByIdsMut = useMutation(api.mesocycles.removeExerciseByIds);
+  const addExToSessionMut = useMutation(api.mesocycles.addExerciseToSession);
 
   // id === "new" means fresh start via /workout/new?sessionId=xxx — treat as null
   const existingWorkoutId = id && id !== "new" ? (id as Id<"workouts">) : null;
 
   const [state, dispatch] = useReducer(reducer, {
     workoutId: existingWorkoutId,
-    exStates: {}, activeCell: null, numpadVal: "0",
+    exStates: {}, cardioStates: {}, hiddenExIds: [], extraExercises: [],
+    activeCell: null, numpadVal: "0",
     restVisible: false, feedbackVisible: false, startTime: Date.now(),
     swapOverrides: {},
   });
+
+  const [addExSheetVisible, setAddExSheetVisible] = useState(false);
 
   const [swapTarget, setSwapTarget] = useState<{
     seId: Id<"sessionExercises"> | null;
@@ -499,16 +838,33 @@ export default function WorkoutScreen() {
   }, [sessionExs]);
 
   const allLogged = useMemo(() => {
-    const ids = Object.keys(state.exStates);
-    if (!ids.length) return false;
-    return ids.every((id) => { const ex = state.exStates[id]; return ex.sets.length > 0 && ex.sets.every((s) => s.isLogged); });
-  }, [state.exStates]);
+    if (!sessionExs || !(sessionExs as any[]).length) return false;
+    return (sessionExs as any[]).every((se: any) => {
+      const exId = se.exercise._id as string;
+      if (se.exercise.category === "cardio") {
+        return state.cardioStates[exId]?.isLogged ?? false;
+      }
+      const ex = state.exStates[exId];
+      return ex && ex.sets.length > 0 && ex.sets.every((s) => s.isLogged);
+    });
+  }, [state.exStates, state.cardioStates, sessionExs]);
 
   const handleFinish = async () => {
     if (!wid) return;
     notificationSuccess();
     await completeMut({ workoutId: wid, durationMs: Date.now() - state.startTime });
     dispatch({ type: "SHOW_FB" });
+  };
+
+  const handleDeleteExercise = async (exId: string, seId: Id<"sessionExercises"> | null, scope: "today" | "meso") => {
+    dispatch({ type: "HIDE_EX", exId });
+    if (scope !== "meso") return;
+    if (seId) {
+      await removeExMut({ sessionExerciseId: seId });
+    } else if (resolvedSessionId) {
+      // Legacy session or extra exercise that was persisted — delete by sessionId + exerciseId
+      await removeExByIdsMut({ sessionId: resolvedSessionId, exerciseId: exId as Id<"exercises"> });
+    }
   };
 
   const weekday = new Date().toLocaleDateString("en-US", { weekday: "long" }).toUpperCase();
@@ -548,12 +904,32 @@ export default function WorkoutScreen() {
       {/* Scroll */}
       <ScrollView contentContainerStyle={{ paddingTop: 12, paddingBottom: 140 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets={false} automaticallyAdjustsScrollIndicatorInsets={false}>
         {!sessionExs && <View style={{ alignItems: "center", paddingTop: 80 }}><Text style={{ color: colors.labelSecondary }}>Loading…</Text></View>}
-        {(sessionExs as any[] | undefined)?.map((se: any) => {
+
+        {/* Session exercises (planned) */}
+        {(sessionExs as any[] | undefined)?.filter((se: any) => !state.hiddenExIds.includes(se.exercise._id as string)).map((se: any) => {
           const oldExId = se.exercise._id as string;
           const override = state.swapOverrides[oldExId];
           const effectiveSe = override
             ? { ...se, exerciseId: override.exerciseId, exercise: { ...se.exercise, ...override.exercise } }
             : se;
+          const seId: Id<"sessionExercises"> | null = se.isLegacy ? null : se._id;
+
+          if (effectiveSe.exercise?.category === "cardio") {
+            return (
+              <CardioExCardWithSuggestion
+                key={se.exerciseId}
+                se={effectiveSe}
+                exId={oldExId}
+                cardioState={state.cardioStates[oldExId]}
+                dispatch={dispatch}
+                workoutId={wid}
+                userId={userId ?? null}
+                weekNumber={weekNumber}
+                onDelete={(scope) => handleDeleteExercise(oldExId, seId, scope)}
+              />
+            );
+          }
+
           return (
             <ExCardWithSuggestion
               key={se.exerciseId}
@@ -566,20 +942,74 @@ export default function WorkoutScreen() {
               userId={userId ?? null}
               weekNumber={weekNumber}
               mesoId={meso?._id ?? null}
-              onOpenSwap={() =>
-                setSwapTarget({
-                  seId: se.isLegacy ? null : se._id,
-                  exercise: se.exercise,
-                  oldExId,
-                })
-              }
+              onOpenSwap={() => setSwapTarget({ seId, exercise: se.exercise, oldExId })}
               onOpenVideo={() => {
                 const vid = getVideoId(effectiveSe.exercise?.name ?? "");
                 if (vid) setVideoTarget({ name: effectiveSe.exercise?.name ?? "", videoId: vid });
               }}
+              onDelete={(scope) => handleDeleteExercise(oldExId, seId, scope)}
             />
           );
         })}
+
+        {/* Extra exercises added during this workout — hide once sessionExs picks them up */}
+        {state.extraExercises.filter((ex) => {
+          if (state.hiddenExIds.includes(ex._id as string)) return false;
+          // Already reflected in the live session query — don't double-render
+          if ((sessionExs as any[] | undefined)?.some((se: any) => (se.exercise._id as string) === (ex._id as string))) return false;
+          return true;
+        }).map((ex) => {
+          const exId = ex._id as string;
+          const fakeSe = {
+            exerciseId: ex._id,
+            exercise: { _id: ex._id, name: ex.name, muscleGroup: ex.muscleGroup, equipment: ex.equipment, sfr: ex.sfr, category: ex.category, cardioMode: ex.cardioMode },
+            repRangeMin: 8, repRangeMax: 12, targetSets: 3, setType: "regular" as const, isLegacy: true,
+          };
+          if (ex.category === "cardio") {
+            return (
+              <CardioExCardWithSuggestion
+                key={exId}
+                se={fakeSe}
+                exId={exId}
+                cardioState={state.cardioStates[exId]}
+                dispatch={dispatch}
+                workoutId={wid}
+                userId={userId ?? null}
+                weekNumber={weekNumber}
+                onDelete={(scope) => handleDeleteExercise(exId, ex.seId, scope)}
+              />
+            );
+          }
+          return (
+            <ExCardWithSuggestion
+              key={exId}
+              se={fakeSe}
+              originalExId={exId}
+              exState={state.exStates[exId]}
+              activeCell={state.activeCell}
+              dispatch={dispatch}
+              workoutId={wid}
+              userId={userId ?? null}
+              weekNumber={weekNumber}
+              mesoId={meso?._id ?? null}
+              onOpenSwap={() => {}}
+              onOpenVideo={() => {
+                const vid = getVideoId(ex.name);
+                if (vid) setVideoTarget({ name: ex.name, videoId: vid });
+              }}
+              onDelete={(scope) => handleDeleteExercise(exId, ex.seId, scope)}
+            />
+          );
+        })}
+
+        {/* Add Exercise button */}
+        <TouchableOpacity
+          onPress={() => { selectionAsync(); setAddExSheetVisible(true); }}
+          style={[styles.addExBtn, { borderColor: colors.separator }]}
+        >
+          <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 14, color: colors.accent }}>+ Add Exercise</Text>
+        </TouchableOpacity>
+
         {allLogged && (
           <TouchableOpacity style={[styles.finishBar, { backgroundColor: colors.accentGreen }]} onPress={handleFinish}>
             <Text style={{ color: "#FFF", fontSize: 17, fontFamily: "Outfit_400Regular" }}>Finish Workout ✓</Text>
@@ -641,6 +1071,28 @@ export default function WorkoutScreen() {
           onClose={() => setVideoTarget(null)}
         />
       )}
+
+      {/* Add exercise sheet */}
+      <AddExSheet
+        visible={addExSheetVisible}
+        onAdd={async (ex: PickedExercise) => {
+          const exId = ex._id as string;
+          // Show immediately
+          dispatch({ type: "ADD_EXTRA_EX", exercise: { ...ex, seId: null } });
+          // Persist to session so it appears on next visit
+          if (resolvedSessionId) {
+            const seId = await addExToSessionMut({
+              sessionId: resolvedSessionId,
+              exerciseId: ex._id,
+              repRangeMin: 8,
+              repRangeMax: 12,
+              targetSets: 3,
+            });
+            dispatch({ type: "SET_EXTRA_SEID", exId, seId });
+          }
+        }}
+        onClose={() => setAddExSheetVisible(false)}
+      />
     </View>
   );
 }
@@ -677,4 +1129,8 @@ const styles = StyleSheet.create({
   numKey: { width: "30%", height: 52, borderRadius: 4, alignItems: "center", justifyContent: "center", flexGrow: 1 },
   restBar: { position: "absolute", bottom: 0, left: 0, right: 0, flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 20, paddingVertical: 14, paddingBottom: 28, borderTopLeftRadius: 16, borderTopRightRadius: 16 },
   finishBar: { marginHorizontal: 16, height: 56, borderRadius: 4, alignItems: "center", justifyContent: "center", marginTop: 8 },
+  addExBtn: { marginHorizontal: 12, marginTop: 4, marginBottom: 8, paddingVertical: 14, borderRadius: 4, borderWidth: 1, borderStyle: "dashed", alignItems: "center" },
+  stepperRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  stepBtn: { width: 44, height: 44, borderRadius: 4, alignItems: "center", justifyContent: "center" },
+  stepVal: { flex: 1, textAlign: "center", fontSize: 20, fontFamily: "CormorantGaramond_300Light", color: "white" },
 });

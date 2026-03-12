@@ -29,7 +29,8 @@ export default defineSchema({
       v.literal("glutes"),
       v.literal("calves"),
       v.literal("abs"),
-      v.literal("forearms")
+      v.literal("forearms"),
+      v.literal("cardio")
     ),
     equipment: v.union(
       v.literal("barbell"),
@@ -43,6 +44,13 @@ export default defineSchema({
     isCustom: v.boolean(),
     userId: v.optional(v.id("users")),
     instructions: v.optional(v.string()),
+    // Cardio-specific fields
+    category: v.optional(v.union(v.literal("strength"), v.literal("cardio"))),
+    cardioMode: v.optional(v.union(
+      v.literal("duration_pace"),   // treadmill, cycling — track time + distance
+      v.literal("duration_only"),   // stairmaster, elliptical — track time + RPE
+      v.literal("intervals")        // HIIT — track intervals, work/rest, RPE
+    )),
   })
     .index("by_muscle_group", ["muscleGroup"])
     .index("by_user", ["userId"]),
@@ -131,6 +139,27 @@ export default defineSchema({
     setNumber: v.number(),
     timestamp: v.number(),
     isWarmup: v.boolean(),
+    notes: v.optional(v.string()),
+  })
+    .index("by_workout", ["workoutId"])
+    .index("by_exercise_user", ["exerciseId", "userId"])
+    .index("by_user_timestamp", ["userId", "timestamp"]),
+
+  // --- Cardio Sets ---
+  cardioSets: defineTable({
+    workoutId: v.id("workouts"),
+    exerciseId: v.id("exercises"),
+    userId: v.id("users"),
+    setNumber: v.number(),
+    durationSec: v.number(),           // total duration in seconds
+    distanceM: v.optional(v.number()), // meters (for duration_pace mode)
+    rpe: v.number(),                   // 1–10 RPE
+    targetRpe: v.optional(v.number()),
+    // Interval-specific
+    intervalCount: v.optional(v.number()),
+    intervalWorkSec: v.optional(v.number()),
+    intervalRestSec: v.optional(v.number()),
+    timestamp: v.number(),
     notes: v.optional(v.string()),
   })
     .index("by_workout", ["workoutId"])

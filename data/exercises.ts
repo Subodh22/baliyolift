@@ -9,7 +9,8 @@ export type MuscleGroup =
   | "glutes"
   | "calves"
   | "abs"
-  | "forearms";
+  | "forearms"
+  | "cardio";
 
 export type Equipment =
   | "barbell"
@@ -20,6 +21,7 @@ export type Equipment =
   | "other";
 
 export type SFR = "high" | "medium" | "low";
+export type CardioMode = "duration_pace" | "duration_only" | "intervals";
 
 export type Exercise = {
   name: string;
@@ -27,6 +29,8 @@ export type Exercise = {
   equipment: Equipment;
   sfr: SFR;
   instructions: string;
+  category?: "strength" | "cardio";
+  cardioMode?: CardioMode;
 };
 
 export const EXERCISE_SEED_DATA: Exercise[] = [
@@ -1114,5 +1118,148 @@ export const EXERCISE_SEED_DATA: Exercise[] = [
     sfr: "high",
     instructions:
       "Hang from a pull-up bar for as long as possible without any kipping. Builds grip endurance and decompresses the spine as a bonus.",
+  },
+];
+
+// ─── Cardio Exercise Seed Data ────────────────────────────────────────────────
+
+export const CARDIO_EXERCISE_SEED_DATA: Exercise[] = [
+  // Duration + Pace (track time & distance)
+  {
+    name: "Treadmill Run",
+    muscleGroup: "cardio",
+    equipment: "machine",
+    sfr: "high",
+    category: "cardio",
+    cardioMode: "duration_pace",
+    instructions: "Set a comfortable pace for steady-state cardio. Aim to increase duration by 5 minutes each week before increasing speed.",
+  },
+  {
+    name: "Outdoor Run",
+    muscleGroup: "cardio",
+    equipment: "bodyweight",
+    sfr: "high",
+    category: "cardio",
+    cardioMode: "duration_pace",
+    instructions: "Run at a conversational pace (RPE 5–6) for steady state. Increase distance by ~10% per week.",
+  },
+  {
+    name: "Cycling",
+    muscleGroup: "cardio",
+    equipment: "machine",
+    sfr: "high",
+    category: "cardio",
+    cardioMode: "duration_pace",
+    instructions: "Maintain a consistent cadence (80–100 RPM). Progress by adding 5 min per week before increasing resistance.",
+  },
+  {
+    name: "Outdoor Cycling",
+    muscleGroup: "cardio",
+    equipment: "bodyweight",
+    sfr: "high",
+    category: "cardio",
+    cardioMode: "duration_pace",
+    instructions: "Ride at a steady effort (RPE 5–7). Track distance and aim for progressive increases in total volume.",
+  },
+  {
+    name: "Rowing Machine",
+    muscleGroup: "cardio",
+    equipment: "machine",
+    sfr: "high",
+    category: "cardio",
+    cardioMode: "duration_pace",
+    instructions: "Drive with legs first, then lean back, then pull arms. Aim for 500m split as your pace metric. Progress duration before pace.",
+  },
+  {
+    name: "Swimming",
+    muscleGroup: "cardio",
+    equipment: "other",
+    sfr: "high",
+    category: "cardio",
+    cardioMode: "duration_pace",
+    instructions: "Focus on consistent stroke technique. Track total laps or distance. Progress by adding one length per session.",
+  },
+  // Duration only (track time + RPE)
+  {
+    name: "Stairmaster",
+    muscleGroup: "cardio",
+    equipment: "machine",
+    sfr: "high",
+    category: "cardio",
+    cardioMode: "duration_only",
+    instructions: "Stand tall, avoid leaning on the rails. Set a moderate step rate and maintain it for the full duration. Progress by adding 3–5 minutes per week.",
+  },
+  {
+    name: "Elliptical",
+    muscleGroup: "cardio",
+    equipment: "machine",
+    sfr: "medium",
+    category: "cardio",
+    cardioMode: "duration_only",
+    instructions: "Low impact, full-body motion. Keep resistance moderate and focus on maintaining a consistent cadence throughout.",
+  },
+  {
+    name: "Jump Rope",
+    muscleGroup: "cardio",
+    equipment: "other",
+    sfr: "high",
+    category: "cardio",
+    cardioMode: "duration_only",
+    instructions: "Maintain a light two-foot bounce. Start with 5-minute blocks and increase total duration as fitness improves.",
+  },
+  {
+    name: "Walking (Incline)",
+    muscleGroup: "cardio",
+    equipment: "machine",
+    sfr: "medium",
+    category: "cardio",
+    cardioMode: "duration_only",
+    instructions: "Set treadmill incline to 10–15% at 5–6 km/h. Hands-free for maximum glute and calf engagement. Excellent low-impact fat-loss tool.",
+  },
+  {
+    name: "Assault Bike",
+    muscleGroup: "cardio",
+    equipment: "machine",
+    sfr: "high",
+    category: "cardio",
+    cardioMode: "duration_only",
+    instructions: "Full-body effort — push and pull the handles while pedaling. Excellent for total conditioning. Maintain consistent effort across the session.",
+  },
+  // Intervals
+  {
+    name: "HIIT Sprints",
+    muscleGroup: "cardio",
+    equipment: "bodyweight",
+    sfr: "high",
+    category: "cardio",
+    cardioMode: "intervals",
+    instructions: "Sprint at max effort for work interval, walk or jog for rest. Common protocol: 20s on / 40s off × 8–10 rounds. Progress by adding rounds or reducing rest.",
+  },
+  {
+    name: "Treadmill Intervals",
+    muscleGroup: "cardio",
+    equipment: "machine",
+    sfr: "high",
+    category: "cardio",
+    cardioMode: "intervals",
+    instructions: "Alternate between high-speed (RPE 8–9) and low-speed (RPE 4) intervals. Start with 1:2 work:rest ratio and progress to 1:1.",
+  },
+  {
+    name: "Rowing Intervals",
+    muscleGroup: "cardio",
+    equipment: "machine",
+    sfr: "high",
+    category: "cardio",
+    cardioMode: "intervals",
+    instructions: "Row at near-max effort for work intervals, paddle lightly for rest. Classic protocol: 250m hard / 250m easy × 6–8 rounds.",
+  },
+  {
+    name: "Bike Intervals",
+    muscleGroup: "cardio",
+    equipment: "machine",
+    sfr: "high",
+    category: "cardio",
+    cardioMode: "intervals",
+    instructions: "Increase resistance significantly for work intervals, drop resistance for recovery. 30s hard / 60s easy is a strong starting point.",
   },
 ];

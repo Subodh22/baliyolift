@@ -251,7 +251,7 @@ export const getSessionExercises = query({
           targetSets: 3,
           setType: "regular" as const,
           isLegacy: true,
-          exercise: { _id: ex!._id, name: ex!.name, muscleGroup: ex!.muscleGroup, equipment: ex!.equipment, sfr: ex!.sfr },
+          exercise: { _id: ex!._id, name: ex!.name, muscleGroup: ex!.muscleGroup, equipment: ex!.equipment, sfr: ex!.sfr, category: ex!.category ?? null, cardioMode: ex!.cardioMode ?? null },
         }));
     }
 
@@ -264,7 +264,7 @@ export const getSessionExercises = query({
           ...se,
           isLegacy: false,
           exercise: exercise
-            ? { _id: exercise._id, name: exercise.name, muscleGroup: exercise.muscleGroup, equipment: exercise.equipment, sfr: exercise.sfr }
+            ? { _id: exercise._id, name: exercise.name, muscleGroup: exercise.muscleGroup, equipment: exercise.equipment, sfr: exercise.sfr, category: exercise.category ?? null, cardioMode: exercise.cardioMode ?? null }
             : null,
         };
       })
@@ -355,6 +355,91 @@ export const swapExercise = mutation({
         (id as string) === (oldExerciseId as string) ? newExerciseId : id
       );
       await ctx.db.patch(se.sessionId, { exerciseIds: updated });
+    }
+  },
+});
+
+export const removeExerciseFromSession = mutation({
+  args: {
+    sessionExerciseId: v.id("sessionExercises"),
+  },
+  handler: async (ctx, { sessionExerciseId }) => {
+    const se = await ctx.db.get(sessionExerciseId);
+    if (!se) return;
+    // Remove the sessionExercise row
+    await ctx.db.delete(sessionExerciseId);
+    // Also remove from sessions.exerciseIds
+    const session = await ctx.db.get(se.sessionId);
+    if (session) {
+      const updated = session.exerciseIds.filter(
+        (id) => (id as string) !== (se.exerciseId as string)
+      );
+      await ctx.db.patch(se.sessionId, { exerciseIds: updated });
+    }
+  },
+});
+
+export const addExerciseToSession = mutation({
+  args: {
+    sessionId: v.id("sessions"),
+    exerciseId: v.id("exercises"),
+    repRangeMin: v.number(),
+    repRangeMax: v.number(),
+    targetSets: v.number(),
+  },
+  handler: async (ctx, args) => {
+    // Get current exercises to determine order
+    const existing = await ctx.db
+      .query("sessionExercises")
+      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+      .collect();
+    const order = existing.length;
+
+    const seId = await ctx.db.insert("sessionExercises", {
+      sessionId: args.sessionId,
+      exerciseId: args.exerciseId,
+      order,
+      repRangeMin: args.repRangeMin,
+      repRangeMax: args.repRangeMax,
+      targetSets: args.targetSets,
+      setType: "regular",
+    });
+
+    // Also add to sessions.exerciseIds
+    const session = await ctx.db.get(args.sessionId);
+    if (session) {
+      await ctx.db.patch(args.sessionId, {
+        exerciseIds: [...session.exerciseIds, args.exerciseId],
+      });
+    }
+
+    return seId;
+  },
+});
+
+// Fallback for legacy sessions that have no sessionExercises rows
+export const removeExerciseByIds = mutation({
+  args: {
+    sessionId: v.id("sessions"),
+    exerciseId: v.id("exercises"),
+  },
+  handler: async (ctx, { sessionId, exerciseId }) => {
+    // Delete any sessionExercises row that matches
+    const rows = await ctx.db
+      .query("sessionExercises")
+      .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
+      .collect();
+    for (const row of rows) {
+      if ((row.exerciseId as string) === (exerciseId as string)) {
+        await ctx.db.delete(row._id);
+      }
+    }
+    // Remove from sessions.exerciseIds
+    const session = await ctx.db.get(sessionId);
+    if (session) {
+      await ctx.db.patch(sessionId, {
+        exerciseIds: session.exerciseIds.filter((id) => (id as string) !== (exerciseId as string)),
+      });
     }
   },
 });
