@@ -279,6 +279,7 @@ function ExCard({ se, originalExId, exState, suggestion, activeCell, dispatch, w
   const { colors, typography } = useTheme();
   const logMut = useMutation(api.sets.logSet);
   const deleteMut = useMutation(api.sets.deleteSet);
+  const updateSetTypeMut = useMutation(api.mesocycles.updateSetType);
   const ex = se.exercise;
 
   useEffect(() => {
@@ -434,7 +435,11 @@ function ExCard({ se, originalExId, exState, suggestion, activeCell, dispatch, w
       <View style={[styles.setTypeRow, { borderTopColor: colors.separator }]}>
         <Text style={{ color: colors.labelTertiary, fontSize: 11, fontFamily: "Outfit_400Regular", letterSpacing: 0.8, marginRight: 8 }}>SET TYPE</Text>
         {(["regular", "myorep", "myorep_match"] as SetType[]).map((t) => (
-          <Pressable key={t} onPress={() => { selectionAsync(); dispatch({ type: "SET_TYPE", exId: originalExId, st: t }); }}
+          <Pressable key={t} onPress={() => {
+            selectionAsync();
+            dispatch({ type: "SET_TYPE", exId: originalExId, st: t });
+            if (!se.isLegacy && se._id) updateSetTypeMut({ sessionExerciseId: se._id, setType: t }).catch(() => {});
+          }}
             style={[styles.typePill, { backgroundColor: setType === t ? colors.accent : colors.fillSecondary }]}>
             <Text style={{ color: setType === t ? "#FFF" : colors.labelSecondary, fontSize: 11, fontFamily: "Outfit_400Regular" }}>
               {t === "regular" ? "Regular" : t === "myorep" ? "Myorep" : "Myorep match"}

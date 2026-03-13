@@ -443,3 +443,15 @@ export const removeExerciseByIds = mutation({
     }
   },
 });
+
+export const updateSetType = mutation({
+  args: {
+    sessionExerciseId: v.id("sessionExercises"),
+    setType: v.union(v.literal("regular"), v.literal("myorep"), v.literal("myorep_match")),
+  },
+  handler: async (ctx, { sessionExerciseId, setType }) => {
+    const se = await ctx.db.get(sessionExerciseId);
+    if (!se) return;
+    await ctx.db.patch(sessionExerciseId, { setType });
+  },
+});
