@@ -917,7 +917,7 @@ export default function WorkoutScreen() {
           if (effectiveSe.exercise?.category === "cardio") {
             return (
               <CardioExCardWithSuggestion
-                key={se.exerciseId}
+                key={se._id ?? se.exerciseId}
                 se={effectiveSe}
                 exId={oldExId}
                 cardioState={state.cardioStates[oldExId]}
@@ -932,7 +932,7 @@ export default function WorkoutScreen() {
 
           return (
             <ExCardWithSuggestion
-              key={se.exerciseId}
+              key={se._id ?? se.exerciseId}
               se={effectiveSe}
               originalExId={oldExId}
               exState={state.exStates[oldExId]}
@@ -968,7 +968,7 @@ export default function WorkoutScreen() {
           if (ex.category === "cardio") {
             return (
               <CardioExCardWithSuggestion
-                key={exId}
+                key={`extra-${exId}`}
                 se={fakeSe}
                 exId={exId}
                 cardioState={state.cardioStates[exId]}
@@ -982,7 +982,7 @@ export default function WorkoutScreen() {
           }
           return (
             <ExCardWithSuggestion
-              key={exId}
+              key={`extra-${exId}`}
               se={fakeSe}
               originalExId={exId}
               exState={state.exStates[exId]}
