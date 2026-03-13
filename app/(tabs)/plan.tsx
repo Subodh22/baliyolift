@@ -57,7 +57,7 @@ function MesoCard({
 
   const statusLabel =
     meso.status === "active" ? "ACTIVE" :
-    meso.status === "deload" ? "DELOAD" : "COMPLETED";
+    meso.status === "deload" ? "DELOAD" : "PAUSED";
 
   const statusColor =
     meso.status === "active" ? P.gold :
@@ -270,7 +270,7 @@ export default function PlanScreen() {
       {endTarget && (
         <WarningSheet
           title="End this mesocycle?"
-          body="Your training history is saved. You can create a new mesocycle or reactivate this one later."
+          body="Your training history is saved. You can create a new mesocycle or set this one active again later."
           confirmLabel="END"
           confirmDanger
           onConfirm={handleEnd}
@@ -285,7 +285,7 @@ export default function PlanScreen() {
           title={hasActive ? "Switch active mesocycle?" : "Activate mesocycle?"}
           body={
             hasActive
-              ? "Your current active mesocycle will be marked as completed. This mesocycle will start fresh from today."
+              ? "Your current active mesocycle will be paused. This mesocycle will start fresh from today."
               : "This mesocycle will be set as active and start from today."
           }
           confirmLabel="ACTIVATE"

@@ -15,6 +15,7 @@ import Animated, {
   withSpring,
   Easing,
 } from "react-native-reanimated";
+import { Audio } from "expo-av";
 import { impactLight, notificationSuccess } from "@/utils/haptics";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -22,6 +23,19 @@ const RING_SIZE = 200;
 const STROKE = 8;
 
 const PRESET_SECONDS = [60, 90, 120, 180];
+
+async function playChime() {
+  try {
+    await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
+    const { sound } = await Audio.Sound.createAsync(
+      require("../assets/timer-complete.wav"),
+      { shouldPlay: true, volume: 1.0 }
+    );
+    sound.setOnPlaybackStatusUpdate((status) => {
+      if (status.isLoaded && status.didJustFinish) sound.unloadAsync();
+    });
+  } catch {}
+}
 
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -73,6 +87,7 @@ export function RestTimer({
       ringScale.value = withSpring(1, { damping: 12 });
     });
     notificationSuccess();
+    playChime();
     onComplete?.();
   }, [stopTimer, onComplete]);
 
