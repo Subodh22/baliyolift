@@ -1,6 +1,6 @@
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Platform, useColorScheme, View } from "react-native";
+import { Platform, useColorScheme, View, StyleSheet } from "react-native";
 import { ConvexProvider, ConvexReactClient, useMutation, useQuery } from "convex/react";
 import { useEffect } from "react";
 import { WorkoutProvider } from "@/hooks/useWorkoutStore";
@@ -100,10 +100,10 @@ function NativeLayout() {
   }, [isLoaded, isSignedIn, segments]);
 
   return (
-    <>
+    <View style={styles.root}>
       <ProfileGate />
       <AppStack />
-    </>
+    </View>
   );
 }
 
@@ -172,3 +172,7 @@ export default function RootLayout() {
     </ClerkProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: "#0A0A0B" },
+});

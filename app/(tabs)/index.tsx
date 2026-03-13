@@ -285,7 +285,7 @@ export default function HomeScreen() {
                   {nextSession.muscleGroups.map((mg: string) =>
                     MUSCLE_DISPLAY_NAMES[mg as keyof typeof MUSCLE_DISPLAY_NAMES] ?? mg
                   ).join(" · ")}
-                  {" · ~52 min"}
+                  
                 </Text>
                 {/* Stats + Begin row */}
                 <View style={s.sessionFooter}>
