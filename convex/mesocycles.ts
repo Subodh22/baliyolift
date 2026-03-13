@@ -27,6 +27,13 @@ export const create = mutation({
     sessions: v.optional(v.array(sessionInputValidator)),
   },
   handler: async (ctx, args) => {
+    // Enforce one active meso at a time
+    const existing = await ctx.db
+      .query("mesocycles")
+      .withIndex("by_user_status", (q) => q.eq("userId", args.userId).eq("status", "active"))
+      .first();
+    if (existing) await ctx.db.patch(existing._id, { status: "completed" });
+
     const mesocycleId = await ctx.db.insert("mesocycles", {
       userId: args.userId,
       name: args.name,
@@ -155,6 +162,13 @@ export const createCustom = mutation({
     })),
   },
   handler: async (ctx, args) => {
+    // Enforce one active meso at a time
+    const existing = await ctx.db
+      .query("mesocycles")
+      .withIndex("by_user_status", (q) => q.eq("userId", args.userId).eq("status", "active"))
+      .first();
+    if (existing) await ctx.db.patch(existing._id, { status: "completed" });
+
     const mesoId = await ctx.db.insert("mesocycles", {
       userId: args.userId,
       name: args.name,
