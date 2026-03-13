@@ -455,3 +455,75 @@ export const updateSetType = mutation({
     await ctx.db.patch(sessionExerciseId, { setType });
   },
 });
+
+// Returns all mesocycles for a user (desc) with sessions + exercises resolved
+export const listAllWithSessions = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, { userId }) => {
+    const mesos = await ctx.db
+      .query("mesocycles")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .order("desc")
+      .collect();
+
+    return await Promise.all(
+      mesos.map(async (meso) => {
+        const sessions = await ctx.db
+          .query("sessions")
+          .withIndex("by_mesocycle", (q) => q.eq("mesocycleId", meso._id))
+          .collect();
+
+        sessions.sort((a, b) => a.order - b.order);
+
+        const sessionsWithDetails = await Promise.all(
+          sessions.map(async (session) => {
+            const exercises = await Promise.all(session.exerciseIds.map((id) => ctx.db.get(id)));
+            const valid = exercises.filter(Boolean) as NonNullable<(typeof exercises)[number]>[];
+            const muscleGroups =
+              session.muscleGroups?.length
+                ? session.muscleGroups
+                : [...new Set(valid.map((ex) => ex.muscleGroup))];
+            return {
+              ...session,
+              muscleGroups,
+              exercises: valid.map((ex) => ({ id: ex._id, name: ex.name, muscleGroup: ex.muscleGroup })),
+            };
+          })
+        );
+
+        // Week number for active mesos
+        let weekNumber = 1;
+        if (meso.status === "active") {
+          const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+          const calendarWeek = Math.max(1, Math.ceil((Date.now() - meso.startDate) / msPerWeek));
+          const allWorkouts = await ctx.db
+            .query("workouts")
+            .withIndex("by_user", (q) => q.eq("userId", userId))
+            .filter((q) => q.eq(q.field("mesocycleId"), meso._id))
+            .collect();
+          const maxLoggedWeek = allWorkouts.length > 0 ? Math.max(...allWorkouts.map((w) => w.weekNumber)) : 1;
+          weekNumber = Math.min(Math.max(calendarWeek, maxLoggedWeek), meso.weeks);
+        }
+
+        return { ...meso, sessions: sessionsWithDetails, weekNumber };
+      })
+    );
+  },
+});
+
+// End any currently active meso and activate the given one
+export const setActive = mutation({
+  args: { userId: v.id("users"), mesocycleId: v.id("mesocycles") },
+  handler: async (ctx, { userId, mesocycleId }) => {
+    // Complete any currently active meso
+    const current = await ctx.db
+      .query("mesocycles")
+      .withIndex("by_user_status", (q) => q.eq("userId", userId).eq("status", "active"))
+      .first();
+    if (current && (current._id as string) !== (mesocycleId as string)) {
+      await ctx.db.patch(current._id, { status: "completed" });
+    }
+    // Activate the target, reset startDate to now
+    await ctx.db.patch(mesocycleId, { status: "active", startDate: Date.now() });
+  },
+});

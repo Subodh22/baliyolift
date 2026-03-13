@@ -1,216 +1,330 @@
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Pressable } from "react-native";
+import {
+  View, Text, ScrollView, TouchableOpacity, StyleSheet,
+  ActivityIndicator, Pressable, LayoutAnimation, Platform, UIManager,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useState } from "react";
 import { router } from "expo-router";
 import { useQuery, useMutation } from "convex/react";
-import { notificationSuccess } from "@/utils/haptics";
-import { useTheme } from "@/hooks/useTheme";
+import { notificationSuccess, selectionAsync } from "@/utils/haptics";
+import { P } from "@/constants/colors";
+import { CG_ITALIC, OUT_L, OUT } from "@/constants/typography";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { Button } from "@/components/ui/Button";
-import { MUSCLE_DISPLAY_NAMES } from "@/constants/muscles";
 import { api } from "@/convex/_generated/api";
+import { MUSCLE_DISPLAY_NAMES } from "@/constants/muscles";
+import { Id } from "@/convex/_generated/dataModel";
+
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-export default function PlanScreen() {
-  const { colors } = useTheme();
-  const { userId, loading: userLoading } = useCurrentUser();
-  const meso = useQuery(api.mesocycles.getActiveWithDetails, userId ? { userId } : "skip");
-  const completeMeso = useMutation(api.mesocycles.complete);
-  const [confirmEnd, setConfirmEnd] = useState(false);
-  const [ending, setEnding] = useState(false);
-  const isLoading = userLoading || meso === undefined;
+type Meso = {
+  _id: Id<"mesocycles">;
+  name: string;
+  status: "active" | "completed" | "deload";
+  weeks: number;
+  weekNumber: number;
+  sessions: {
+    _id: Id<"sessions">;
+    name: string;
+    dayOfWeek: number;
+    muscleGroups: string[];
+    exercises: { id: Id<"exercises">; name: string; muscleGroup: string }[];
+  }[];
+};
 
-  const handleEndMeso = async () => {
-    if (!meso || ending) return;
-    setEnding(true);
-    try { notificationSuccess(); await completeMeso({ mesocycleId: meso._id }); }
-    finally { setEnding(false); setConfirmEnd(false); }
+// ── Meso accordion card ────────────────────────────────────────────────────────
+function MesoCard({
+  meso,
+  onEnd,
+  onActivate,
+}: {
+  meso: Meso;
+  onEnd: () => void;
+  onActivate: () => void;
+}) {
+  const [open, setOpen] = useState(meso.status === "active");
+  const isActive = meso.status === "active";
+  const pct = isActive ? ((meso.weekNumber - 1) / meso.weeks) * 100 : 100;
+
+  const toggle = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setOpen((v) => !v);
+  };
+
+  const statusLabel =
+    meso.status === "active" ? "ACTIVE" :
+    meso.status === "deload" ? "DELOAD" : "COMPLETED";
+
+  const statusColor =
+    meso.status === "active" ? P.gold :
+    meso.status === "deload" ? "#7BA7BC" : P.mid;
+
+  return (
+    <View style={[s.mesoCard, isActive && { borderColor: P.gold + "40" }]}>
+      {/* Header row — tap to expand */}
+      <Pressable onPress={toggle} style={s.mesoHeader}>
+        <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 6 }}>
+            <View style={[s.statusPill, { backgroundColor: statusColor + "18" }]}>
+              <Text style={{ fontFamily: OUT_L, fontSize: 9, color: statusColor, letterSpacing: 1.5 }}>
+                {statusLabel}
+              </Text>
+            </View>
+            {isActive && (
+              <Text style={{ fontFamily: OUT_L, fontSize: 11, color: P.mid }}>
+                Week {meso.weekNumber} / {meso.weeks}
+              </Text>
+            )}
+          </View>
+          <Text style={{ fontFamily: OUT, fontSize: 17, color: P.ink, letterSpacing: -0.2 }}>
+            {meso.name}
+          </Text>
+          <Text style={{ fontFamily: OUT_L, fontSize: 12, color: P.mid, marginTop: 2 }}>
+            {meso.sessions.length} sessions · {meso.weeks} weeks
+          </Text>
+        </View>
+        <Text style={{ fontFamily: OUT_L, fontSize: 18, color: P.mid, paddingLeft: 12 }}>
+          {open ? "⌃" : "⌄"}
+        </Text>
+      </Pressable>
+
+      {/* Progress bar — active only */}
+      {isActive && (
+        <View style={s.progressTrack}>
+          <View style={[s.progressFill, { width: `${pct}%` as any }]} />
+        </View>
+      )}
+
+      {/* Sessions list — collapsible */}
+      {open && (
+        <View style={[s.sessionsList, { borderTopColor: P.border }]}>
+          {meso.sessions.map((session) => (
+            <View key={session._id as string} style={[s.sessionRow, { borderBottomColor: P.border }]}>
+              <View style={s.dayBadge}>
+                <Text style={{ fontFamily: OUT_L, fontSize: 10, color: P.mid }}>
+                  {DAY_LABELS[session.dayOfWeek]}
+                </Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: OUT, fontSize: 14, color: P.ink }}>{session.name}</Text>
+                <Text style={{ fontFamily: OUT_L, fontSize: 11, color: P.mid, marginTop: 2 }}>
+                  {session.muscleGroups
+                    .map((m) => MUSCLE_DISPLAY_NAMES[m as keyof typeof MUSCLE_DISPLAY_NAMES] ?? m)
+                    .join(" · ")}
+                </Text>
+                {session.exercises.length > 0 && (
+                  <View style={{ marginTop: 6, gap: 3 }}>
+                    {session.exercises.map((ex) => (
+                      <View key={ex.id as string} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                        <View style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: P.gold }} />
+                        <Text style={{ fontFamily: OUT_L, fontSize: 12, color: P.mid }}>{ex.name}</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+            </View>
+          ))}
+
+          {/* Action buttons */}
+          <View style={s.actionRow}>
+            {isActive ? (
+              <Pressable onPress={onEnd} style={[s.actionBtn, s.dangerBtn]}>
+                <Text style={{ fontFamily: OUT_L, fontSize: 12, color: "#CF4444", letterSpacing: 1 }}>
+                  END MESOCYCLE
+                </Text>
+              </Pressable>
+            ) : (
+              <Pressable onPress={onActivate} style={[s.actionBtn, s.activateBtn]}>
+                <Text style={{ fontFamily: OUT_L, fontSize: 12, color: P.gold, letterSpacing: 1 }}>
+                  SET ACTIVE
+                </Text>
+              </Pressable>
+            )}
+          </View>
+        </View>
+      )}
+    </View>
+  );
+}
+
+// ── Warning modal ──────────────────────────────────────────────────────────────
+function WarningSheet({
+  title,
+  body,
+  confirmLabel,
+  confirmDanger,
+  onConfirm,
+  onCancel,
+  loading,
+}: {
+  title: string; body: string; confirmLabel: string; confirmDanger: boolean;
+  onConfirm: () => void; onCancel: () => void; loading: boolean;
+}) {
+  return (
+    <View style={s.overlay}>
+      <Animated.View entering={FadeInDown.springify().damping(18)} style={s.sheet}>
+        <Text style={{ fontFamily: OUT, fontSize: 17, color: P.ink, marginBottom: 8 }}>{title}</Text>
+        <Text style={{ fontFamily: OUT_L, fontSize: 13, color: P.mid, lineHeight: 20, marginBottom: 24 }}>{body}</Text>
+        <View style={{ flexDirection: "row", gap: 10 }}>
+          <Pressable onPress={onCancel} style={[s.sheetBtn, { backgroundColor: P.s2, flex: 1 }]}>
+            <Text style={{ fontFamily: OUT_L, fontSize: 13, color: P.ink }}>Cancel</Text>
+          </Pressable>
+          <Pressable onPress={onConfirm} disabled={loading}
+            style={[s.sheetBtn, { backgroundColor: confirmDanger ? "#CF4444" : P.gold, flex: 1 }]}
+          >
+            {loading
+              ? <ActivityIndicator color="#fff" size="small" />
+              : <Text style={{ fontFamily: OUT_L, fontSize: 13, color: confirmDanger ? "#fff" : P.bg, letterSpacing: 0.5 }}>
+                  {confirmLabel}
+                </Text>
+            }
+          </Pressable>
+        </View>
+      </Animated.View>
+    </View>
+  );
+}
+
+// ── Main screen ────────────────────────────────────────────────────────────────
+export default function PlanScreen() {
+  const { userId, loading: userLoading } = useCurrentUser();
+  const mesoList = useQuery(api.mesocycles.listAllWithSessions, userId ? { userId } : "skip");
+  const completeMeso = useMutation(api.mesocycles.complete);
+  const setActiveMeso = useMutation(api.mesocycles.setActive);
+
+  const [endTarget, setEndTarget] = useState<Id<"mesocycles"> | null>(null);
+  const [activateTarget, setActivateTarget] = useState<Id<"mesocycles"> | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const isLoading = userLoading || mesoList === undefined;
+  const hasActive = mesoList?.some((m) => m.status === "active");
+
+  const handleEnd = async () => {
+    if (!endTarget || !userId) return;
+    setBusy(true);
+    try { notificationSuccess(); await completeMeso({ mesocycleId: endTarget }); }
+    finally { setBusy(false); setEndTarget(null); }
+  };
+
+  const handleActivate = async () => {
+    if (!activateTarget || !userId) return;
+    setBusy(true);
+    try { notificationSuccess(); await setActiveMeso({ userId, mesocycleId: activateTarget }); }
+    finally { setBusy(false); setActivateTarget(null); }
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={["top"]}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: P.bg }} edges={["top"]}>
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
 
         {/* Header */}
         <View style={s.header}>
           <View>
-            <Text style={[s.screenLabel, { color: colors.labelSecondary }]}>Your program</Text>
-            <Text style={[s.heroItalic, { color: colors.label }]}>Mesocycle plan.</Text>
+            <Text style={s.eyebrow}>Your program</Text>
+            <Text style={s.hero}>Mesocycles.</Text>
           </View>
-          <TouchableOpacity onPress={() => router.push("/meso/new")} activeOpacity={0.7}
-            style={[s.newBtn, { backgroundColor: colors.fillSecondary, borderColor: colors.separator }]}
-          >
-            <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 13, color: colors.accent }}>+ New</Text>
+          <TouchableOpacity onPress={() => router.push("/meso/new")} activeOpacity={0.7} style={s.newBtn}>
+            <Text style={{ fontFamily: OUT_L, fontSize: 12, color: P.gold, letterSpacing: 1 }}>+ NEW</Text>
           </TouchableOpacity>
         </View>
 
-        {isLoading && <ActivityIndicator color={colors.accent} style={{ marginTop: 40 }} />}
+        {isLoading && <ActivityIndicator color={P.gold} style={{ marginTop: 40 }} />}
 
-        {/* Empty */}
-        {!isLoading && !meso && (
-          <Animated.View entering={FadeInDown.springify()}
-            style={[s.card, { backgroundColor: colors.backgroundSecondary, borderColor: colors.separator }]}
-          >
-            <Text style={[s.cardTitle, { color: colors.label }]}>No active mesocycle</Text>
-            <Text style={{ fontFamily: "Outfit_300Light", fontSize: 14, color: colors.labelSecondary, marginTop: 8, lineHeight: 22 }}>
+        {/* Empty state */}
+        {!isLoading && (!mesoList || mesoList.length === 0) && (
+          <Animated.View entering={FadeInDown.springify()} style={s.emptyCard}>
+            <Text style={{ fontFamily: OUT, fontSize: 17, color: P.ink, marginBottom: 8 }}>No mesocycles yet</Text>
+            <Text style={{ fontFamily: OUT_L, fontSize: 13, color: P.mid, lineHeight: 20, marginBottom: 20 }}>
               A mesocycle is a structured training block designed to progressively overload your muscles over 4–6 weeks.
             </Text>
-            <View style={{ marginTop: 20 }}>
-              <Button label="Create Mesocycle" onPress={() => router.push("/meso/new")} />
-            </View>
+            <Pressable onPress={() => router.push("/meso/new")} style={s.createBtn}>
+              <Text style={{ fontFamily: OUT_L, fontSize: 12, color: P.gold, letterSpacing: 1 }}>CREATE MESOCYCLE</Text>
+            </Pressable>
           </Animated.View>
         )}
 
-        {/* Active meso */}
-        {!isLoading && meso && (
-          <>
-            {/* Meso overview card */}
-            <Animated.View entering={FadeInDown.springify()}
-              style={[s.card, { backgroundColor: colors.backgroundSecondary, borderColor: colors.separator }]}
-            >
-              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <View style={{ flex: 1 }}>
-                  <View style={[s.activePill, { backgroundColor: colors.accentLight }]}>
-                    <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 10, color: colors.accent, letterSpacing: 0.8 }}>ACTIVE</Text>
-                  </View>
-                  <Text style={[s.cardTitle, { color: colors.label, marginTop: 10 }]}>{meso.name}</Text>
-                  <Text style={{ fontFamily: "Outfit_300Light", fontSize: 13, color: colors.labelSecondary, marginTop: 4 }}>
-                    Week {meso.weekNumber} of {meso.weeks}
-                  </Text>
-                </View>
-                <Text style={{ fontFamily: "CormorantGaramond_300Light", fontSize: 32, color: colors.label, letterSpacing: -1 }}>
-                  {meso.weekNumber}/{meso.weeks}
-                </Text>
-              </View>
-
-              {/* Week progress bar */}
-              <View style={{ marginTop: 16 }}>
-                <View style={{ height: 2, borderRadius: 1, backgroundColor: colors.fillSecondary }}>
-                  <View style={{ height: 2, borderRadius: 1, backgroundColor: colors.accent, width: `${((meso.weekNumber - 1) / meso.weeks) * 100}%` }} />
-                </View>
-              </View>
-            </Animated.View>
-
-            {/* Sessions */}
-            <Animated.View entering={FadeInDown.delay(80).springify()} style={{ marginTop: 28 }}>
-              <Text style={[s.sectionLabel, { color: colors.labelSecondary }]}>All sessions</Text>
-              <View style={{ gap: 8, marginTop: 12 }}>
-                {meso.sessions.map((session) => (
-                  <View key={session._id}
-                    style={[s.sessionCard, { backgroundColor: colors.backgroundSecondary, borderColor: colors.separator }]}
-                  >
-                    <View style={s.sessionRow}>
-                      <View style={[s.dayBadge, { backgroundColor: colors.fillSecondary }]}>
-                        <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 11, color: colors.labelSecondary }}>
-                          {DAY_LABELS[session.dayOfWeek]}
-                        </Text>
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 15, color: colors.label }}>{session.name}</Text>
-                        <Text style={{ fontFamily: "Outfit_300Light", fontSize: 12, color: colors.labelSecondary, marginTop: 2 }}>
-                          {session.muscleGroups.map(m => MUSCLE_DISPLAY_NAMES[m as keyof typeof MUSCLE_DISPLAY_NAMES] ?? m).join(" · ")}
-                        </Text>
-                      </View>
-                    </View>
-                    {session.exercises && session.exercises.length > 0 && (
-                      <View style={[s.exerciseList, { borderTopColor: colors.separator }]}>
-                        {session.exercises.map((ex: any, i: number) => (
-                          <View key={ex.id ?? i} style={s.exRow}>
-                            <View style={[s.exDot, { backgroundColor: colors.accent }]} />
-                            <Text style={{ fontFamily: "Outfit_300Light", fontSize: 13, color: colors.label, flex: 1 }}>{ex.name}</Text>
-                            <Text style={{ fontFamily: "Outfit_300Light", fontSize: 12, color: colors.labelTertiary }}>
-                              {MUSCLE_DISPLAY_NAMES[ex.muscleGroup as keyof typeof MUSCLE_DISPLAY_NAMES] ?? ex.muscleGroup}
-                            </Text>
-                          </View>
-                        ))}
-                      </View>
-                    )}
-                  </View>
-                ))}
-              </View>
-            </Animated.View>
-
-            {/* Volume landmarks */}
-            {meso.volumeTargets.length > 0 && (
-              <Animated.View entering={FadeInDown.delay(160).springify()} style={{ marginTop: 28 }}>
-                <Text style={[s.sectionLabel, { color: colors.labelSecondary }]}>Volume landmarks</Text>
-                <View style={[s.card, { backgroundColor: colors.backgroundSecondary, borderColor: colors.separator, marginTop: 12, gap: 14 }]}>
-                  {meso.volumeTargets.map((vt) => (
-                    <View key={vt.muscleGroup} style={{ flexDirection: "row", alignItems: "center" }}>
-                      <Text style={{ fontFamily: "Outfit_300Light", fontSize: 14, color: colors.label, flex: 1 }}>
-                        {MUSCLE_DISPLAY_NAMES[vt.muscleGroup as keyof typeof MUSCLE_DISPLAY_NAMES] ?? vt.muscleGroup}
-                      </Text>
-                      <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
-                        <Text style={{ fontFamily: "Outfit_300Light", fontSize: 12, color: colors.volumeLow }}>{vt.mev}</Text>
-                        <Text style={{ fontFamily: "Outfit_300Light", fontSize: 12, color: colors.labelTertiary }}> / </Text>
-                        <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 12, color: colors.accent }}>{vt.mav}</Text>
-                        <Text style={{ fontFamily: "Outfit_300Light", fontSize: 12, color: colors.labelTertiary }}> / </Text>
-                        <Text style={{ fontFamily: "Outfit_300Light", fontSize: 12, color: colors.volumeHigh }}>{vt.mrv}</Text>
-                      </View>
-                    </View>
-                  ))}
-                  <View style={{ flexDirection: "row", gap: 16, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.separator }}>
-                    {[{ c: colors.volumeLow, l: "MEV" }, { c: colors.accent, l: "MAV" }, { c: colors.volumeHigh, l: "MRV" }].map(({ c, l }) => (
-                      <View key={l} style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                        <View style={{ width: 8, height: 2, borderRadius: 1, backgroundColor: c }} />
-                        <Text style={{ fontFamily: "Outfit_300Light", fontSize: 11, color: colors.labelSecondary }}>{l}</Text>
-                      </View>
-                    ))}
-                  </View>
-                </View>
+        {/* Meso list */}
+        {!isLoading && mesoList && mesoList.length > 0 && (
+          <View style={{ gap: 12, marginTop: 4 }}>
+            {(mesoList as Meso[]).map((meso, i) => (
+              <Animated.View key={meso._id as string} entering={FadeInDown.delay(i * 60).springify()}>
+                <MesoCard
+                  meso={meso}
+                  onEnd={() => setEndTarget(meso._id)}
+                  onActivate={() => { selectionAsync(); setActivateTarget(meso._id); }}
+                />
               </Animated.View>
-            )}
-
-            {/* End meso */}
-            <Animated.View entering={FadeInDown.delay(240).springify()} style={{ marginTop: 28 }}>
-              {confirmEnd ? (
-                <View style={[s.confirmBox, { backgroundColor: "#B8303010", borderColor: "#B8303040" }]}>
-                  <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 15, color: colors.label, marginBottom: 4 }}>End this mesocycle?</Text>
-                  <Text style={{ fontFamily: "Outfit_300Light", fontSize: 13, color: colors.labelSecondary, marginBottom: 16, lineHeight: 20 }}>
-                    Your training history is saved. You can start a new mesocycle after.
-                  </Text>
-                  <View style={{ flexDirection: "row", gap: 10 }}>
-                    <Pressable onPress={() => setConfirmEnd(false)}
-                      style={[s.confirmBtn, { backgroundColor: colors.fillSecondary, flex: 1 }]}
-                    >
-                      <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 14, color: colors.label }}>Cancel</Text>
-                    </Pressable>
-                    <Pressable onPress={handleEndMeso} style={[s.confirmBtn, { backgroundColor: "#B83030", flex: 1 }]}>
-                      {ending ? <ActivityIndicator color="#fff" /> : (
-                        <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 14, color: "#fff" }}>End</Text>
-                      )}
-                    </Pressable>
-                  </View>
-                </View>
-              ) : (
-                <Button label="End Mesocycle" onPress={() => setConfirmEnd(true)} variant="secondary" />
-              )}
-            </Animated.View>
-          </>
+            ))}
+          </View>
         )}
+
+        <View style={{ height: 100 }} />
       </ScrollView>
+
+      {/* End meso warning */}
+      {endTarget && (
+        <WarningSheet
+          title="End this mesocycle?"
+          body="Your training history is saved. You can create a new mesocycle or reactivate this one later."
+          confirmLabel="END"
+          confirmDanger
+          onConfirm={handleEnd}
+          onCancel={() => setEndTarget(null)}
+          loading={busy}
+        />
+      )}
+
+      {/* Activate meso warning */}
+      {activateTarget && (
+        <WarningSheet
+          title={hasActive ? "Switch active mesocycle?" : "Activate mesocycle?"}
+          body={
+            hasActive
+              ? "Your current active mesocycle will be marked as completed. This mesocycle will start fresh from today."
+              : "This mesocycle will be set as active and start from today."
+          }
+          confirmLabel="ACTIVATE"
+          confirmDanger={false}
+          onConfirm={handleActivate}
+          onCancel={() => setActivateTarget(null)}
+          loading={busy}
+        />
+      )}
     </SafeAreaView>
   );
 }
 
 const s = StyleSheet.create({
-  scroll:      { paddingHorizontal: 20, paddingBottom: 100 },
-  header:      { marginTop: 16, marginBottom: 32, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" },
-  screenLabel: { fontFamily: "Outfit_300Light", fontSize: 10, letterSpacing: 3, textTransform: "uppercase" },
-  heroItalic:  { fontFamily: "CormorantGaramond_300Light_Italic", fontSize: 52, fontWeight: "300", letterSpacing: -0.5, lineHeight: 58, marginTop: 10 },
-  newBtn:      { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 4, borderWidth: 1 },
-  sectionLabel:{ fontFamily: "Outfit_300Light", fontSize: 10, letterSpacing: 3, textTransform: "uppercase" },
-  card:        { borderRadius: 4, padding: 20, borderWidth: 1 },
-  cardTitle:   { fontFamily: "Outfit_400Regular", fontSize: 18, letterSpacing: -0.2 },
-  activePill:  { alignSelf: "flex-start", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4 },
-  sessionCard: { borderRadius: 4, overflow: "hidden", borderWidth: 1 },
-  sessionRow:  { flexDirection: "row", alignItems: "center", gap: 12, padding: 14 },
-  dayBadge:    { width: 40, height: 40, borderRadius: 10, alignItems: "center", justifyContent: "center" },
-  exerciseList:{ borderTopWidth: 0.5, paddingHorizontal: 14, paddingTop: 10, paddingBottom: 12, gap: 8 },
-  exRow:       { flexDirection: "row", alignItems: "center", gap: 10 },
-  exDot:       { width: 4, height: 4, borderRadius: 2 },
-  confirmBox:  { borderRadius: 4, borderWidth: 1, padding: 20 },
-  confirmBtn:  { borderRadius: 4, paddingVertical: 13, alignItems: "center" },
+  scroll:       { paddingHorizontal: 20, paddingBottom: 100 },
+  header:       { marginTop: 16, marginBottom: 28, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" },
+  eyebrow:      { fontFamily: OUT_L, fontSize: 10, letterSpacing: 4, color: P.mid, textTransform: "uppercase" },
+  hero:         { fontFamily: CG_ITALIC, fontSize: 52, color: P.ink, letterSpacing: -0.5, lineHeight: 58, marginTop: 8 },
+  newBtn:       { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 4, borderWidth: 1, borderColor: P.border },
+
+  mesoCard:     { borderRadius: 4, borderWidth: 1, borderColor: P.border, backgroundColor: P.s1, overflow: "hidden" },
+  mesoHeader:   { flexDirection: "row", alignItems: "center", padding: 16 },
+  statusPill:   { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 2 },
+  progressTrack:{ height: 1, backgroundColor: P.border, marginHorizontal: 16, marginBottom: 0 },
+  progressFill: { height: 1, backgroundColor: P.gold },
+
+  sessionsList: { borderTopWidth: 1 },
+  sessionRow:   { flexDirection: "row", gap: 12, padding: 14, borderBottomWidth: 0.5 },
+  dayBadge:     { width: 36, height: 36, borderRadius: 4, backgroundColor: P.s2, alignItems: "center", justifyContent: "center" },
+
+  actionRow:    { padding: 14 },
+  actionBtn:    { paddingVertical: 12, alignItems: "center", borderRadius: 4, borderWidth: 1 },
+  dangerBtn:    { borderColor: "#CF444440", backgroundColor: "#CF44440C" },
+  activateBtn:  { borderColor: P.gold + "40", backgroundColor: P.goldDim },
+
+  emptyCard:    { marginTop: 20, borderRadius: 4, borderWidth: 1, borderColor: P.border, backgroundColor: P.s1, padding: 20 },
+  createBtn:    { borderWidth: 1, borderColor: P.gold + "60", paddingVertical: 12, alignItems: "center", borderRadius: 4, backgroundColor: P.goldDim },
+
+  overlay:      { position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" },
+  sheet:        { backgroundColor: P.s1, borderTopLeftRadius: 12, borderTopRightRadius: 12, padding: 24, borderWidth: 1, borderColor: P.border },
+  sheetBtn:     { paddingVertical: 14, alignItems: "center", borderRadius: 4 },
 });
