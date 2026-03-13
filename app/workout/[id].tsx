@@ -757,6 +757,7 @@ export default function WorkoutScreen() {
   });
 
   const [addExSheetVisible, setAddExSheetVisible] = useState(false);
+  const [restExpanded, setRestExpanded] = useState(false);
 
   const [swapTarget, setSwapTarget] = useState<{
     seId: Id<"sessionExercises"> | null;
@@ -1038,13 +1039,43 @@ export default function WorkoutScreen() {
 
       {/* Rest timer */}
       {state.restVisible && !state.activeCell && (
-        <View style={[styles.restBar, { backgroundColor: colors.headerBg }]}>
-          <Text style={{ fontSize: 18 }}>⏱</Text>
-          <RestTimer defaultSeconds={90} compact onComplete={() => dispatch({ type: "HIDE_REST" })} />
-          <TouchableOpacity onPress={() => dispatch({ type: "HIDE_REST" })} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-            <Text style={{ color: colors.labelTertiary, fontSize: 16 }}>✕</Text>
+        restExpanded ? (
+          /* ── Full sheet ─────────────────────────────────────────────── */
+          <View style={[styles.restSheet, { backgroundColor: colors.backgroundSecondary, borderTopColor: colors.separator }]}>
+            <View style={styles.restSheetHandle}>
+              <TouchableOpacity onPress={() => setRestExpanded(false)} style={{ flex: 1 }}>
+                <Text style={{ fontFamily: "Outfit_300Light", fontSize: 11, color: colors.labelTertiary, letterSpacing: 2, textAlign: "center" }}>
+                  COLLAPSE ⌄
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => { setRestExpanded(false); dispatch({ type: "HIDE_REST" }); }}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                <Text style={{ color: colors.labelTertiary, fontSize: 16 }}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            <RestTimer
+              defaultSeconds={90}
+              compact={false}
+              onComplete={() => { setRestExpanded(false); dispatch({ type: "HIDE_REST" }); }}
+            />
+          </View>
+        ) : (
+          /* ── Compact bar ────────────────────────────────────────────── */
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => setRestExpanded(true)}
+            style={[styles.restBar, { backgroundColor: colors.headerBg }]}
+          >
+            <Text style={{ fontSize: 16 }}>⏱</Text>
+            <RestTimer defaultSeconds={90} compact onComplete={() => dispatch({ type: "HIDE_REST" })} />
+            <TouchableOpacity onPress={() => dispatch({ type: "HIDE_REST" })}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              onStartShouldSetResponder={() => true}
+            >
+              <Text style={{ color: colors.labelTertiary, fontSize: 16 }}>✕</Text>
+            </TouchableOpacity>
           </TouchableOpacity>
-        </View>
+        )
       )}
 
       {/* Feedback modal */}
@@ -1133,6 +1164,8 @@ const styles = StyleSheet.create({
   numGrid: { flexDirection: "row", flexWrap: "wrap", padding: 8, gap: 6 },
   numKey: { width: "30%", height: 52, borderRadius: 4, alignItems: "center", justifyContent: "center", flexGrow: 1 },
   restBar: { position: "absolute", bottom: 0, left: 0, right: 0, flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 20, paddingVertical: 14, paddingBottom: 28, borderTopLeftRadius: 16, borderTopRightRadius: 16 },
+  restSheet: { position: "absolute", bottom: 0, left: 0, right: 0, borderTopWidth: 1, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: 32 },
+  restSheetHandle: { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingTop: 16, paddingBottom: 4 },
   finishBar: { marginHorizontal: 16, height: 56, borderRadius: 4, alignItems: "center", justifyContent: "center", marginTop: 8 },
   addExBtn: { marginHorizontal: 12, marginTop: 4, marginBottom: 8, paddingVertical: 14, borderRadius: 4, borderWidth: 1, borderStyle: "dashed", alignItems: "center" },
   stepperRow: { flexDirection: "row", alignItems: "center", gap: 12 },

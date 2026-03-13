@@ -47,12 +47,14 @@ interface RestTimerProps {
   onComplete?: () => void;
   defaultSeconds?: number;
   compact?: boolean;
+  onExpand?: () => void;
 }
 
 export function RestTimer({
   onComplete,
   defaultSeconds = 90,
   compact = false,
+  onExpand,
 }: RestTimerProps) {
   const { colors, typography } = useTheme();
 
@@ -160,9 +162,14 @@ export function RestTimer({
 
   if (compact) {
     return (
-      <Text style={{ color: isComplete ? "#26A870" : "#FFFFFF", fontSize: 18, fontWeight: "700", flex: 1 }}>
-        Rest · {formatTime(remaining)}
-      </Text>
+      <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 8 }}>
+        <Text style={{ color: isComplete ? "#26A870" : "#FFFFFF", fontSize: 16, fontFamily: "Outfit_400Regular", flex: 1 }}>
+          Rest · {formatTime(remaining)}
+        </Text>
+        <Text style={{ color: "#FFFFFF60", fontSize: 11, fontFamily: "Outfit_300Light", letterSpacing: 1 }}>
+          TAP TO EXPAND
+        </Text>
+      </View>
     );
   }
 
