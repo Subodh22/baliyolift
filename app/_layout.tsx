@@ -1,6 +1,7 @@
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Platform, useColorScheme, View, StyleSheet } from "react-native";
+import { unlockAudioContext } from "@/utils/audio";
 import { ConvexProvider, ConvexReactClient, useMutation, useQuery } from "convex/react";
 import { useEffect } from "react";
 import { WorkoutProvider } from "@/hooks/useWorkoutStore";
@@ -120,6 +121,21 @@ function WebLayout() {
     if (!isSignedIn && inTabs) router.replace("/sign-in");
     else if (isSignedIn && onSignIn) router.replace("/(tabs)");
   }, [isLoaded, isSignedIn, segments]);
+
+  // Unlock Web Audio API on first user gesture — required by iOS Safari / PWA
+  useEffect(() => {
+    const unlock = () => {
+      unlockAudioContext();
+      document.removeEventListener("touchstart", unlock, true);
+      document.removeEventListener("click", unlock, true);
+    };
+    document.addEventListener("touchstart", unlock, true);
+    document.addEventListener("click", unlock, true);
+    return () => {
+      document.removeEventListener("touchstart", unlock, true);
+      document.removeEventListener("click", unlock, true);
+    };
+  }, []);
 
   return (
     <>

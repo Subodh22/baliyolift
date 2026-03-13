@@ -16,7 +16,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.baliyolift.app",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": ["audio"]
       }
     },
     "android": {

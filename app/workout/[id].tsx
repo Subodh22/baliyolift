@@ -1037,45 +1037,48 @@ export default function WorkoutScreen() {
         <NumPad onKey={(k) => dispatch({ type: "KEY", key: k })} colors={colors} />
       </Animated.View>
 
-      {/* Rest timer */}
+      {/* Rest timer — single instance; compact prop toggled to preserve state */}
       {state.restVisible && !state.activeCell && (
-        restExpanded ? (
-          /* ── Full sheet ─────────────────────────────────────────────── */
-          <View style={[styles.restSheet, { backgroundColor: colors.backgroundSecondary, borderTopColor: colors.separator }]}>
+        <TouchableOpacity
+          activeOpacity={restExpanded ? 1 : 0.85}
+          onPress={restExpanded ? undefined : () => setRestExpanded(true)}
+          style={
+            restExpanded
+              ? [styles.restSheet, { backgroundColor: colors.backgroundSecondary, borderTopColor: colors.separator }]
+              : [styles.restBar, { backgroundColor: colors.headerBg }]
+          }
+        >
+          {restExpanded ? (
             <View style={styles.restSheetHandle}>
               <TouchableOpacity onPress={() => setRestExpanded(false)} style={{ flex: 1 }}>
-                <Text style={{ fontFamily: "Outfit_300Light", fontSize: 11, color: colors.labelTertiary, letterSpacing: 2, textAlign: "center" }}>
+                <Text style={{ fontFamily: "Outfit_300Light", fontSize: 10, color: colors.labelTertiary, letterSpacing: 2, textAlign: "center" }}>
                   COLLAPSE ⌄
                 </Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => { setRestExpanded(false); dispatch({ type: "HIDE_REST" }); }}
-                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+              <TouchableOpacity
+                onPress={() => { setRestExpanded(false); dispatch({ type: "HIDE_REST" }); }}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              >
                 <Text style={{ color: colors.labelTertiary, fontSize: 16 }}>✕</Text>
               </TouchableOpacity>
             </View>
-            <RestTimer
-              defaultSeconds={90}
-              compact={false}
-              onComplete={() => { setRestExpanded(false); dispatch({ type: "HIDE_REST" }); }}
-            />
-          </View>
-        ) : (
-          /* ── Compact bar ────────────────────────────────────────────── */
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={() => setRestExpanded(true)}
-            style={[styles.restBar, { backgroundColor: colors.headerBg }]}
-          >
+          ) : (
             <Text style={{ fontSize: 16 }}>⏱</Text>
-            <RestTimer defaultSeconds={90} compact onComplete={() => dispatch({ type: "HIDE_REST" })} />
-            <TouchableOpacity onPress={() => dispatch({ type: "HIDE_REST" })}
+          )}
+          <RestTimer
+            compact={!restExpanded}
+            onComplete={() => { setRestExpanded(false); dispatch({ type: "HIDE_REST" }); }}
+          />
+          {!restExpanded && (
+            <TouchableOpacity
+              onPress={() => dispatch({ type: "HIDE_REST" })}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               onStartShouldSetResponder={() => true}
             >
               <Text style={{ color: colors.labelTertiary, fontSize: 16 }}>✕</Text>
             </TouchableOpacity>
-          </TouchableOpacity>
-        )
+          )}
+        </TouchableOpacity>
       )}
 
       {/* Feedback modal */}
