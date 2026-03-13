@@ -17,6 +17,9 @@ export default function Root({ children }: { children: React.ReactNode }) {
         <meta name="theme-color" content="#0A0A0B" />
 
         <ScrollViewStyleReset />
+
+        {/* Prevent white flash behind transparent iOS PWA status bar */}
+        <style>{`html,body{background-color:#0A0A0B;}`}</style>
       </head>
       <body>{children}</body>
     </html>
