@@ -6,7 +6,7 @@ import { useTheme } from "@/hooks/useTheme";
 interface ButtonProps {
   label: string;
   onPress: () => void;
-  variant?: "primary" | "secondary" | "ghost" | "destructive";
+  variant?: "primary" | "secondary" | "ghost" | "outline" | "destructive";
   size?: "lg" | "md" | "sm";
   loading?: boolean;
   disabled?: boolean;
@@ -41,6 +41,7 @@ export function Button({
     primary:     colors.accent,
     secondary:   colors.fillSecondary,
     ghost:       "transparent",
+    outline:     "transparent",
     destructive: colors.accentRed,
   }[variant];
 
@@ -48,11 +49,13 @@ export function Button({
     primary:     "#FFFFFF",
     secondary:   colors.label,
     ghost:       colors.accent,
+    outline:     colors.accent,
     destructive: "#FFFFFF",
   }[variant];
 
   const height   = { lg: 52, md: 44, sm: 36 }[size];
   const fontSize = { lg: 15, md: 14, sm: 13 }[size];
+  const isOutline = variant === "outline";
 
   return (
     <Animated.View style={animatedStyle}>
@@ -60,6 +63,7 @@ export function Button({
         style={[
           styles.button,
           { backgroundColor: bgColor, height, opacity: disabled ? 0.4 : 1 },
+          isOutline && { borderWidth: 1, borderColor: colors.accent },
         ]}
         onPress={handlePress}
         activeOpacity={0.85}
@@ -67,7 +71,13 @@ export function Button({
         {loading ? (
           <ActivityIndicator color={labelColor} />
         ) : (
-          <Text style={{ fontFamily: "Outfit_400Regular", fontSize, color: labelColor, letterSpacing: 0.1 }}>
+          <Text style={{
+            fontFamily: "Outfit_400Regular",
+            fontSize,
+            color: labelColor,
+            letterSpacing: isOutline ? 2 : 0.1,
+            textTransform: isOutline ? "uppercase" : "none",
+          }}>
             {label}
           </Text>
         )}

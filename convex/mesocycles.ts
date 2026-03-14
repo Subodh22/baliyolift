@@ -159,6 +159,8 @@ export const createCustom = mutation({
       name: v.string(),
       muscleGroups: v.array(v.string()),
       order: v.number(),
+      // When provided, use these exercise names instead of auto-filling
+      exerciseNames: v.optional(v.array(v.string())),
     })),
   },
   handler: async (ctx, args) => {
@@ -180,25 +182,38 @@ export const createCustom = mutation({
 
     for (const sessionDef of args.sessions) {
       const allExIds: any[] = [];
-      const seInputs: { exerciseId: any; repMin: number; repMax: number }[] = [];
+      const seInputs: { exerciseId: any; repMin: number; repMax: number; mg: string }[] = [];
 
-      for (const mg of sessionDef.muscleGroups) {
-        // Pick top exercises for this muscle (SFR high first, then medium)
-        const exList = await ctx.db
-          .query("exercises")
-          .withIndex("by_muscle_group", (q) => q.eq("muscleGroup", mg as any))
-          .collect();
+      if (sessionDef.exerciseNames && sessionDef.exerciseNames.length > 0) {
+        // User-selected exercises: look up by name
+        for (const exName of sessionDef.exerciseNames) {
+          const ex = await ctx.db
+            .query("exercises")
+            .filter((q) => q.eq(q.field("name"), exName))
+            .first();
+          if (ex) {
+            const range = REP_RANGES[ex.muscleGroup] ?? { min: 8, max: 12 };
+            allExIds.push(ex._id);
+            seInputs.push({ exerciseId: ex._id, repMin: range.min, repMax: range.max, mg: ex.muscleGroup });
+          }
+        }
+      } else {
+        // Auto-fill: pick top exercises per muscle group
+        for (const mg of sessionDef.muscleGroups) {
+          const exList = await ctx.db
+            .query("exercises")
+            .withIndex("by_muscle_group", (q) => q.eq("muscleGroup", mg as any))
+            .collect();
 
-        // Sort: high SFR first, then medium, then low
-        const sfrOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
-        exList.sort((a, b) => (sfrOrder[a.sfr] ?? 2) - (sfrOrder[b.sfr] ?? 2));
+          const sfrOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
+          exList.sort((a, b) => (sfrOrder[a.sfr] ?? 2) - (sfrOrder[b.sfr] ?? 2));
 
-        // Pick top 2 per muscle group
-        const picked = exList.slice(0, 2);
-        const range = REP_RANGES[mg] ?? { min: 8, max: 12 };
-        for (const ex of picked) {
-          allExIds.push(ex._id);
-          seInputs.push({ exerciseId: ex._id, repMin: range.min, repMax: range.max });
+          const picked = exList.slice(0, 2);
+          const range = REP_RANGES[mg] ?? { min: 8, max: 12 };
+          for (const ex of picked) {
+            allExIds.push(ex._id);
+            seInputs.push({ exerciseId: ex._id, repMin: range.min, repMax: range.max, mg });
+          }
         }
       }
 
