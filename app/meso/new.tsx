@@ -32,7 +32,9 @@ import {
 } from "@/constants/muscles";
 const TOTAL_STEPS = 4;
 
-// ---- Template definitions (display only) ----
+// ---- Template definitions ----
+const DAY_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
 const TEMPLATES = [
   {
     id: "laxman",
@@ -42,6 +44,12 @@ const TEMPLATES = [
     tagColor: "#FF6B35",
     description: "Super-set heavy 4-day split with drop sets and pre-fatigue protocols.",
     weeks: 5,
+    sessions: [
+      { day: 1, name: "Shoulders & Biceps", exercises: ["Bent Over Lateral Raise", "Incline DB Front Raise", "Upright Row", "Machine Shoulder Press", "EZ Bar Curl", "Hammer Curl"] },
+      { day: 2, name: "Back", exercises: ["Reverse Grip Pulldown", "V Bar Pulldown", "Dumbbell Row", "Cable Row", "Cable Face Pull", "Reverse Pec Deck"] },
+      { day: 4, name: "Triceps & Back", exercises: ["Cable Pushdown", "Cable Kickback", "Cable Overhead Tricep Extension", "Reverse Grip Pushdown", "Deadlift", "Chest-Supported Row"] },
+      { day: 5, name: "Legs", exercises: ["Seated Leg Curl", "Barbell Back Squat", "Hack Squat Machine", "Walking Lunge", "Standing Calf Raise"] },
+    ],
   },
   {
     id: "ppl",
@@ -51,6 +59,14 @@ const TEMPLATES = [
     tagColor: "#007AFF",
     description: "Classic Push/Pull/Legs twice per week. Maximum frequency for hypertrophy.",
     weeks: 5,
+    sessions: [
+      { day: 1, name: "Push A — Chest & Shoulders", exercises: ["Incline Dumbbell Press", "Machine Chest Press", "Cable Lateral Raise", "Overhead Tricep Extension"] },
+      { day: 2, name: "Pull A — Back & Biceps", exercises: ["Cable Row", "Lat Pulldown", "Incline Dumbbell Curl", "Hammer Curl"] },
+      { day: 3, name: "Legs A — Quads & Glutes", exercises: ["Leg Press", "Leg Extension", "Romanian Deadlift", "Standing Calf Raise"] },
+      { day: 4, name: "Push B — Chest & Triceps", exercises: ["Flat Dumbbell Press", "Pec Dec", "Machine Shoulder Press", "Cable Tricep Pushdown"] },
+      { day: 5, name: "Pull B — Back & Biceps", exercises: ["Chest Supported Row", "Single Arm Cable Row", "EZ Bar Curl", "Cable Curl"] },
+      { day: 6, name: "Legs B — Hamstrings & Glutes", exercises: ["Hack Squat", "Leg Curl", "Hip Thrust", "Seated Calf Raise"] },
+    ],
   },
   {
     id: "upper_lower",
@@ -60,6 +76,12 @@ const TEMPLATES = [
     tagColor: "#34C759",
     description: "Balanced upper/lower split. Ideal if you're building your training base.",
     weeks: 5,
+    sessions: [
+      { day: 1, name: "Upper A — Chest Focus", exercises: ["Incline Dumbbell Press", "Cable Row", "Cable Lateral Raise", "EZ Bar Curl", "Cable Tricep Pushdown"] },
+      { day: 2, name: "Lower A — Quad Focus", exercises: ["Leg Press", "Leg Extension", "Romanian Deadlift", "Standing Calf Raise"] },
+      { day: 4, name: "Upper B — Back Focus", exercises: ["Lat Pulldown", "Flat Dumbbell Press", "Machine Shoulder Press", "Incline Dumbbell Curl", "Overhead Tricep Extension"] },
+      { day: 5, name: "Lower B — Glute & Ham Focus", exercises: ["Hack Squat", "Leg Curl", "Hip Thrust", "Seated Calf Raise"] },
+    ],
   },
   {
     id: "cbum",
@@ -69,6 +91,13 @@ const TEMPLATES = [
     tagColor: "#C9A84C",
     description: "Chris Bumstead's 5-day split. High chest and arm volume with a dedicated legs day.",
     weeks: 5,
+    sessions: [
+      { day: 1, name: "Chest & Triceps", exercises: ["Incline Dumbbell Press", "Machine Chest Press", "Pec Dec", "Cable Tricep Pushdown", "Overhead Tricep Extension"] },
+      { day: 2, name: "Back & Biceps", exercises: ["Deadlift", "Lat Pulldown", "Cable Row", "EZ Bar Curl", "Incline Dumbbell Curl"] },
+      { day: 4, name: "Shoulders & Arms", exercises: ["Machine Shoulder Press", "Cable Lateral Raise", "Cable Face Pull", "EZ Bar Curl", "Cable Tricep Pushdown"] },
+      { day: 5, name: "Legs", exercises: ["Leg Press", "Hack Squat", "Leg Extension", "Leg Curl", "Hip Thrust", "Standing Calf Raise", "Seated Calf Raise"] },
+      { day: 6, name: "Arms Pump", exercises: ["Incline Dumbbell Curl", "Hammer Curl", "Cable Curl", "Cable Tricep Pushdown", "Overhead Tricep Extension"] },
+    ],
   },
   {
     id: "jeff_nippard",
@@ -78,6 +107,12 @@ const TEMPLATES = [
     tagColor: "#AF52DE",
     description: "Science-based upper/lower split emphasising compound movements and mechanical tension.",
     weeks: 5,
+    sessions: [
+      { day: 1, name: "Upper A — Horizontal", exercises: ["Flat Dumbbell Press", "Cable Row", "Pec Dec", "EZ Bar Curl", "Cable Tricep Pushdown", "Cable Face Pull"] },
+      { day: 2, name: "Lower A — Quad Dominant", exercises: ["Barbell Back Squat", "Leg Press", "Leg Extension", "Leg Curl", "Standing Calf Raise"] },
+      { day: 4, name: "Upper B — Vertical", exercises: ["Machine Shoulder Press", "Lat Pulldown", "Cable Lateral Raise", "Incline Dumbbell Press", "Hammer Curl", "Overhead Tricep Extension"] },
+      { day: 5, name: "Lower B — Hip Dominant", exercises: ["Romanian Deadlift", "Hip Thrust", "Hack Squat", "Seated Leg Curl", "Seated Calf Raise"] },
+    ],
   },
   {
     id: "lean_beef_patty",
@@ -87,6 +122,13 @@ const TEMPLATES = [
     tagColor: "#FF2D55",
     description: "Glute-dominant 5-day program with twice-weekly hip thrust and high posterior chain volume.",
     weeks: 5,
+    sessions: [
+      { day: 1, name: "Glutes & Hamstrings", exercises: ["Hip Thrust", "Romanian Deadlift", "Leg Curl", "Seated Leg Curl", "Standing Calf Raise"] },
+      { day: 2, name: "Upper Pull", exercises: ["Lat Pulldown", "Cable Row", "Cable Face Pull", "Incline Dumbbell Curl", "Hammer Curl"] },
+      { day: 4, name: "Quads & Glutes", exercises: ["Leg Press", "Hack Squat", "Leg Extension", "Hip Thrust", "Seated Calf Raise"] },
+      { day: 5, name: "Upper Push", exercises: ["Incline Dumbbell Press", "Machine Chest Press", "Machine Shoulder Press", "Cable Lateral Raise", "Cable Tricep Pushdown"] },
+      { day: 6, name: "Full Legs", exercises: ["Barbell Back Squat", "Romanian Deadlift", "Leg Extension", "Leg Curl", "Standing Calf Raise"] },
+    ],
   },
 ];
 
@@ -107,20 +149,51 @@ function TemplateConfirmSheet({
           entering={FadeInDown.springify().damping(18)}
           style={[confirmStyles.sheet, { backgroundColor: colors.backgroundSecondary, paddingBottom: insets.bottom + 16 }]}
         >
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 12 }}>
+          {/* Header */}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 4 }}>
             <Text style={[typography.title2, { color: colors.label, flex: 1 }]}>{template.name}</Text>
-            <View style={[templateStyles.tag, { backgroundColor: template.tagColor + "22" }]}>
-              <Text style={[typography.caption2, { color: template.tagColor, fontWeight: "700" }]}>
+            <View style={[confirmStyles.tag, { backgroundColor: template.tagColor + "22" }]}>
+              <Text style={{ fontSize: 10, fontWeight: "700", color: template.tagColor, letterSpacing: 0.5 }}>
                 {template.tag}
               </Text>
             </View>
           </View>
-          <Text style={[typography.caption1, { color: colors.accent, marginBottom: 8, fontWeight: "600" }]}>
+          <Text style={[typography.caption1, { color: colors.accent, marginBottom: 12, fontWeight: "600" }]}>
             {template.subtitle}
           </Text>
-          <Text style={[typography.subheadline, { color: colors.labelSecondary, lineHeight: 20, marginBottom: 24 }]}>
-            {template.description}
-          </Text>
+
+          {/* Sessions */}
+          <ScrollView style={{ maxHeight: 340 }} showsVerticalScrollIndicator={false}>
+            <View style={{ gap: 10, marginBottom: 20 }}>
+              {template.sessions.map((session: any) => (
+                <View
+                  key={session.day}
+                  style={[confirmStyles.sessionCard, { backgroundColor: colors.background }]}
+                >
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                    <View style={[confirmStyles.dayBadge, { backgroundColor: colors.fillSecondary }]}>
+                      <Text style={{ fontSize: 10, color: colors.labelSecondary, fontWeight: "600" }}>
+                        {DAY_SHORT[session.day]}
+                      </Text>
+                    </View>
+                    <Text style={[typography.subheadline, { color: colors.label, fontWeight: "600", flex: 1 }]}>
+                      {session.name}
+                    </Text>
+                  </View>
+                  <View style={{ gap: 4, paddingLeft: 4 }}>
+                    {session.exercises.map((ex: string) => (
+                      <View key={ex} style={{ flexDirection: "row", alignItems: "center", gap: 7 }}>
+                        <View style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: colors.accent }} />
+                        <Text style={[typography.footnote, { color: colors.labelSecondary }]}>{ex}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              ))}
+            </View>
+          </ScrollView>
+
+          {/* Buttons */}
           <View style={{ flexDirection: "row", gap: 10 }}>
             <TouchableOpacity
               onPress={onCancel}
@@ -148,9 +221,12 @@ function TemplateConfirmSheet({
 }
 
 const confirmStyles = StyleSheet.create({
-  overlay: { position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" },
-  sheet:   { borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, borderWidth: StyleSheet.hairlineWidth },
-  btn:     { paddingVertical: 14, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  overlay:     { position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" },
+  sheet:       { borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, borderWidth: StyleSheet.hairlineWidth },
+  tag:         { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+  sessionCard: { borderRadius: 12, padding: 12 },
+  dayBadge:    { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+  btn:         { paddingVertical: 14, borderRadius: 12, alignItems: "center", justifyContent: "center" },
 });
 
 // ---- Step 0: Template picker ----
