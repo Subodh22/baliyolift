@@ -41,10 +41,12 @@ function MesoCard({
   meso,
   onEnd,
   onActivate,
+  onDelete,
 }: {
   meso: Meso;
   onEnd: () => void;
   onActivate: () => void;
+  onDelete: () => void;
 }) {
   const [open, setOpen] = useState(meso.status === "active");
   const isActive = meso.status === "active";
@@ -148,6 +150,9 @@ function MesoCard({
                 </Text>
               </Pressable>
             )}
+            <Pressable onPress={onDelete} style={[s.actionBtn, { borderColor: "#CF4444" + "40", borderWidth: 1 }]}>
+              <Text style={{ fontFamily: OUT_L, fontSize: 12, color: "#CF4444", letterSpacing: 1 }}>DELETE</Text>
+            </Pressable>
           </View>
         </View>
       )}
@@ -205,9 +210,11 @@ export default function PlanScreen() {
   const mesoList = useQuery(api.mesocycles.listAllWithSessions, userId ? { userId } : "skip");
   const completeMeso = useMutation(api.mesocycles.complete);
   const setActiveMeso = useMutation(api.mesocycles.setActive);
+  const deleteMeso = useMutation(api.mesocycles.deleteMesocycle);
 
   const [endTarget, setEndTarget] = useState<Id<"mesocycles"> | null>(null);
   const [activateTarget, setActivateTarget] = useState<Id<"mesocycles"> | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Id<"mesocycles"> | null>(null);
   const [busy, setBusy] = useState(false);
 
   const isLoading = userLoading || mesoList === undefined;
@@ -225,6 +232,13 @@ export default function PlanScreen() {
     setBusy(true);
     try { notificationSuccess(); await setActiveMeso({ userId, mesocycleId: activateTarget }); }
     finally { setBusy(false); setActivateTarget(null); }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setBusy(true);
+    try { await deleteMeso({ mesocycleId: deleteTarget }); }
+    finally { setBusy(false); setDeleteTarget(null); }
   };
 
   return (
@@ -266,6 +280,7 @@ export default function PlanScreen() {
                   meso={meso}
                   onEnd={() => setEndTarget(meso._id)}
                   onActivate={() => { selectionAsync(); setActivateTarget(meso._id); }}
+                  onDelete={() => setDeleteTarget(meso._id)}
                 />
               </Animated.View>
             ))}
@@ -284,6 +299,19 @@ export default function PlanScreen() {
           confirmDanger
           onConfirm={handleEnd}
           onCancel={() => setEndTarget(null)}
+          loading={busy}
+        />
+      )}
+
+      {/* Delete meso warning */}
+      {deleteTarget && (
+        <WarningSheet
+          title="Delete mesocycle?"
+          body="This will permanently delete the mesocycle, all sessions, and all logged workout data. This cannot be undone."
+          confirmLabel="DELETE"
+          confirmDanger
+          onConfirm={handleDelete}
+          onCancel={() => setDeleteTarget(null)}
           loading={busy}
         />
       )}
