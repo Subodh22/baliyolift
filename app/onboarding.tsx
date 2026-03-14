@@ -348,7 +348,7 @@ export default function OnboardingScreen() {
                 Used to calculate your body fat accurately.
               </Text>
 
-              <Text style={styles.sectionLabel(colors)}>Sex</Text>
+              <Text style={sectionLabel(colors)}>Sex</Text>
               <SegmentControl
                 options={[{ label: "Male", value: "male" }, { label: "Female", value: "female" }]}
                 value={sex}
@@ -426,7 +426,7 @@ export default function OnboardingScreen() {
                 You're at {currentBf}% — where do you want to be?
               </Text>
 
-              <Text style={styles.sectionLabel(colors)}>Target body fat</Text>
+              <Text style={sectionLabel(colors)}>Target body fat</Text>
               <View style={{ gap: 8, marginBottom: 28 }}>
                 {targetPresets.map((p) => {
                   const cat      = bfCategory(sex, p.value);
@@ -456,7 +456,7 @@ export default function OnboardingScreen() {
                 })}
               </View>
 
-              <Text style={styles.sectionLabel(colors)}>Workouts per week</Text>
+              <Text style={sectionLabel(colors)}>Workouts per week</Text>
               <SegmentControl
                 options={WEEKLY_OPTIONS.map((n) => ({ label: `${n}×`, value: n }))}
                 value={weeklyGoal}
@@ -469,7 +469,7 @@ export default function OnboardingScreen() {
                   entering={FadeInUp.springify()}
                   style={[styles.card, { borderColor: colors.separator }]}
                 >
-                  <Text style={styles.sectionLabel(colors)}>Your Journey</Text>
+                  <Text style={sectionLabel(colors)}>Your Journey</Text>
                   <BfZoneBar
                     sex={sex}
                     current={currentBf}
@@ -529,11 +529,20 @@ export default function OnboardingScreen() {
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
+function sectionLabel(colors: any) {
+  return {
+    fontSize: 10,
+    letterSpacing: 1.5,
+    textTransform: "uppercase" as const,
+    color: colors.labelSecondary,
+    marginBottom: 12,
+  };
+}
+
 const styles = StyleSheet.create({
   progressBar:     { flexDirection: "row", gap: 4, paddingHorizontal: 24, paddingTop: 14, paddingBottom: 10 },
   progressSegment: { flex: 1, height: 2, borderRadius: 1 },
   scroll:          { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 20 },
-
   card: {
     borderRadius: 4,
     borderWidth: StyleSheet.hairlineWidth,
@@ -591,11 +600,4 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     borderWidth: 1,
   },
-  sectionLabel: (colors: any) => ({
-    fontSize: 10,
-    letterSpacing: 1.5,
-    textTransform: "uppercase" as const,
-    color: colors.labelSecondary,
-    marginBottom: 12,
-  }),
 });
