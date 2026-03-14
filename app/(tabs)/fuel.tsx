@@ -1,9 +1,9 @@
 import {
-  View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Modal,
+  View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Modal, PanResponder,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "expo-router";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useQuery, useMutation } from "convex/react";
@@ -61,7 +61,7 @@ function calcTargets(profile: {
   else if (bfDiff < -3) { goal = "bulk";      calories = Math.round(tdee + 250); }
   else                  { goal = "maintain";  calories = Math.round(tdee); }
 
-  const proteinG = Math.round(lbm * (goal === "cut" ? 2.5 : 2.2));
+  const proteinG = Math.round(profile.weightKg * (goal === "cut" ? 2.5 : 2.2));
   const fatG     = Math.round(calories * 0.27 / 9);
   const carbsG   = Math.max(0, Math.round((calories - proteinG * 4 - fatG * 9) / 4));
 
@@ -74,14 +74,58 @@ function goalColor(goal: "cut" | "bulk" | "maintain") {
   return P.gold;
 }
 
+// ── Custom slider ─────────────────────────────────────────────────────────────
+function MacroSlider({ value, min, max, step = 1, color, onChange }: {
+  value: number; min: number; max: number; step?: number; color: string;
+  onChange: (v: number) => void;
+}) {
+  const [trackWidth, setTrackWidth] = useState(1);
+  const pct = Math.max(0, Math.min(1, (value - min) / (max - min)));
+
+  const calcVal = (x: number) => {
+    const raw = min + Math.max(0, Math.min(1, x / trackWidth)) * (max - min);
+    return Math.round(raw / step) * step;
+  };
+
+  const panResponder = useRef(PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderGrant: (e) => onChange(calcVal(e.nativeEvent.locationX)),
+    onPanResponderMove: (e) => onChange(calcVal(e.nativeEvent.locationX)),
+  })).current;
+
+  return (
+    <View
+      onLayout={(e) => setTrackWidth(e.nativeEvent.layout.width)}
+      style={{ height: 36, justifyContent: "center" }}
+      {...panResponder.panHandlers}
+    >
+      <View style={{ height: 3, backgroundColor: P.border, borderRadius: 2 }}>
+        <View style={{ width: `${pct * 100}%` as any, height: 3, backgroundColor: color, borderRadius: 2 }} />
+      </View>
+      <View style={{
+        position: "absolute", left: `${pct * 100}%` as any,
+        width: 18, height: 18, borderRadius: 9,
+        backgroundColor: color, transform: [{ translateX: -9 }],
+        shadowColor: color, shadowOpacity: 0.5, shadowRadius: 4, shadowOffset: { width: 0, height: 0 },
+      }} />
+    </View>
+  );
+}
+
 // ── Screen ────────────────────────────────────────────────────────────────────
 export default function FuelScreen() {
   const today = todayStr();
   const router = useRouter();
   const { userId } = useCurrentUser();
 
-  const [date,         setDate]         = useState(today);
-  const [deleteTarget, setDeleteTarget] = useState<Id<"foodEntries"> | null>(null);
+  const [date,           setDate]           = useState(today);
+  const [deleteTarget,   setDeleteTarget]   = useState<Id<"foodEntries"> | null>(null);
+  const [macroEditorOpen, setMacroEditorOpen] = useState(false);
+  const [draftCals,   setDraftCals]   = useState(0);
+  const [draftPro,    setDraftPro]    = useState(0);
+  const [draftCarbs,  setDraftCarbs]  = useState(0);
+  const [draftFat,    setDraftFat]    = useState(0);
 
   // ── Queries ───────────────────────────────────────────────────────────────
   const profile      = useQuery(api.userProfile.getByUser,    userId ? { userId } : "skip");
@@ -200,7 +244,18 @@ export default function FuelScreen() {
             {/* Calories */}
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" }}>
               <View>
-                <Text style={s.sectionLabel}>CALORIES</Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                  <Text style={s.sectionLabel}>CALORIES</Text>
+                  <TouchableOpacity onPress={() => {
+                    setDraftCals(targets.calories);
+                    setDraftPro(targets.proteinG);
+                    setDraftCarbs(targets.carbsG);
+                    setDraftFat(targets.fatG);
+                    setMacroEditorOpen(true);
+                  }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                    <Text style={{ fontFamily: OUT_L, fontSize: 16, color: P.mid, letterSpacing: 2 }}>⋯</Text>
+                  </TouchableOpacity>
+                </View>
                 <View style={{ flexDirection: "row", alignItems: "baseline", gap: 4, marginTop: 6 }}>
                   <Text style={s.bigNumber}>{totalCals}</Text>
                   <Text style={s.bigDenom}>/ {targets.calories}</Text>
@@ -308,6 +363,48 @@ export default function FuelScreen() {
       </ScrollView>
 
       {/* ── Delete confirmation ──────────────────────────────────────────── */}
+      {/* ── Macro editor ──────────────────────────────────────────────────── */}
+      <Modal visible={macroEditorOpen} transparent animationType="slide" onRequestClose={() => setMacroEditorOpen(false)}>
+        <TouchableOpacity style={s.overlay} activeOpacity={1} onPress={() => setMacroEditorOpen(false)} />
+        <View style={{ backgroundColor: P.s1, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 24, paddingBottom: 40, borderTopWidth: 1, borderColor: P.border }}>
+          <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: P.border, alignSelf: "center", marginBottom: 20 }} />
+          <Text style={{ fontFamily: OUT_L, fontSize: 10, letterSpacing: 4, color: P.mid, marginBottom: 20 }}>ADJUST TARGETS</Text>
+
+          {[
+            { label: "CALORIES",  val: draftCals,  setVal: setDraftCals,  min: 1200, max: 5000, step: 50,  color: P.gold },
+            { label: "PROTEIN",   val: draftPro,   setVal: setDraftPro,   min: 50,   max: 400,  step: 5,   color: C_PROTEIN },
+            { label: "CARBS",     val: draftCarbs, setVal: setDraftCarbs, min: 0,    max: 700,  step: 5,   color: C_CARBS },
+            { label: "FAT",       val: draftFat,   setVal: setDraftFat,   min: 20,   max: 300,  step: 5,   color: C_FAT },
+          ].map(({ label, val, setVal, min, max, step, color }) => (
+            <View key={label} style={{ marginBottom: 20 }}>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
+                <Text style={{ fontFamily: OUT_L, fontSize: 10, letterSpacing: 2, color: P.mid }}>{label}</Text>
+                <Text style={{ fontFamily: CG, fontSize: 18, color: P.ink, letterSpacing: -0.5 }}>
+                  {val}{label === "CALORIES" ? " kcal" : "g"}
+                </Text>
+              </View>
+              <MacroSlider value={val} min={min} max={max} step={step} color={color} onChange={setVal} />
+            </View>
+          ))}
+
+          <View style={{ flexDirection: "row", gap: 10, marginTop: 4 }}>
+            <TouchableOpacity onPress={() => setMacroEditorOpen(false)}
+              style={{ flex: 1, paddingVertical: 14, borderRadius: 10, backgroundColor: P.s2, alignItems: "center", borderWidth: 1, borderColor: P.border }}>
+              <Text style={{ fontFamily: OUT_L, fontSize: 10, letterSpacing: 2, color: P.mid }}>CANCEL</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                if (!userId) return;
+                saveFoodTarget({ userId, calories: draftCals, proteinG: draftPro, carbsG: draftCarbs, fatG: draftFat, goal: targets?.goal ?? "maintain" });
+                setMacroEditorOpen(false);
+              }}
+              style={{ flex: 1, paddingVertical: 14, borderRadius: 10, backgroundColor: P.gold, alignItems: "center" }}>
+              <Text style={{ fontFamily: OUT_L, fontSize: 10, letterSpacing: 2, color: P.bg }}>SAVE</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <Modal visible={!!deleteTarget} transparent animationType="fade" onRequestClose={() => setDeleteTarget(null)}>
         <TouchableOpacity style={s.overlay} activeOpacity={1} onPress={() => setDeleteTarget(null)}>
           <TouchableOpacity activeOpacity={1} style={s.dialog}>
