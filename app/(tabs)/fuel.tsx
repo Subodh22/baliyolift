@@ -79,25 +79,47 @@ function MacroSlider({ value, min, max, step = 1, color, onChange }: {
   value: number; min: number; max: number; step?: number; color: string;
   onChange: (v: number) => void;
 }) {
-  const [trackWidth, setTrackWidth] = useState(1);
-  const pct = Math.max(0, Math.min(1, (value - min) / (max - min)));
+  const trackRef = useRef<View>(null);
+  // Keep latest values in refs so PanResponder closures are never stale
+  const layoutRef = useRef({ pageX: 0, width: 1 });
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+  const paramsRef = useRef({ min, max, step });
+  paramsRef.current = { min, max, step };
 
-  const calcVal = (x: number) => {
-    const raw = min + Math.max(0, Math.min(1, x / trackWidth)) * (max - min);
-    return Math.round(raw / step) * step;
+  const calcVal = (pageX: number) => {
+    const { min, max, step } = paramsRef.current;
+    const { pageX: trackX, width } = layoutRef.current;
+    const pct = Math.max(0, Math.min(1, (pageX - trackX) / width));
+    return Math.round((min + pct * (max - min)) / step) * step;
   };
 
   const panResponder = useRef(PanResponder.create({
     onStartShouldSetPanResponder: () => true,
     onMoveShouldSetPanResponder: () => true,
-    onPanResponderGrant: (e) => onChange(calcVal(e.nativeEvent.locationX)),
-    onPanResponderMove: (e) => onChange(calcVal(e.nativeEvent.locationX)),
+    onPanResponderGrant: (_e, gs) => {
+      // Re-measure on every touch so position is accurate after scroll
+      trackRef.current?.measure((_fx, _fy, width, _h, pageX) => {
+        layoutRef.current = { pageX, width };
+        onChangeRef.current(calcVal(gs.x0));
+      });
+    },
+    onPanResponderMove: (_e, gs) => {
+      onChangeRef.current(calcVal(gs.moveX));
+    },
   })).current;
+
+  const pct = Math.max(0, Math.min(1, (value - min) / (max - min)));
 
   return (
     <View
-      onLayout={(e) => setTrackWidth(e.nativeEvent.layout.width)}
-      style={{ height: 36, justifyContent: "center" }}
+      ref={trackRef}
+      onLayout={() => {
+        trackRef.current?.measure((_fx, _fy, width, _h, pageX) => {
+          layoutRef.current = { pageX, width };
+        });
+      }}
+      style={{ height: 40, justifyContent: "center" }}
       {...panResponder.panHandlers}
     >
       <View style={{ height: 3, backgroundColor: P.border, borderRadius: 2 }}>
@@ -105,9 +127,9 @@ function MacroSlider({ value, min, max, step = 1, color, onChange }: {
       </View>
       <View style={{
         position: "absolute", left: `${pct * 100}%` as any,
-        width: 18, height: 18, borderRadius: 9,
-        backgroundColor: color, transform: [{ translateX: -9 }],
-        shadowColor: color, shadowOpacity: 0.5, shadowRadius: 4, shadowOffset: { width: 0, height: 0 },
+        width: 20, height: 20, borderRadius: 10,
+        backgroundColor: color, transform: [{ translateX: -10 }],
+        shadowColor: color, shadowOpacity: 0.6, shadowRadius: 4, shadowOffset: { width: 0, height: 0 },
       }} />
     </View>
   );
