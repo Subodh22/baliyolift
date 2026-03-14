@@ -1,8 +1,8 @@
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  ActivityIndicator, Pressable, LayoutAnimation, Platform, UIManager,
+  ActivityIndicator, Pressable, LayoutAnimation, Platform, UIManager, Modal,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useState } from "react";
 import { router } from "expo-router";
@@ -165,28 +165,34 @@ function WarningSheet({
   title: string; body: string; confirmLabel: string; confirmDanger: boolean;
   onConfirm: () => void; onCancel: () => void; loading: boolean;
 }) {
+  const insets = useSafeAreaInsets();
   return (
-    <View style={s.overlay}>
-      <Animated.View entering={FadeInDown.springify().damping(18)} style={s.sheet}>
-        <Text style={{ fontFamily: OUT, fontSize: 17, color: P.ink, marginBottom: 8 }}>{title}</Text>
-        <Text style={{ fontFamily: OUT_L, fontSize: 13, color: P.mid, lineHeight: 20, marginBottom: 24 }}>{body}</Text>
-        <View style={{ flexDirection: "row", gap: 10 }}>
-          <Pressable onPress={onCancel} style={[s.sheetBtn, { backgroundColor: P.s2, flex: 1 }]}>
-            <Text style={{ fontFamily: OUT_L, fontSize: 13, color: P.ink }}>Cancel</Text>
-          </Pressable>
-          <Pressable onPress={onConfirm} disabled={loading}
-            style={[s.sheetBtn, { backgroundColor: confirmDanger ? "#CF4444" : P.gold, flex: 1 }]}
-          >
-            {loading
-              ? <ActivityIndicator color="#fff" size="small" />
-              : <Text style={{ fontFamily: OUT_L, fontSize: 13, color: confirmDanger ? "#fff" : P.bg, letterSpacing: 0.5 }}>
-                  {confirmLabel}
-                </Text>
-            }
-          </Pressable>
-        </View>
-      </Animated.View>
-    </View>
+    <Modal transparent animationType="none" visible statusBarTranslucent onRequestClose={onCancel}>
+      <View style={s.overlay}>
+        <Animated.View
+          entering={FadeInDown.springify().damping(18)}
+          style={[s.sheet, { paddingBottom: insets.bottom + 16 }]}
+        >
+          <Text style={{ fontFamily: OUT, fontSize: 17, color: P.ink, marginBottom: 8 }}>{title}</Text>
+          <Text style={{ fontFamily: OUT_L, fontSize: 13, color: P.mid, lineHeight: 20, marginBottom: 24 }}>{body}</Text>
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <Pressable onPress={onCancel} style={[s.sheetBtn, { backgroundColor: P.s2, flex: 1 }]}>
+              <Text style={{ fontFamily: OUT_L, fontSize: 13, color: P.ink }}>Cancel</Text>
+            </Pressable>
+            <Pressable onPress={onConfirm} disabled={loading}
+              style={[s.sheetBtn, { backgroundColor: confirmDanger ? "#CF4444" : P.gold, flex: 1 }]}
+            >
+              {loading
+                ? <ActivityIndicator color="#fff" size="small" />
+                : <Text style={{ fontFamily: OUT_L, fontSize: 13, color: confirmDanger ? "#fff" : P.bg, letterSpacing: 0.5 }}>
+                    {confirmLabel}
+                  </Text>
+              }
+            </Pressable>
+          </View>
+        </Animated.View>
+      </View>
+    </Modal>
   );
 }
 
