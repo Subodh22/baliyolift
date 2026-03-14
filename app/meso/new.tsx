@@ -7,8 +7,9 @@ import {
   TextInput,
   ScrollView,
   ActivityIndicator,
+  Modal,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -89,8 +90,71 @@ const TEMPLATES = [
   },
 ];
 
+// ---- Template confirm sheet ----
+function TemplateConfirmSheet({
+  template,
+  onConfirm,
+  onCancel,
+  loading,
+  colors,
+  typography,
+}: any) {
+  const insets = useSafeAreaInsets();
+  return (
+    <Modal transparent animationType="none" visible statusBarTranslucent onRequestClose={onCancel}>
+      <View style={confirmStyles.overlay}>
+        <Animated.View
+          entering={FadeInDown.springify().damping(18)}
+          style={[confirmStyles.sheet, { backgroundColor: colors.backgroundSecondary, paddingBottom: insets.bottom + 16 }]}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 12 }}>
+            <Text style={[typography.title2, { color: colors.label, flex: 1 }]}>{template.name}</Text>
+            <View style={[templateStyles.tag, { backgroundColor: template.tagColor + "22" }]}>
+              <Text style={[typography.caption2, { color: template.tagColor, fontWeight: "700" }]}>
+                {template.tag}
+              </Text>
+            </View>
+          </View>
+          <Text style={[typography.caption1, { color: colors.accent, marginBottom: 8, fontWeight: "600" }]}>
+            {template.subtitle}
+          </Text>
+          <Text style={[typography.subheadline, { color: colors.labelSecondary, lineHeight: 20, marginBottom: 24 }]}>
+            {template.description}
+          </Text>
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <TouchableOpacity
+              onPress={onCancel}
+              activeOpacity={0.8}
+              style={[confirmStyles.btn, { backgroundColor: colors.fillSecondary, flex: 1 }]}
+            >
+              <Text style={[typography.body, { color: colors.label }]}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={onConfirm}
+              disabled={loading}
+              activeOpacity={0.8}
+              style={[confirmStyles.btn, { backgroundColor: colors.accent, flex: 1 }]}
+            >
+              {loading
+                ? <ActivityIndicator color="#fff" size="small" />
+                : <Text style={[typography.body, { color: "#fff", fontWeight: "600" }]}>Use Template</Text>
+              }
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+      </View>
+    </Modal>
+  );
+}
+
+const confirmStyles = StyleSheet.create({
+  overlay: { position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" },
+  sheet:   { borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, borderWidth: StyleSheet.hairlineWidth },
+  btn:     { paddingVertical: 14, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+});
+
 // ---- Step 0: Template picker ----
-function StepTemplates({ onSelectTemplate, onBuildCustom, colors, typography, loading }: any) {
+function StepTemplates({ onPreviewTemplate, onBuildCustom, colors, typography }: any) {
   return (
     <Animated.View entering={FadeInDown.springify()} style={styles.stepContainer}>
       <Text style={[typography.largeTitle, { color: colors.label }]}>
@@ -105,7 +169,7 @@ function StepTemplates({ onSelectTemplate, onBuildCustom, colors, typography, lo
           {TEMPLATES.map((t) => (
             <TouchableOpacity
               key={t.id}
-              onPress={() => !loading && onSelectTemplate(t.id)}
+              onPress={() => onPreviewTemplate(t)}
               activeOpacity={0.8}
               style={[templateStyles.card, { backgroundColor: colors.backgroundSecondary }]}
             >
@@ -121,15 +185,12 @@ function StepTemplates({ onSelectTemplate, onBuildCustom, colors, typography, lo
               <Text style={[typography.subheadline, { color: colors.labelSecondary }]}>
                 {t.description}
               </Text>
-              {loading === t.id && (
-                <ActivityIndicator style={{ marginTop: 10 }} color={colors.accent} />
-              )}
             </TouchableOpacity>
           ))}
         </View>
 
         <TouchableOpacity
-          onPress={!loading ? onBuildCustom : undefined}
+          onPress={onBuildCustom}
           activeOpacity={0.7}
           style={{ alignItems: "center", paddingVertical: 20 }}
         >
@@ -499,7 +560,8 @@ export default function MesoNew() {
 
   // -1 = template picker, 0–3 = custom wizard steps
   const [step, setStep] = useState(-1);
-  const [templateLoading, setTemplateLoading] = useState<string | null>(null);
+  const [previewTemplate, setPreviewTemplate] = useState<typeof TEMPLATES[number] | null>(null);
+  const [templateLoading, setTemplateLoading] = useState(false);
   const [name, setName] = useState("");
   const [weeks, setWeeks] = useState(5);
   const [selectedDays, setSelectedDays] = useState<number[]>([1, 3, 5]);
@@ -507,20 +569,22 @@ export default function MesoNew() {
   const [volumeOverrides, setVolumeOverrides] = useState<Record<string, any>>({});
   const [creating, setCreating] = useState(false);
 
-  const handleSelectTemplate = async (templateId: string) => {
-    if (!userId) return;
-    setTemplateLoading(templateId);
+  const handleConfirmTemplate = async () => {
+    if (!userId || !previewTemplate) return;
+    setTemplateLoading(true);
     try {
-      if (templateId === "laxman") await createLaxman({ userId });
-      else if (templateId === "ppl") await createPPL({ userId });
-      else if (templateId === "upper_lower") await createUpperLower({ userId });
-      else if (templateId === "cbum") await createCBum({ userId });
-      else if (templateId === "jeff_nippard") await createJeffNippard({ userId });
-      else if (templateId === "lean_beef_patty") await createLeanBeefPatty({ userId });
+      const id = previewTemplate.id;
+      if (id === "laxman") await createLaxman({ userId });
+      else if (id === "ppl") await createPPL({ userId });
+      else if (id === "upper_lower") await createUpperLower({ userId });
+      else if (id === "cbum") await createCBum({ userId });
+      else if (id === "jeff_nippard") await createJeffNippard({ userId });
+      else if (id === "lean_beef_patty") await createLeanBeefPatty({ userId });
       notificationSuccess();
+      setPreviewTemplate(null);
       router.back();
     } catch {
-      setTemplateLoading(null);
+      setTemplateLoading(false);
     }
   };
 
@@ -651,9 +715,8 @@ export default function MesoNew() {
       <View style={styles.content}>
         {isTemplatePicker && (
           <StepTemplates
-            onSelectTemplate={handleSelectTemplate}
+            onPreviewTemplate={(t: typeof TEMPLATES[number]) => { selectionAsync(); setPreviewTemplate(t); }}
             onBuildCustom={() => { impactLight(); setStep(0); }}
-            loading={templateLoading}
             {...stepProps}
           />
         )}
@@ -701,6 +764,18 @@ export default function MesoNew() {
             disabled={!canAdvance()}
           />
         </View>
+      )}
+
+      {/* Template confirmation sheet */}
+      {previewTemplate && (
+        <TemplateConfirmSheet
+          template={previewTemplate}
+          onConfirm={handleConfirmTemplate}
+          onCancel={() => { setPreviewTemplate(null); setTemplateLoading(false); }}
+          loading={templateLoading}
+          colors={colors}
+          typography={typography}
+        />
       )}
     </SafeAreaView>
   );
