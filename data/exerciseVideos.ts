@@ -238,6 +238,84 @@ const RAW_MAP: Record<string, string> = {
   "dumbbell bench wrist curl":            "2wPpcJBe03o",
   "dumbbell standing wrist curl":         "iQ4JjOK73PE",
   "barbell standing wrist curl":          "lfQR7oVS8eo",
+  "reverse wrist curl":                   "osYPwlBiCRM",
+  "farmer carry":                         "1uOs1hP3u4A",
+  "plate pinch":                          "_cdWkwQGffU",
+
+  // ── Back ──────────────────────────────────────────────────────────────────
+  "db pullover":                          "jQjWlIwG4sI",
+  "lat pulldown":                         "hnSqbBk15tw",
+  "cable row":                            "qD1WZ5pSuvk",
+  "barbell row":                          "Nqh7q3zDCoQ",
+  "dumbbell row":                         "5PoEksoJNaw",
+  "chest-supported row":                  "0UBRfiO4zDs",
+  "chest supported row":                  "0UBRfiO4zDs",
+  "t-bar row":                            "yPis7nlbqdY",
+  "t bar row":                            "yPis7nlbqdY",
+  "pull-up":                              "OEXosPwzFdc",
+  "pull up":                              "OEXosPwzFdc",
+  "chin-up":                              "Oi3bW9nQmGI",
+  "chin up":                              "Oi3bW9nQmGI",
+  "straight-arm pulldown":                "G9uNaXGTJ4w",
+  "straight arm pulldown":                "G9uNaXGTJ4w",
+  "seated cable row wide grip":           "sjJ0z4R3w0M",
+  "single-arm cable row":                 "9TWiV80cUYs",
+  "single arm cable row":                 "9TWiV80cUYs",
+  "rack pull":                            "3RMufk1jELs",
+  "meadows row":                          "wIbxk0zD3xM",
+  "seal row":                             "4H2ItXwUTp8",
+  "cable pullover":                       "zokTHF8a9Z8",
+  "reverse grip pulldown":                "VprlTxpB1rk",
+  "v bar pulldown":                       "LJ5ebC1pWkA",
+
+  // ── Biceps (additional) ───────────────────────────────────────────────────
+  "drag curl":                            "ntl_xrjfCt8",
+  "cross-body hammer curl":               "lgOuK76wuiE",
+  "cross body hammer curl":               "lgOuK76wuiE",
+
+  // ── Triceps (additional) ──────────────────────────────────────────────────
+  "tate press":                           "9Lpwk3nLve8",
+  "tricep kickback":                      "XrmZ4nVkYRY",
+  "reverse grip pushdown":                "ZG2n5IcYIcY",
+
+  // ── Chest (additional) ───────────────────────────────────────────────────
+  "svend press":                          "cIoUZOnypS8",
+  "landmine press":                       "t9GuiNQo1O4",
+
+  // ── Shoulders (additional) ───────────────────────────────────────────────
+  "cable rotation":                       "YIU0U_B57rU",
+  "reverse curl":                         "ZG2n5IcYIcY",
+
+  // ── Legs / Glutes (additional) ────────────────────────────────────────────
+  "abductor machine":                     "tu4o4quPv2k",
+  "step up":                              "wEnxQmNwans",
+  "lateral band walk":                    "HW9xLHrLhxI",
+
+  // ── Calves ────────────────────────────────────────────────────────────────
+  "seated calf raise":                    "FsqE-g1C5fk",
+  "standing calf raise":                  "_OewEscCsbo",
+  "leg press calf raise":                 "KxEYX_cuesM",
+  "calf raise on leg press":              "KxEYX_cuesM",
+  "donkey calf raise":                    "WbBJmFQsIMA",
+  "single-leg calf raise":               "ElcvJ0kjt6c",
+  "single leg calf raise":               "ElcvJ0kjt6c",
+
+  // ── Abs ───────────────────────────────────────────────────────────────────
+  "cable crunch":                         "K2m0jj6RfYg",
+  "hanging leg raise":                    "_jLskVdzS4o",
+  "ab wheel rollout":                     "XWJmFD_AdbM",
+  "decline crunch":                       "XqLuhgK-a0c",
+  "plank":                                "xe2MXatLTUw",
+  "russian twist":                        "iFQV6q4xRXM",
+  "reverse crunch":                       "eX9vjAsdWvY",
+  "dragon flag":                          "eLCBC6fjtQU",
+  "pallof press":                         "5aZ0IhJS8O8",
+  "weighted sit-up":                      "CdMwx-MEzCc",
+  "weighted sit up":                      "CdMwx-MEzCc",
+  "dead hang":                            "XPcT3capkyk",
+
+  // ── Mobility / Other ─────────────────────────────────────────────────────
+  "tibialis raise":                       "pQcvW08rnAk",
 };
 
 // Normalised lookup table (built once at import time)
