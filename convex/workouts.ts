@@ -36,6 +36,13 @@ export const startWorkout = mutation({
   },
 });
 
+export const abandonWorkout = mutation({
+  args: { workoutId: v.id("workouts") },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.workoutId, { status: "skipped" });
+  },
+});
+
 export const completeWorkout = mutation({
   args: {
     workoutId: v.id("workouts"),
@@ -320,7 +327,10 @@ export const getWorkoutDates = query({
       )
       .filter((q) => q.eq(q.field("status"), "completed"))
       .collect();
-    return workouts.map((w) => ({ date: w.date, durationMs: w.durationMs ?? null }));
+    return await Promise.all(workouts.map(async (w) => {
+      const session = await ctx.db.get(w.sessionId);
+      return { date: w.date, durationMs: w.durationMs ?? null, sessionName: session?.name ?? null };
+    }));
   },
 });
 

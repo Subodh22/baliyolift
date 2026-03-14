@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, Pressable, StyleSheet, Dimensions } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Pressable, StyleSheet, Dimensions, Modal } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useEffect, useMemo } from "react";
@@ -100,17 +100,17 @@ function VolumeArc({ progress }: { progress: number }) {
 }
 
 // ── Week tile ─────────────────────────────────────────────────────────────────
-function WeekTile({ label, value, state }: {
+function WeekTile({ label, value, state, sessionName }: {
   label: string;
   value: string;
   state: "done" | "today" | "rest" | "future";
+  sessionName?: string;
 }) {
   const bg = state === "today" ? P.gold : state === "done" ? P.goldDim : "transparent";
   const borderColor = state === "today" ? P.gold : state === "done" ? P.gold : P.border;
   const textColor = state === "today" ? P.bg : state === "done" ? P.gold : P.dim;
-  const labelColor = state === "today" ? P.bg : P.dim;
   return (
-    <View style={{ flex: 1, alignItems: "center", gap: 6 }}>
+    <View style={{ flex: 1, alignItems: "center", gap: 4 }}>
       <Text style={{ fontFamily: OUT_L, fontSize: 8, letterSpacing: 1.5, color: P.dim }}>
         {label}
       </Text>
@@ -119,6 +119,11 @@ function WeekTile({ label, value, state }: {
           {value}
         </Text>
       </View>
+      {sessionName ? (
+        <Text numberOfLines={1} style={{ fontFamily: OUT_L, fontSize: 9, color: P.gold, textAlign: "center", letterSpacing: 0.3 }}>
+          {sessionName}
+        </Text>
+      ) : <View style={{ height: 9 }} />}
     </View>
   );
 }
@@ -152,7 +157,10 @@ export default function HomeScreen() {
   const { userId, loading: userLoading } = useCurrentUser();
   const createPPL = useMutation(api.templates.createPPLTemplate);
   const createUL  = useMutation(api.templates.createUpperLowerTemplate);
+  const abandonWorkout = useMutation(api.workouts.abandonWorkout);
   const [templateLoading, setTemplateLoading] = useState<string | null>(null);
+  const [sessionPickerOpen, setSessionPickerOpen] = useState(false);
+  const [pendingSession, setPendingSession] = useState<{ _id: string; name: string } | null>(null);
 
   const meso        = useQuery(api.mesocycles.getActiveWithDetails, userId ? { userId } : "skip");
   const volume      = useQuery(api.workouts.getWeeklyVolume, meso && userId ? { userId, mesocycleId: meso._id, weekNumber: meso.weekNumber } : "skip");
@@ -167,8 +175,8 @@ export default function HomeScreen() {
   const todayMon    = today === 0 ? 6 : today - 1; // Mon=0...Sun=6
 
   // Days this Mon–Sun that have a completed workout (Mon=0...Sun=6)
-  const completedDays = useMemo(() => {
-    if (!workoutDates) return new Set<number>();
+  const { completedDays, sessionNameByDow } = useMemo(() => {
+    if (!workoutDates) return { completedDays: new Set<number>(), sessionNameByDow: {} as Record<number, string> };
     const now = new Date();
     const monOffset = now.getDay() === 0 ? 6 : now.getDay() - 1;
     const monday = new Date(now);
@@ -178,14 +186,16 @@ export default function HomeScreen() {
     sunday.setDate(monday.getDate() + 6);
     sunday.setHours(23, 59, 59, 999);
     const set = new Set<number>();
+    const names: Record<number, string> = {};
     for (const w of workoutDates) {
       const d = new Date(w.date);
       if (d >= monday && d <= sunday) {
-        const dow = d.getDay() === 0 ? 6 : d.getDay() - 1; // Mon=0
+        const dow = d.getDay() === 0 ? 6 : d.getDay() - 1;
         set.add(dow);
+        if (w.sessionName) names[dow] = w.sessionName;
       }
     }
-    return set;
+    return { completedDays: set, sessionNameByDow: names };
   }, [workoutDates]);
 
   const volumePct = useMemo(() => {
@@ -280,7 +290,12 @@ export default function HomeScreen() {
               {/* 3px gold left stripe */}
               <View style={s.goldStripe} />
               <View style={{ flex: 1 }}>
-                <Text style={s.sessionName}>{nextSession.name}</Text>
+                <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", paddingRight: 16, paddingTop: 16 }}>
+                  <Text style={[s.sessionName, { paddingTop: 0, paddingHorizontal: 20 }]}>{nextSession.name}</Text>
+                  <TouchableOpacity onPress={() => setSessionPickerOpen(true)} style={{ paddingTop: 6 }}>
+                    <Text style={{ fontFamily: OUT_L, fontSize: 10, letterSpacing: 2, color: P.gold }}>CHANGE</Text>
+                  </TouchableOpacity>
+                </View>
                 <Text style={s.sessionMeta}>
                   {nextSession.muscleGroups.map((mg: string) =>
                     MUSCLE_DISPLAY_NAMES[mg as keyof typeof MUSCLE_DISPLAY_NAMES] ?? mg
@@ -338,7 +353,7 @@ export default function HomeScreen() {
               const isFuture = i > todayMon && sessionDays.has(i);
               const state = isDone ? "done" : isToday ? "today" : isFuture ? "future" : "rest";
               const val   = isDone ? "✓" : isToday ? String(new Date().getDate()) : isFuture ? String(new Date().getDate() + (i - todayMon)) : "—";
-              return <WeekTile key={d} label={d} value={val} state={state} />;
+              return <WeekTile key={d} label={d} value={val} state={state} sessionName={isDone ? sessionNameByDow[i] : undefined} />;
             })}
           </View>
         </View>
@@ -346,6 +361,80 @@ export default function HomeScreen() {
         {/* Bottom spacer for tab bar */}
         <View style={{ height: 100 }} />
       </ScrollView>
+      {/* ── Session Picker Modal ────────────────────────────────────── */}
+      <Modal visible={sessionPickerOpen} transparent animationType="slide" onRequestClose={() => setSessionPickerOpen(false)}>
+        <Pressable style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.6)" }} onPress={() => setSessionPickerOpen(false)} />
+        <View style={{ backgroundColor: P.s1, borderTopLeftRadius: 22, borderTopRightRadius: 22, paddingTop: 12, paddingBottom: 40, borderTopWidth: 1, borderColor: P.border }}>
+          <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: P.border, alignSelf: "center", marginBottom: 20 }} />
+          <Text style={{ fontFamily: OUT_L, fontSize: 10, letterSpacing: 4, color: P.mid, textAlign: "center", marginBottom: 16 }}>
+            CHOOSE SESSION
+          </Text>
+          {(meso?.sessions ?? []).map((session: any) => {
+            const isScheduled = session._id === nextSession?._id;
+            return (
+              <TouchableOpacity
+                key={session._id}
+                onPress={() => {
+                  setSessionPickerOpen(false);
+                  if (session._id === nextSession?._id) {
+                    router.push(`/workout/new?sessionId=${session._id}`);
+                  } else {
+                    setPendingSession(session);
+                  }
+                }}
+                activeOpacity={0.75}
+                style={{ paddingVertical: 16, paddingHorizontal: 24, borderTopWidth: 0.5, borderColor: P.border, flexDirection: "row", alignItems: "center" }}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontFamily: CG_ITALIC, fontSize: 22, color: P.ink, letterSpacing: -0.2 }}>{session.name}</Text>
+                  <Text style={{ fontFamily: OUT_L, fontSize: 11, color: P.mid, marginTop: 2 }}>
+                    {(session.muscleGroups ?? []).map((mg: string) => MUSCLE_DISPLAY_NAMES[mg as keyof typeof MUSCLE_DISPLAY_NAMES] ?? mg).join(" · ")}
+                  </Text>
+                </View>
+                {isScheduled && (
+                  <Text style={{ fontFamily: OUT_L, fontSize: 9, letterSpacing: 2, color: P.gold }}>TODAY</Text>
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </Modal>
+      {/* ── Confirm session change ──────────────────────────────────── */}
+      <Modal visible={!!pendingSession} transparent animationType="fade" onRequestClose={() => setPendingSession(null)}>
+        <Pressable style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "center", alignItems: "center" }} onPress={() => setPendingSession(null)}>
+          <Pressable onPress={() => {}} style={{ backgroundColor: P.s1, borderRadius: 16, padding: 24, width: 300, borderWidth: 1, borderColor: P.border }}>
+            <Text style={{ fontFamily: CG_ITALIC, fontSize: 22, color: P.ink, textAlign: "center", marginBottom: 8 }}>
+              Change Session?
+            </Text>
+            <Text style={{ fontFamily: OUT_L, fontSize: 13, color: P.mid, textAlign: "center", marginBottom: 24, lineHeight: 20 }}>
+              Switch today's session to{"\n"}
+              <Text style={{ color: P.gold }}>{pendingSession?.name}</Text>?
+            </Text>
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <TouchableOpacity
+                onPress={() => setPendingSession(null)}
+                style={{ flex: 1, paddingVertical: 12, borderRadius: 10, backgroundColor: P.s2, alignItems: "center", borderWidth: 1, borderColor: P.border }}
+              >
+                <Text style={{ fontFamily: OUT_L, fontSize: 11, letterSpacing: 2, color: P.mid }}>CANCEL</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={async () => {
+                  const id = pendingSession?._id;
+                  setPendingSession(null);
+                  if (!id) return;
+                  if (next?.status === "in_progress" && next.workoutId) {
+                    await abandonWorkout({ workoutId: next.workoutId });
+                  }
+                  router.push(`/workout/new?sessionId=${id}`);
+                }}
+                style={{ flex: 1, paddingVertical: 12, borderRadius: 10, backgroundColor: P.gold, alignItems: "center" }}
+              >
+                <Text style={{ fontFamily: OUT_L, fontSize: 11, letterSpacing: 2, color: P.bg }}>YES, SWITCH</Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -378,7 +467,7 @@ const s = StyleSheet.create({
   // Session card
   sessionCard:  { flexDirection: "row", backgroundColor: P.s1, marginTop: 20, borderWidth: 1, borderColor: P.border },
   goldStripe:   { width: 3, backgroundColor: P.gold },
-  sessionName:  { fontFamily: CG_ITALIC, fontSize: 36, color: P.ink, letterSpacing: -0.3, lineHeight: 42, paddingHorizontal: 20, paddingTop: 20 },
+  sessionName:  { fontFamily: CG_ITALIC, fontSize: 36, color: P.ink, letterSpacing: -0.3, lineHeight: 42 },
   sessionMeta:  { fontFamily: OUT_L, fontSize: 13, color: P.mid, paddingHorizontal: 20, marginTop: 4 },
   sessionFooter:{ flexDirection: "row", alignItems: "flex-end", padding: 20, paddingTop: 16, marginTop: 4 },
   sessionStat:  { fontFamily: CG, fontSize: 32, color: P.ink, letterSpacing: -0.5 },

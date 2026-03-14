@@ -348,9 +348,10 @@ function WeightRoadmap({ profile, currentWeight }: {
 // ── Weekly Roadmap ────────────────────────────────────────────────────────────
 const DOW_LETTERS = ["S","M","T","W","T","F","S"]; // 0=Sun…6=Sat
 
-function WeeklyRoadmap({ sessions, workoutDates, mesoName, weekNumber, weightByDate, caloriesByDate, onDayPress }: {
+function WeeklyRoadmap({ sessions, workoutDates, sessionByDate, mesoName, weekNumber, weightByDate, caloriesByDate, onDayPress }: {
   sessions: { _id: string; dayOfWeek: number; name: string; muscleGroups: string[] }[];
   workoutDates: Set<string>;
+  sessionByDate: Record<string, string>;
   mesoName: string;
   weekNumber: number;
   weightByDate: Record<string, number>;
@@ -444,11 +445,11 @@ function WeeklyRoadmap({ sessions, workoutDates, mesoName, weekNumber, weightByD
 
               {/* Data below cell */}
               <View style={{ marginTop: 4, alignItems: "center", gap: 1 }}>
-                {hasSession && (
+                {(day.done ? sessionByDate[day.key] : day.session?.name) ? (
                   <Text numberOfLines={1} style={{ fontFamily: OUT_L, fontSize: 8, color: day.done ? P.gold : day.isToday ? P.ink : P.mid, textAlign: "center", letterSpacing: 0.3 }}>
-                    {day.session!.name}
+                    {day.done ? sessionByDate[day.key] : day.session!.name}
                   </Text>
-                )}
+                ) : null}
                 {weight !== undefined && (
                   <Text style={{ fontFamily: OUT_L, fontSize: 8, color: P.mid, textAlign: "center" }}>
                     {weight}kg
@@ -786,6 +787,14 @@ export default function StatsScreen() {
     return dates;
   }, [dateSummary]);
 
+  const sessionByDate = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const w of dateSummary ?? []) {
+      if (w.sessionName) map[dayKey(w.date)] = w.sessionName;
+    }
+    return map;
+  }, [dateSummary]);
+
   function handleLogWeight() {
     const val = parseFloat(weightInput);
     if (!userId || isNaN(val) || val <= 0) return;
@@ -971,6 +980,7 @@ export default function StatsScreen() {
                       <WeeklyRoadmap
                         sessions={activeMeso.sessions as any}
                         workoutDates={workoutDates}
+                        sessionByDate={sessionByDate}
                         mesoName={activeMeso.name}
                         weekNumber={activeMeso.weekNumber}
                         weightByDate={weightByDate}
