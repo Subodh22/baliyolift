@@ -525,17 +525,17 @@ export const listAllWithSessions = query({
   },
 });
 
-// End any currently active meso and activate the given one
+// Pause any currently active meso and activate the given one
 export const setActive = mutation({
   args: { userId: v.id("users"), mesocycleId: v.id("mesocycles") },
   handler: async (ctx, { userId, mesocycleId }) => {
-    // Complete any currently active meso
+    // Pause any currently active meso
     const current = await ctx.db
       .query("mesocycles")
       .withIndex("by_user_status", (q) => q.eq("userId", userId).eq("status", "active"))
       .first();
     if (current && (current._id as string) !== (mesocycleId as string)) {
-      await ctx.db.patch(current._id, { status: "completed" });
+      await ctx.db.patch(current._id, { status: "paused" });
     }
     // Activate the target, reset startDate to now
     await ctx.db.patch(mesocycleId, { status: "active", startDate: Date.now() });

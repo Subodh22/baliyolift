@@ -24,7 +24,7 @@ const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 type Meso = {
   _id: Id<"mesocycles">;
   name: string;
-  status: "active" | "completed" | "deload";
+  status: "active" | "completed" | "deload" | "paused";
   weeks: number;
   weekNumber: number;
   sessions: {
@@ -56,12 +56,15 @@ function MesoCard({
   };
 
   const statusLabel =
-    meso.status === "active" ? "ACTIVE" :
-    meso.status === "deload" ? "DELOAD" : "PAUSED";
+    meso.status === "active"    ? "ACTIVE" :
+    meso.status === "deload"    ? "DELOAD" :
+    meso.status === "paused"    ? "PAUSED" :
+    meso.status === "completed" ? "COMPLETED" : "PAUSED";
 
   const statusColor =
-    meso.status === "active" ? P.gold :
-    meso.status === "deload" ? "#7BA7BC" : P.mid;
+    meso.status === "active"    ? P.gold :
+    meso.status === "deload"    ? "#7BA7BC" :
+    meso.status === "paused"    ? "#8B8B8B" : P.mid;
 
   return (
     <View style={[s.mesoCard, isActive && { borderColor: P.gold + "40" }]}>

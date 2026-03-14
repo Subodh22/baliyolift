@@ -110,6 +110,13 @@ export const createPPLTemplate = mutation({
     ];
 
     // ─── Create mesocycle ──────────────────────────────────────────────────
+    // Pause any currently active mesocycle
+    const activeMeso = await ctx.db
+      .query("mesocycles")
+      .withIndex("by_user_status", (q) => q.eq("userId", args.userId).eq("status", "active"))
+      .first();
+    if (activeMeso) await ctx.db.patch(activeMeso._id, { status: "paused" });
+
     const mesoId = await ctx.db.insert("mesocycles", {
       userId: args.userId,
       name: "PPL Hypertrophy Block",
@@ -273,6 +280,13 @@ export const createLaxmanTemplate = mutation({
       { muscleGroup: "calves",     mev: 5,  mav: 10, mrv: 16 },
     ];
 
+    // Pause any currently active mesocycle
+    const activeMeso = await ctx.db
+      .query("mesocycles")
+      .withIndex("by_user_status", (q) => q.eq("userId", args.userId).eq("status", "active"))
+      .first();
+    if (activeMeso) await ctx.db.patch(activeMeso._id, { status: "paused" });
+
     const mesoId = await ctx.db.insert("mesocycles", {
       userId: args.userId,
       name: "Laxman",
@@ -397,6 +411,13 @@ export const createUpperLowerTemplate = mutation({
       { muscleGroup: "glutes",      mev: 6,  mav: 10, mrv: 14 },
       { muscleGroup: "calves",      mev: 6,  mav: 10, mrv: 14 },
     ];
+
+    // Pause any currently active mesocycle
+    const activeMeso = await ctx.db
+      .query("mesocycles")
+      .withIndex("by_user_status", (q) => q.eq("userId", args.userId).eq("status", "active"))
+      .first();
+    if (activeMeso) await ctx.db.patch(activeMeso._id, { status: "paused" });
 
     const mesoId = await ctx.db.insert("mesocycles", {
       userId: args.userId,
@@ -541,6 +562,13 @@ export const createCBumTemplate = mutation({
       { muscleGroup: "calves",      mev: 10, mav: 14, mrv: 20 },
     ];
 
+    // Pause any currently active mesocycle
+    const activeMeso = await ctx.db
+      .query("mesocycles")
+      .withIndex("by_user_status", (q) => q.eq("userId", args.userId).eq("status", "active"))
+      .first();
+    if (activeMeso) await ctx.db.patch(activeMeso._id, { status: "paused" });
+
     const mesoId = await ctx.db.insert("mesocycles", {
       userId: args.userId,
       name: "CBum Classic Physique",
@@ -670,6 +698,13 @@ export const createJeffNippardTemplate = mutation({
       { muscleGroup: "glutes",      mev: 8,  mav: 12, mrv: 18 },
       { muscleGroup: "calves",      mev: 8,  mav: 12, mrv: 16 },
     ];
+
+    // Pause any currently active mesocycle
+    const activeMeso = await ctx.db
+      .query("mesocycles")
+      .withIndex("by_user_status", (q) => q.eq("userId", args.userId).eq("status", "active"))
+      .first();
+    if (activeMeso) await ctx.db.patch(activeMeso._id, { status: "paused" });
 
     const mesoId = await ctx.db.insert("mesocycles", {
       userId: args.userId,
@@ -811,6 +846,13 @@ export const createLeanBeefPattyTemplate = mutation({
       { muscleGroup: "chest",       mev: 8,  mav: 12, mrv: 18 },
       { muscleGroup: "triceps",     mev: 6,  mav: 10, mrv: 16 },
     ];
+
+    // Pause any currently active mesocycle
+    const activeMeso = await ctx.db
+      .query("mesocycles")
+      .withIndex("by_user_status", (q) => q.eq("userId", args.userId).eq("status", "active"))
+      .first();
+    if (activeMeso) await ctx.db.patch(activeMeso._id, { status: "paused" });
 
     const mesoId = await ctx.db.insert("mesocycles", {
       userId: args.userId,

@@ -65,7 +65,8 @@ export default defineSchema({
       v.literal("active"),
       v.literal("completed"),
       v.literal("deload"),
-      v.literal("draft")
+      v.literal("draft"),
+      v.literal("paused")
     ),
     volumeTargets: v.array(
       v.object({
