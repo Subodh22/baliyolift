@@ -441,3 +441,417 @@ export const createUpperLowerTemplate = mutation({
     return mesoId;
   },
 });
+
+/**
+ * Chris Bumstead 5-day Classic Physique split.
+ * Chest/Tri · Back/Bi · Shoulders/Arms · Legs · Arms Pump
+ */
+export const createCBumTemplate = mutation({
+  args: {
+    userId: v.id("users"),
+    weeks: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const weeks = args.weeks ?? 5;
+
+    const findEx = async (name: string) => {
+      const all = await ctx.db.query("exercises").collect();
+      return all.find((e) => e.name.toLowerCase() === name.toLowerCase()) ?? null;
+    };
+
+    const sessionDefs = [
+      {
+        name: "Chest & Triceps",
+        dayOfWeek: 1, // Monday
+        order: 0,
+        muscleGroups: ["chest", "triceps"],
+        exercises: [
+          { name: "Incline Dumbbell Press",    repRangeMin: 8,  repRangeMax: 12, targetSets: 4, setType: "regular" as const },
+          { name: "Machine Chest Press",        repRangeMin: 10, repRangeMax: 15, targetSets: 3, setType: "regular" as const },
+          { name: "Pec Dec",                    repRangeMin: 12, repRangeMax: 20, targetSets: 3, setType: "myorep" as const },
+          { name: "Cable Tricep Pushdown",      repRangeMin: 12, repRangeMax: 20, targetSets: 3, setType: "myorep" as const },
+          { name: "Overhead Tricep Extension",  repRangeMin: 10, repRangeMax: 15, targetSets: 3, setType: "regular" as const },
+        ],
+      },
+      {
+        name: "Back & Biceps",
+        dayOfWeek: 2, // Tuesday
+        order: 1,
+        muscleGroups: ["back", "biceps"],
+        exercises: [
+          { name: "Deadlift",              repRangeMin: 4,  repRangeMax: 8,  targetSets: 4, setType: "regular" as const },
+          { name: "Lat Pulldown",          repRangeMin: 8,  repRangeMax: 12, targetSets: 3, setType: "regular" as const },
+          { name: "Cable Row",             repRangeMin: 8,  repRangeMax: 12, targetSets: 3, setType: "regular" as const },
+          { name: "EZ Bar Curl",           repRangeMin: 8,  repRangeMax: 12, targetSets: 3, setType: "regular" as const },
+          { name: "Incline Dumbbell Curl", repRangeMin: 10, repRangeMax: 15, targetSets: 3, setType: "regular" as const },
+        ],
+      },
+      {
+        name: "Shoulders & Arms",
+        dayOfWeek: 4, // Thursday
+        order: 2,
+        muscleGroups: ["shoulders", "biceps", "triceps"],
+        exercises: [
+          { name: "Machine Shoulder Press",    repRangeMin: 8,  repRangeMax: 12, targetSets: 4, setType: "regular" as const },
+          { name: "Cable Lateral Raise",        repRangeMin: 15, repRangeMax: 20, targetSets: 4, setType: "myorep" as const },
+          { name: "Cable Face Pull",            repRangeMin: 15, repRangeMax: 20, targetSets: 3, setType: "regular" as const },
+          { name: "EZ Bar Curl",               repRangeMin: 8,  repRangeMax: 12, targetSets: 3, setType: "regular" as const },
+          { name: "Cable Tricep Pushdown",      repRangeMin: 12, repRangeMax: 20, targetSets: 3, setType: "myorep" as const },
+        ],
+      },
+      {
+        name: "Legs",
+        dayOfWeek: 5, // Friday
+        order: 3,
+        muscleGroups: ["quads", "hamstrings", "glutes", "calves"],
+        exercises: [
+          { name: "Leg Press",           repRangeMin: 8,  repRangeMax: 12, targetSets: 4, setType: "regular" as const },
+          { name: "Hack Squat",          repRangeMin: 8,  repRangeMax: 12, targetSets: 3, setType: "regular" as const },
+          { name: "Leg Extension",       repRangeMin: 12, repRangeMax: 20, targetSets: 3, setType: "myorep" as const },
+          { name: "Leg Curl",            repRangeMin: 10, repRangeMax: 15, targetSets: 3, setType: "regular" as const },
+          { name: "Hip Thrust",          repRangeMin: 8,  repRangeMax: 12, targetSets: 3, setType: "regular" as const },
+          { name: "Standing Calf Raise", repRangeMin: 10, repRangeMax: 20, targetSets: 4, setType: "regular" as const },
+          { name: "Seated Calf Raise",   repRangeMin: 10, repRangeMax: 20, targetSets: 3, setType: "regular" as const },
+        ],
+      },
+      {
+        name: "Arms Pump",
+        dayOfWeek: 6, // Saturday
+        order: 4,
+        muscleGroups: ["biceps", "triceps"],
+        exercises: [
+          { name: "Incline Dumbbell Curl",     repRangeMin: 10, repRangeMax: 15, targetSets: 3, setType: "regular" as const },
+          { name: "Hammer Curl",               repRangeMin: 10, repRangeMax: 15, targetSets: 3, setType: "myorep" as const },
+          { name: "Cable Curl",                repRangeMin: 12, repRangeMax: 20, targetSets: 3, setType: "myorep" as const },
+          { name: "Cable Tricep Pushdown",     repRangeMin: 12, repRangeMax: 20, targetSets: 3, setType: "myorep" as const },
+          { name: "Overhead Tricep Extension", repRangeMin: 10, repRangeMax: 15, targetSets: 3, setType: "regular" as const },
+        ],
+      },
+    ];
+
+    const volumeTargets = [
+      { muscleGroup: "chest",       mev: 10, mav: 16, mrv: 22 },
+      { muscleGroup: "back",        mev: 10, mav: 16, mrv: 22 },
+      { muscleGroup: "shoulders",   mev: 10, mav: 16, mrv: 22 },
+      { muscleGroup: "biceps",      mev: 10, mav: 16, mrv: 20 },
+      { muscleGroup: "triceps",     mev: 10, mav: 16, mrv: 20 },
+      { muscleGroup: "quads",       mev: 10, mav: 16, mrv: 22 },
+      { muscleGroup: "hamstrings",  mev: 6,  mav: 10, mrv: 16 },
+      { muscleGroup: "glutes",      mev: 6,  mav: 10, mrv: 16 },
+      { muscleGroup: "calves",      mev: 10, mav: 14, mrv: 20 },
+    ];
+
+    const mesoId = await ctx.db.insert("mesocycles", {
+      userId: args.userId,
+      name: "CBum Classic Physique",
+      startDate: Date.now(),
+      weeks,
+      status: "active",
+      volumeTargets,
+    });
+
+    for (const def of sessionDefs) {
+      const resolvedExIds: any[] = [];
+      for (const exDef of def.exercises) {
+        const ex = await findEx(exDef.name);
+        if (ex) resolvedExIds.push({ id: ex._id, ...exDef });
+      }
+
+      const sessionId = await ctx.db.insert("sessions", {
+        mesocycleId: mesoId,
+        userId: args.userId,
+        dayOfWeek: def.dayOfWeek,
+        name: def.name,
+        exerciseIds: resolvedExIds.map((e) => e.id),
+        order: def.order,
+        muscleGroups: def.muscleGroups,
+      });
+
+      for (let i = 0; i < resolvedExIds.length; i++) {
+        const exDef = resolvedExIds[i];
+        await ctx.db.insert("sessionExercises", {
+          sessionId,
+          exerciseId: exDef.id,
+          order: i,
+          repRangeMin: exDef.repRangeMin,
+          repRangeMax: exDef.repRangeMax,
+          targetSets: exDef.targetSets,
+          setType: exDef.setType,
+        });
+      }
+    }
+
+    return mesoId;
+  },
+});
+
+/**
+ * Jeff Nippard 4-day Science-Based Upper/Lower.
+ * Upper A Horizontal · Lower A Quad · Upper B Vertical · Lower B Hinge
+ */
+export const createJeffNippardTemplate = mutation({
+  args: {
+    userId: v.id("users"),
+    weeks: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const weeks = args.weeks ?? 5;
+
+    const findEx = async (name: string) => {
+      const all = await ctx.db.query("exercises").collect();
+      return all.find((e) => e.name.toLowerCase() === name.toLowerCase()) ?? null;
+    };
+
+    const sessionDefs = [
+      {
+        name: "Upper A — Horizontal",
+        dayOfWeek: 1, // Monday
+        order: 0,
+        muscleGroups: ["chest", "back", "biceps", "triceps"],
+        exercises: [
+          { name: "Flat Dumbbell Press",       repRangeMin: 6,  repRangeMax: 10, targetSets: 4, setType: "regular" as const },
+          { name: "Cable Row",                 repRangeMin: 6,  repRangeMax: 10, targetSets: 4, setType: "regular" as const },
+          { name: "Pec Dec",                   repRangeMin: 12, repRangeMax: 20, targetSets: 3, setType: "myorep" as const },
+          { name: "EZ Bar Curl",               repRangeMin: 8,  repRangeMax: 12, targetSets: 3, setType: "regular" as const },
+          { name: "Cable Tricep Pushdown",     repRangeMin: 10, repRangeMax: 15, targetSets: 3, setType: "regular" as const },
+          { name: "Cable Face Pull",           repRangeMin: 15, repRangeMax: 20, targetSets: 3, setType: "regular" as const },
+        ],
+      },
+      {
+        name: "Lower A — Quad Dominant",
+        dayOfWeek: 2, // Tuesday
+        order: 1,
+        muscleGroups: ["quads", "hamstrings", "glutes", "calves"],
+        exercises: [
+          { name: "Barbell Back Squat",  repRangeMin: 4,  repRangeMax: 8,  targetSets: 4, setType: "regular" as const },
+          { name: "Leg Press",           repRangeMin: 8,  repRangeMax: 12, targetSets: 3, setType: "regular" as const },
+          { name: "Leg Extension",       repRangeMin: 12, repRangeMax: 20, targetSets: 3, setType: "myorep" as const },
+          { name: "Leg Curl",            repRangeMin: 10, repRangeMax: 15, targetSets: 3, setType: "regular" as const },
+          { name: "Standing Calf Raise", repRangeMin: 8,  repRangeMax: 15, targetSets: 4, setType: "regular" as const },
+        ],
+      },
+      {
+        name: "Upper B — Vertical",
+        dayOfWeek: 4, // Thursday
+        order: 2,
+        muscleGroups: ["shoulders", "back", "chest", "biceps", "triceps"],
+        exercises: [
+          { name: "Machine Shoulder Press",    repRangeMin: 6,  repRangeMax: 10, targetSets: 4, setType: "regular" as const },
+          { name: "Lat Pulldown",              repRangeMin: 6,  repRangeMax: 10, targetSets: 4, setType: "regular" as const },
+          { name: "Cable Lateral Raise",       repRangeMin: 15, repRangeMax: 20, targetSets: 3, setType: "myorep" as const },
+          { name: "Incline Dumbbell Press",    repRangeMin: 10, repRangeMax: 15, targetSets: 3, setType: "regular" as const },
+          { name: "Hammer Curl",               repRangeMin: 10, repRangeMax: 15, targetSets: 3, setType: "regular" as const },
+          { name: "Overhead Tricep Extension", repRangeMin: 10, repRangeMax: 15, targetSets: 3, setType: "regular" as const },
+        ],
+      },
+      {
+        name: "Lower B — Hip Dominant",
+        dayOfWeek: 5, // Friday
+        order: 3,
+        muscleGroups: ["hamstrings", "glutes", "quads", "calves"],
+        exercises: [
+          { name: "Romanian Deadlift",   repRangeMin: 6,  repRangeMax: 10, targetSets: 4, setType: "regular" as const },
+          { name: "Hip Thrust",          repRangeMin: 8,  repRangeMax: 12, targetSets: 4, setType: "regular" as const },
+          { name: "Hack Squat",          repRangeMin: 8,  repRangeMax: 12, targetSets: 3, setType: "regular" as const },
+          { name: "Seated Leg Curl",     repRangeMin: 10, repRangeMax: 15, targetSets: 3, setType: "myorep" as const },
+          { name: "Seated Calf Raise",   repRangeMin: 10, repRangeMax: 20, targetSets: 4, setType: "regular" as const },
+        ],
+      },
+    ];
+
+    const volumeTargets = [
+      { muscleGroup: "chest",       mev: 8,  mav: 14, mrv: 20 },
+      { muscleGroup: "back",        mev: 10, mav: 16, mrv: 22 },
+      { muscleGroup: "shoulders",   mev: 10, mav: 16, mrv: 22 },
+      { muscleGroup: "biceps",      mev: 8,  mav: 12, mrv: 18 },
+      { muscleGroup: "triceps",     mev: 8,  mav: 12, mrv: 18 },
+      { muscleGroup: "quads",       mev: 10, mav: 16, mrv: 22 },
+      { muscleGroup: "hamstrings",  mev: 8,  mav: 12, mrv: 18 },
+      { muscleGroup: "glutes",      mev: 8,  mav: 12, mrv: 18 },
+      { muscleGroup: "calves",      mev: 8,  mav: 12, mrv: 16 },
+    ];
+
+    const mesoId = await ctx.db.insert("mesocycles", {
+      userId: args.userId,
+      name: "Jeff Nippard Science-Based",
+      startDate: Date.now(),
+      weeks,
+      status: "active",
+      volumeTargets,
+    });
+
+    for (const def of sessionDefs) {
+      const resolvedExIds: any[] = [];
+      for (const exDef of def.exercises) {
+        const ex = await findEx(exDef.name);
+        if (ex) resolvedExIds.push({ id: ex._id, ...exDef });
+      }
+
+      const sessionId = await ctx.db.insert("sessions", {
+        mesocycleId: mesoId,
+        userId: args.userId,
+        dayOfWeek: def.dayOfWeek,
+        name: def.name,
+        exerciseIds: resolvedExIds.map((e) => e.id),
+        order: def.order,
+        muscleGroups: def.muscleGroups,
+      });
+
+      for (let i = 0; i < resolvedExIds.length; i++) {
+        const exDef = resolvedExIds[i];
+        await ctx.db.insert("sessionExercises", {
+          sessionId,
+          exerciseId: exDef.id,
+          order: i,
+          repRangeMin: exDef.repRangeMin,
+          repRangeMax: exDef.repRangeMax,
+          targetSets: exDef.targetSets,
+          setType: exDef.setType,
+        });
+      }
+    }
+
+    return mesoId;
+  },
+});
+
+/**
+ * Lean Beef Patty 5-day Glute & Physique split.
+ * Glutes & Hams · Upper Pull · Quads & Glutes · Upper Push · Full Legs
+ */
+export const createLeanBeefPattyTemplate = mutation({
+  args: {
+    userId: v.id("users"),
+    weeks: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const weeks = args.weeks ?? 5;
+
+    const findEx = async (name: string) => {
+      const all = await ctx.db.query("exercises").collect();
+      return all.find((e) => e.name.toLowerCase() === name.toLowerCase()) ?? null;
+    };
+
+    const sessionDefs = [
+      {
+        name: "Glutes & Hamstrings",
+        dayOfWeek: 1, // Monday
+        order: 0,
+        muscleGroups: ["glutes", "hamstrings", "calves"],
+        exercises: [
+          { name: "Hip Thrust",          repRangeMin: 8,  repRangeMax: 12, targetSets: 4, setType: "regular" as const },
+          { name: "Romanian Deadlift",   repRangeMin: 8,  repRangeMax: 12, targetSets: 4, setType: "regular" as const },
+          { name: "Leg Curl",            repRangeMin: 10, repRangeMax: 15, targetSets: 3, setType: "regular" as const },
+          { name: "Seated Leg Curl",     repRangeMin: 12, repRangeMax: 20, targetSets: 3, setType: "myorep" as const },
+          { name: "Standing Calf Raise", repRangeMin: 10, repRangeMax: 20, targetSets: 4, setType: "regular" as const },
+        ],
+      },
+      {
+        name: "Upper Pull",
+        dayOfWeek: 2, // Tuesday
+        order: 1,
+        muscleGroups: ["back", "biceps", "shoulders"],
+        exercises: [
+          { name: "Lat Pulldown",          repRangeMin: 8,  repRangeMax: 12, targetSets: 4, setType: "regular" as const },
+          { name: "Cable Row",             repRangeMin: 8,  repRangeMax: 12, targetSets: 4, setType: "regular" as const },
+          { name: "Cable Face Pull",       repRangeMin: 15, repRangeMax: 20, targetSets: 3, setType: "regular" as const },
+          { name: "Incline Dumbbell Curl", repRangeMin: 10, repRangeMax: 15, targetSets: 3, setType: "regular" as const },
+          { name: "Hammer Curl",           repRangeMin: 10, repRangeMax: 15, targetSets: 3, setType: "myorep" as const },
+        ],
+      },
+      {
+        name: "Quads & Glutes",
+        dayOfWeek: 4, // Thursday
+        order: 2,
+        muscleGroups: ["quads", "glutes", "calves"],
+        exercises: [
+          { name: "Leg Press",           repRangeMin: 8,  repRangeMax: 12, targetSets: 4, setType: "regular" as const },
+          { name: "Hack Squat",          repRangeMin: 8,  repRangeMax: 12, targetSets: 3, setType: "regular" as const },
+          { name: "Leg Extension",       repRangeMin: 12, repRangeMax: 20, targetSets: 3, setType: "myorep" as const },
+          { name: "Hip Thrust",          repRangeMin: 10, repRangeMax: 15, targetSets: 3, setType: "regular" as const },
+          { name: "Seated Calf Raise",   repRangeMin: 10, repRangeMax: 20, targetSets: 4, setType: "regular" as const },
+        ],
+      },
+      {
+        name: "Upper Push",
+        dayOfWeek: 5, // Friday
+        order: 3,
+        muscleGroups: ["chest", "shoulders", "triceps"],
+        exercises: [
+          { name: "Incline Dumbbell Press",    repRangeMin: 8,  repRangeMax: 12, targetSets: 4, setType: "regular" as const },
+          { name: "Machine Chest Press",        repRangeMin: 10, repRangeMax: 15, targetSets: 3, setType: "regular" as const },
+          { name: "Machine Shoulder Press",    repRangeMin: 8,  repRangeMax: 12, targetSets: 3, setType: "regular" as const },
+          { name: "Cable Lateral Raise",        repRangeMin: 15, repRangeMax: 20, targetSets: 3, setType: "myorep" as const },
+          { name: "Cable Tricep Pushdown",     repRangeMin: 12, repRangeMax: 20, targetSets: 3, setType: "myorep" as const },
+        ],
+      },
+      {
+        name: "Full Legs",
+        dayOfWeek: 6, // Saturday
+        order: 4,
+        muscleGroups: ["quads", "hamstrings", "glutes", "calves"],
+        exercises: [
+          { name: "Barbell Back Squat",  repRangeMin: 6,  repRangeMax: 10, targetSets: 4, setType: "regular" as const },
+          { name: "Romanian Deadlift",   repRangeMin: 8,  repRangeMax: 12, targetSets: 3, setType: "regular" as const },
+          { name: "Leg Extension",       repRangeMin: 12, repRangeMax: 20, targetSets: 3, setType: "myorep" as const },
+          { name: "Leg Curl",            repRangeMin: 10, repRangeMax: 15, targetSets: 3, setType: "regular" as const },
+          { name: "Standing Calf Raise", repRangeMin: 10, repRangeMax: 20, targetSets: 4, setType: "regular" as const },
+        ],
+      },
+    ];
+
+    const volumeTargets = [
+      { muscleGroup: "glutes",      mev: 12, mav: 20, mrv: 26 },
+      { muscleGroup: "hamstrings",  mev: 10, mav: 16, mrv: 22 },
+      { muscleGroup: "quads",       mev: 10, mav: 16, mrv: 22 },
+      { muscleGroup: "calves",      mev: 8,  mav: 14, mrv: 20 },
+      { muscleGroup: "back",        mev: 10, mav: 16, mrv: 22 },
+      { muscleGroup: "biceps",      mev: 8,  mav: 12, mrv: 18 },
+      { muscleGroup: "shoulders",   mev: 8,  mav: 14, mrv: 20 },
+      { muscleGroup: "chest",       mev: 8,  mav: 12, mrv: 18 },
+      { muscleGroup: "triceps",     mev: 6,  mav: 10, mrv: 16 },
+    ];
+
+    const mesoId = await ctx.db.insert("mesocycles", {
+      userId: args.userId,
+      name: "Lean Beef Patty Glute Build",
+      startDate: Date.now(),
+      weeks,
+      status: "active",
+      volumeTargets,
+    });
+
+    for (const def of sessionDefs) {
+      const resolvedExIds: any[] = [];
+      for (const exDef of def.exercises) {
+        const ex = await findEx(exDef.name);
+        if (ex) resolvedExIds.push({ id: ex._id, ...exDef });
+      }
+
+      const sessionId = await ctx.db.insert("sessions", {
+        mesocycleId: mesoId,
+        userId: args.userId,
+        dayOfWeek: def.dayOfWeek,
+        name: def.name,
+        exerciseIds: resolvedExIds.map((e) => e.id),
+        order: def.order,
+        muscleGroups: def.muscleGroups,
+      });
+
+      for (let i = 0; i < resolvedExIds.length; i++) {
+        const exDef = resolvedExIds[i];
+        await ctx.db.insert("sessionExercises", {
+          sessionId,
+          exerciseId: exDef.id,
+          order: i,
+          repRangeMin: exDef.repRangeMin,
+          repRangeMax: exDef.repRangeMax,
+          targetSets: exDef.targetSets,
+          setType: exDef.setType,
+        });
+      }
+    }
+
+    return mesoId;
+  },
+});

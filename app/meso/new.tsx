@@ -60,6 +60,33 @@ const TEMPLATES = [
     description: "Balanced upper/lower split. Ideal if you're building your training base.",
     weeks: 5,
   },
+  {
+    id: "cbum",
+    name: "CBum Classic Physique",
+    subtitle: "5 days · Chest/Tri · Back/Bi · Shoulders/Arms · Legs · Arms Pump",
+    tag: "Classic Physique",
+    tagColor: "#C9A84C",
+    description: "Chris Bumstead's 5-day split. High chest and arm volume with a dedicated legs day.",
+    weeks: 5,
+  },
+  {
+    id: "jeff_nippard",
+    name: "Jeff Nippard Science-Based",
+    subtitle: "4 days · Upper Horizontal · Lower Quad · Upper Vertical · Lower Hinge",
+    tag: "Evidence-Based",
+    tagColor: "#AF52DE",
+    description: "Science-based upper/lower split emphasising compound movements and mechanical tension.",
+    weeks: 5,
+  },
+  {
+    id: "lean_beef_patty",
+    name: "Lean Beef Patty Glute Build",
+    subtitle: "5 days · Glutes/Hams · Upper Pull · Quads/Glutes · Upper Push · Full Legs",
+    tag: "Glute Focus",
+    tagColor: "#FF2D55",
+    description: "Glute-dominant 5-day program with twice-weekly hip thrust and high posterior chain volume.",
+    weeks: 5,
+  },
 ];
 
 // ---- Step 0: Template picker ----
@@ -466,6 +493,9 @@ export default function MesoNew() {
   const createLaxman = useMutation(api.templates.createLaxmanTemplate);
   const createPPL = useMutation(api.templates.createPPLTemplate);
   const createUpperLower = useMutation(api.templates.createUpperLowerTemplate);
+  const createCBum = useMutation(api.templates.createCBumTemplate);
+  const createJeffNippard = useMutation(api.templates.createJeffNippardTemplate);
+  const createLeanBeefPatty = useMutation(api.templates.createLeanBeefPattyTemplate);
 
   // -1 = template picker, 0–3 = custom wizard steps
   const [step, setStep] = useState(-1);
@@ -484,6 +514,9 @@ export default function MesoNew() {
       if (templateId === "laxman") await createLaxman({ userId });
       else if (templateId === "ppl") await createPPL({ userId });
       else if (templateId === "upper_lower") await createUpperLower({ userId });
+      else if (templateId === "cbum") await createCBum({ userId });
+      else if (templateId === "jeff_nippard") await createJeffNippard({ userId });
+      else if (templateId === "lean_beef_patty") await createLeanBeefPatty({ userId });
       notificationSuccess();
       router.back();
     } catch {
