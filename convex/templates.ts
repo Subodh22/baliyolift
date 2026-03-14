@@ -205,44 +205,55 @@ export const createLaxmanTemplate = mutation({
           // SUPER SET: EZ Bar Curl + Hammer Curl — 3x20
           { name: "EZ Bar Curl",                      repRangeMin: 20, repRangeMax: 20, targetSets: 3, setType: "regular" as const },
           { name: "Hammer Curl",                      repRangeMin: 20, repRangeMax: 20, targetSets: 3, setType: "regular" as const },
-        ],
-      },
-      {
-        name: "Back",
-        dayOfWeek: 2, // Tuesday
-        order: 1,
-        muscleGroups: ["back", "shoulders"],
-        exercises: [
-          // Reverse Grip Pull Down — 6x15
-          { name: "Reverse Grip Pulldown",            repRangeMin: 15, repRangeMax: 15, targetSets: 6, setType: "regular" as const },
-          // V Bar Pull Down — 3x30 + drop 10+10+10
-          { name: "V Bar Pulldown",                   repRangeMin: 10, repRangeMax: 30, targetSets: 3, setType: "myorep" as const },
-          // DB Row — 2x20
-          { name: "Dumbbell Row",                     repRangeMin: 20, repRangeMax: 20, targetSets: 2, setType: "regular" as const },
-          // Wide Grip Cable Row — 3x8-10-12 all drop sets
-          { name: "Seated Cable Row Wide Grip",       repRangeMin: 8,  repRangeMax: 12, targetSets: 3, setType: "myorep" as const },
-          // SUPER SET: Face Pull + Reverse Pec Deck — 4x15
+          // Rear delt work (dispersed from old Back session) — 4x15
           { name: "Cable Face Pull",                  repRangeMin: 15, repRangeMax: 15, targetSets: 4, setType: "regular" as const },
           { name: "Reverse Pec Deck",                 repRangeMin: 15, repRangeMax: 15, targetSets: 4, setType: "regular" as const },
         ],
       },
       {
-        name: "Triceps & Back",
-        dayOfWeek: 4, // Thursday
-        order: 2,
-        muscleGroups: ["triceps", "back"],
+        name: "Chest & Triceps",
+        dayOfWeek: 2, // Tuesday
+        order: 1,
+        muscleGroups: ["chest", "triceps"],
         exercises: [
-          // Straight Bar Push Down — 6x15
-          { name: "Cable Pushdown",                   repRangeMin: 15, repRangeMax: 15, targetSets: 6, setType: "regular" as const },
+          // Pec Fly — 3x15
+          { name: "Pec Deck Machine",                 repRangeMin: 15, repRangeMax: 15, targetSets: 3, setType: "regular" as const },
+          // Incline Bench Press — 5 sets pyramid: 12-10-8-4-15
+          { name: "Incline Barbell Press",            repRangeMin: 4,  repRangeMax: 15, targetSets: 5, setType: "regular" as const },
+          // Push Up — 2x20 (bodyweight)
+          { name: "Push Up",                          repRangeMin: 20, repRangeMax: 20, targetSets: 2, setType: "regular" as const },
+          // Machine Chest Press — 3x30 drop set
+          { name: "Machine Chest Press",              repRangeMin: 15, repRangeMax: 30, targetSets: 3, setType: "myorep" as const },
+          // Dips — 4x15
+          { name: "Dips",                             repRangeMin: 15, repRangeMax: 15, targetSets: 4, setType: "regular" as const },
+          // Cross Cable Push Down (triceps) — 3x20
+          { name: "Cable Pushdown",                   repRangeMin: 20, repRangeMax: 20, targetSets: 3, setType: "regular" as const },
+          // Additional triceps from old Triceps & Back session
           // Cable Kick Back — 7x10
           { name: "Cable Kickback",                   repRangeMin: 10, repRangeMax: 10, targetSets: 7, setType: "regular" as const },
           // Cable Overhead Extension — 4x12
           { name: "Cable Overhead Tricep Extension",  repRangeMin: 12, repRangeMax: 12, targetSets: 4, setType: "regular" as const },
-          // Reverse Grip Push Down — 3x8-10-12 all drop sets
+          // Reverse Grip Push Down — 3x8-12 drop sets
           { name: "Reverse Grip Pushdown",            repRangeMin: 8,  repRangeMax: 12, targetSets: 3, setType: "myorep" as const },
-          // Deadlift — 3x30 + drop 10+10+10
-          { name: "Deadlift",                         repRangeMin: 10, repRangeMax: 30, targetSets: 3, setType: "myorep" as const },
-          // Chest Supported Barbell Row — 6x15
+        ],
+      },
+      {
+        name: "Back",
+        dayOfWeek: 4, // Thursday
+        order: 2,
+        muscleGroups: ["back", "shoulders"],
+        exercises: [
+          // Reverse Grip Pull Down — 6x15 (from old Back session)
+          { name: "Reverse Grip Pulldown",            repRangeMin: 15, repRangeMax: 15, targetSets: 6, setType: "regular" as const },
+          // V Bar Pull Down — 3x30 + drop 10+10+10 (from old Back session)
+          { name: "V Bar Pulldown",                   repRangeMin: 10, repRangeMax: 30, targetSets: 3, setType: "myorep" as const },
+          // DB Row — 2x20 (from old Back session)
+          { name: "Dumbbell Row",                     repRangeMin: 20, repRangeMax: 20, targetSets: 2, setType: "regular" as const },
+          // Wide Grip Cable Row — 3x8-12 drop sets (from old Back session)
+          { name: "Seated Cable Row Wide Grip",       repRangeMin: 8,  repRangeMax: 12, targetSets: 3, setType: "myorep" as const },
+          // Deadlift — 3 sets (from old Triceps & Back session)
+          { name: "Deadlift",                         repRangeMin: 6,  repRangeMax: 10, targetSets: 3, setType: "regular" as const },
+          // Chest Supported Row — 6x15 (from old Triceps & Back session)
           { name: "Chest-Supported Row",              repRangeMin: 15, repRangeMax: 15, targetSets: 6, setType: "regular" as const },
         ],
       },
@@ -272,6 +283,7 @@ export const createLaxmanTemplate = mutation({
       { muscleGroup: "shoulders",  mev: 16, mav: 24, mrv: 30 },
       { muscleGroup: "biceps",     mev: 10, mav: 16, mrv: 20 },
       { muscleGroup: "forearms",   mev: 4,  mav: 8,  mrv: 12 },
+      { muscleGroup: "chest",      mev: 10, mav: 16, mrv: 22 },
       { muscleGroup: "back",       mev: 14, mav: 22, mrv: 28 },
       { muscleGroup: "triceps",    mev: 12, mav: 20, mrv: 26 },
       { muscleGroup: "quads",      mev: 9,  mav: 15, mrv: 20 },

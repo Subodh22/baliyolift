@@ -93,6 +93,14 @@ const EXERCISE_SEED_DATA: ExerciseSeed[] = [
       "Lean forward slightly on parallel bars and lower your body until upper arms are parallel to the floor. Press back up through the chest rather than the triceps.",
   },
   {
+    name: "Push Up",
+    muscleGroup: "chest",
+    equipment: "bodyweight",
+    sfr: "medium",
+    instructions:
+      "Start in a high plank with hands slightly wider than shoulder-width. Lower your chest to the floor keeping your body in a straight line, then press back up explosively.",
+  },
+  {
     name: "Incline Cable Fly",
     muscleGroup: "chest",
     equipment: "cable",
