@@ -50,16 +50,16 @@ function calcBf(
 
 function bfCategory(sex: "male" | "female", bf: number): { label: string; color: string } {
   if (sex === "male") {
-    if (bf < 6) return { label: "Essential", color: "#5AC8FA" };
-    if (bf < 14) return { label: "Athletic", color: "#34C759" };
-    if (bf < 18) return { label: "Fitness", color: "#FFD60A" };
-    if (bf < 25) return { label: "Average", color: "#FF9F0A" };
+    if (bf < 6)  return { label: "Essential", color: "#5AC8FA" };
+    if (bf < 14) return { label: "Athletic",  color: "#34C759" };
+    if (bf < 18) return { label: "Fitness",   color: "#FFD60A" };
+    if (bf < 25) return { label: "Average",   color: "#FF9F0A" };
     return { label: "Obese", color: "#FF3B30" };
   } else {
     if (bf < 14) return { label: "Essential", color: "#5AC8FA" };
-    if (bf < 21) return { label: "Athletic", color: "#34C759" };
-    if (bf < 25) return { label: "Fitness", color: "#FFD60A" };
-    if (bf < 32) return { label: "Average", color: "#FF9F0A" };
+    if (bf < 21) return { label: "Athletic",  color: "#34C759" };
+    if (bf < 25) return { label: "Fitness",   color: "#FFD60A" };
+    if (bf < 32) return { label: "Average",   color: "#FF9F0A" };
     return { label: "Obese", color: "#FF3B30" };
   }
 }
@@ -73,33 +73,22 @@ function estimateMonths(currentBf: number, targetBf: number, weeklyGoal: number)
   return `~${months} months`;
 }
 
-// ── Reusable input ───────────────────────────────────────────────────────────
+// ── Reusable numeric input ────────────────────────────────────────────────────
 function NumInput({
-  label,
-  hint,
-  value,
-  onChange,
-  colors,
-  typography,
-  unit,
+  label, hint, value, onChange, colors, typography, unit,
 }: {
-  label: string;
-  hint?: string;
-  value: string;
-  onChange: (v: string) => void;
-  colors: any;
-  typography: any;
-  unit?: string;
+  label: string; hint?: string; value: string; onChange: (v: string) => void;
+  colors: any; typography: any; unit?: string;
 }) {
   return (
     <View style={{ marginBottom: 20 }}>
-      <Text style={[typography.subheadline, { color: colors.label, marginBottom: 6, fontWeight: "600" }]}>
+      <Text style={{ fontSize: 10, letterSpacing: 1.5, textTransform: "uppercase", color: colors.labelSecondary, marginBottom: 8 }}>
         {label}
       </Text>
       {hint && (
-        <Text style={[typography.caption1, { color: colors.labelSecondary, marginBottom: 8 }]}>{hint}</Text>
+        <Text style={[typography.caption1, { color: colors.labelTertiary, marginBottom: 8 }]}>{hint}</Text>
       )}
-      <View style={[inputStyles.row, { backgroundColor: colors.backgroundSecondary, borderColor: colors.separator }]}>
+      <View style={[inputStyles.row, { borderColor: colors.separator }]}>
         <TextInput
           value={value}
           onChangeText={onChange}
@@ -109,7 +98,7 @@ function NumInput({
           placeholder="0"
         />
         {unit && (
-          <Text style={[typography.body, { color: colors.labelSecondary, paddingRight: 14 }]}>{unit}</Text>
+          <Text style={{ color: colors.labelSecondary, fontSize: 11, letterSpacing: 1, paddingRight: 14 }}>{unit}</Text>
         )}
       </View>
     </View>
@@ -117,18 +106,8 @@ function NumInput({
 }
 
 const inputStyles = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  field: {
-    flex: 1,
-    fontSize: 17,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-  },
+  row:   { flexDirection: "row", alignItems: "center", borderRadius: 4, borderWidth: 1 },
+  field: { flex: 1, fontSize: 17, paddingHorizontal: 14, paddingVertical: 14 },
 });
 
 // ── BF Zone Bar ──────────────────────────────────────────────────────────────
@@ -137,11 +116,11 @@ function BfZoneBar({ sex, current, target, colors, typography }: any) {
   const maxBf = 40;
   const range = maxBf - minBf;
   const currentPct = Math.min(Math.max((current - minBf) / range, 0), 1);
-  const targetPct = Math.min(Math.max((target - minBf) / range, 0), 1);
+  const targetPct  = Math.min(Math.max((target  - minBf) / range, 0), 1);
 
   const zones = sex === "male"
     ? [
-        { end: 6, color: "#5AC8FA", label: "Ess." },
+        { end: 6,  color: "#5AC8FA", label: "Ess." },
         { end: 14, color: "#34C759", label: "Athletic" },
         { end: 18, color: "#FFD60A", label: "Fitness" },
         { end: 25, color: "#FF9F0A", label: "Avg" },
@@ -157,29 +136,27 @@ function BfZoneBar({ sex, current, target, colors, typography }: any) {
 
   return (
     <View style={{ marginVertical: 8 }}>
-      {/* Zone bar */}
-      <View style={{ height: 12, borderRadius: 6, flexDirection: "row", overflow: "hidden", marginBottom: 24 }}>
+      {/* Flat zone bar */}
+      <View style={{ height: 10, flexDirection: "row", overflow: "hidden", marginBottom: 24 }}>
         {zones.map((z, i) => {
           const start = i === 0 ? minBf : zones[i - 1].end;
           return (
-            <View key={i} style={{ flex: (z.end - start) / range, backgroundColor: z.color, opacity: 0.85 }} />
+            <View key={i} style={{ flex: (z.end - start) / range, backgroundColor: z.color, opacity: 0.8 }} />
           );
         })}
       </View>
 
       {/* Markers */}
       <View style={{ position: "relative", height: 40 }}>
-        {/* Target marker */}
         <View style={[markerStyles.flag, { left: `${targetPct * 100}%` as any }]}>
           <View style={[markerStyles.flagLine, { backgroundColor: colors.accent }]} />
-          <Text style={[typography.caption2, { color: colors.accent, fontWeight: "700", marginTop: 2 }]}>
+          <Text style={{ fontSize: 10, color: colors.accent, fontWeight: "700", marginTop: 2, letterSpacing: 0.5 }}>
             Goal {target}%
           </Text>
         </View>
-        {/* Current marker */}
         <View style={[markerStyles.flag, { left: `${currentPct * 100}%` as any }]}>
           <View style={[markerStyles.flagLine, { backgroundColor: colors.label }]} />
-          <Text style={[typography.caption2, { color: colors.label, fontWeight: "700", marginTop: 2 }]}>
+          <Text style={{ fontSize: 10, color: colors.label, fontWeight: "700", marginTop: 2 }}>
             {current}%
           </Text>
         </View>
@@ -189,16 +166,50 @@ function BfZoneBar({ sex, current, target, colors, typography }: any) {
 }
 
 const markerStyles = StyleSheet.create({
-  flag: {
-    position: "absolute",
-    alignItems: "center",
-    transform: [{ translateX: -16 }],
-  },
-  flagLine: {
-    width: 2,
-    height: 16,
-    borderRadius: 1,
-  },
+  flag:     { position: "absolute", alignItems: "center", transform: [{ translateX: -16 }] },
+  flagLine: { width: 1, height: 16 },
+});
+
+// ── Segmented selector ────────────────────────────────────────────────────────
+function SegmentControl({
+  options, value, onChange, colors,
+}: {
+  options: { label: string; value: any }[];
+  value: any;
+  onChange: (v: any) => void;
+  colors: any;
+}) {
+  return (
+    <View style={{ flexDirection: "row", gap: 8, marginBottom: 24 }}>
+      {options.map((opt) => {
+        const active = value === opt.value;
+        return (
+          <TouchableOpacity
+            key={String(opt.value)}
+            onPress={() => onChange(opt.value)}
+            activeOpacity={0.8}
+            style={[segStyles.btn, {
+              borderColor: active ? colors.accent : colors.separator,
+            }]}
+          >
+            <Text style={{
+              fontSize: 11,
+              letterSpacing: 1.5,
+              textTransform: "uppercase",
+              color: active ? colors.accent : colors.labelSecondary,
+              fontWeight: active ? "700" : "400",
+            }}>
+              {opt.label}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+}
+
+const segStyles = StyleSheet.create({
+  btn: { flex: 1, alignItems: "center", paddingVertical: 13, borderRadius: 4, borderWidth: 1 },
 });
 
 // ── Main screen ──────────────────────────────────────────────────────────────
@@ -209,41 +220,47 @@ export default function OnboardingScreen() {
   const { userId } = useCurrentUser();
   const saveProfile = useMutation(api.userProfile.saveProfile);
 
-  const [step, setStep] = useState(0);
+  const [step, setSt] = useState(0);
   const [saving, setSaving] = useState(false);
 
-  // Step 1 state
-  const [sex, setSex] = useState<"male" | "female">("male");
-  const [age, setAge] = useState("");
+  const [sex, setSex]       = useState<"male" | "female">("male");
+  const [age, setAge]       = useState("");
   const [height, setHeight] = useState("");
   const [weight, setWeight] = useState("");
 
-  // Step 2 state
-  const [manualMode, setManualMode] = useState(false);
-  const [manualBfInput, setManualBfInput] = useState("");
-  const [neck, setNeck] = useState("");
+  const [manualMode, setManualMode]         = useState(false);
+  const [manualBfInput, setManualBfInput]   = useState("");
+  const [neck, setNeck]   = useState("");
   const [waist, setWaist] = useState("");
-  const [hip, setHip] = useState("");
+  const [hip, setHip]     = useState("");
 
-  // Step 3 state
-  const [targetBf, setTargetBf] = useState<number | null>(null);
+  const [targetBf, setTargetBf]     = useState<number | null>(null);
   const [weeklyGoal, setWeeklyGoal] = useState(4);
 
   const formulaBf = calcBf(
     sex,
     parseFloat(height) || 0,
-    parseFloat(waist) || 0,
-    parseFloat(neck) || 0,
+    parseFloat(waist)  || 0,
+    parseFloat(neck)   || 0,
     sex === "female" ? (parseFloat(hip) || 0) : undefined
   );
-  const manualBf = manualBfInput ? parseFloat(manualBfInput) : null;
-  const currentBf = manualMode ? (manualBf && manualBf > 2 && manualBf < 60 ? Math.round(manualBf * 10) / 10 : null) : formulaBf;
+  const manualBf  = manualBfInput ? parseFloat(manualBfInput) : null;
+  const currentBf = manualMode
+    ? (manualBf && manualBf > 2 && manualBf < 60 ? Math.round(manualBf * 10) / 10 : null)
+    : formulaBf;
 
   const step1Valid = age && height && weight;
   const step2Valid = manualMode
     ? currentBf !== null
     : neck && waist && (sex === "male" || hip) && currentBf !== null;
   const step3Valid = targetBf !== null;
+
+  const canContinue = () => {
+    if (step === 1) return !!step1Valid;
+    if (step === 2) return !!step2Valid;
+    if (step === 3) return !!step3Valid;
+    return true;
+  };
 
   const handleSave = async () => {
     if (!userId || !currentBf || targetBf === null) return;
@@ -255,9 +272,9 @@ export default function OnboardingScreen() {
         age: parseInt(age),
         heightCm: parseFloat(height),
         weightKg: parseFloat(weight),
-        neckCm: manualMode ? undefined : parseFloat(neck),
+        neckCm:  manualMode ? undefined : parseFloat(neck),
         waistCm: manualMode ? undefined : parseFloat(waist),
-        hipCm: (!manualMode && sex === "female") ? parseFloat(hip) : undefined,
+        hipCm:   (!manualMode && sex === "female") ? parseFloat(hip) : undefined,
         currentBf,
         targetBf,
         weeklyGoal,
@@ -268,36 +285,27 @@ export default function OnboardingScreen() {
     }
   };
 
-  const bg = colors.background;
-  const card = colors.backgroundSecondary;
-
-  // Target presets by sex
   const targetPresets = sex === "male"
     ? [{ label: "Athletic", value: 12 }, { label: "Fitness", value: 16 }, { label: "Healthy", value: 20 }]
     : [{ label: "Athletic", value: 18 }, { label: "Fitness", value: 22 }, { label: "Healthy", value: 26 }];
 
+  const STEP_COUNT = 4;
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: bg }} edges={["top", "bottom"]}>
-      {/* Progress dots */}
-      <View style={styles.dots}>
-        {[0, 1, 2, 3].map((i) => (
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={["top", "bottom"]}>
+      {/* Progress bar */}
+      <View style={styles.progressBar}>
+        {Array.from({ length: STEP_COUNT }).map((_, i) => (
           <View
             key={i}
-            style={[
-              styles.dot,
-              {
-                backgroundColor: i === step ? colors.accent : colors.fillSecondary,
-                width: i === step ? 20 : 8,
-              },
-            ]}
+            style={[styles.progressSegment, {
+              backgroundColor: i <= step ? colors.accent : colors.fillSecondary,
+            }]}
           />
         ))}
       </View>
 
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
@@ -305,23 +313,27 @@ export default function OnboardingScreen() {
         >
           {/* ── Step 0: Welcome ── */}
           {step === 0 && (
-            <Animated.View entering={FadeInRight.springify()} style={{ flex: 1, alignItems: "center", paddingTop: 40 }}>
-              <Text style={[typography.largeTitle, { color: colors.label, textAlign: "center", marginBottom: 16 }]}>
+            <Animated.View entering={FadeInRight.springify()} style={{ paddingTop: 20 }}>
+              <Text style={[typography.largeTitle, { color: colors.label, marginBottom: 8 }]}>
                 Set Your Goal
               </Text>
-              <Text style={[typography.body, { color: colors.labelSecondary, textAlign: "center", lineHeight: 24, paddingHorizontal: 20, marginBottom: 40 }]}>
+              <Text style={[typography.body, { color: colors.labelSecondary, lineHeight: 24, marginBottom: 40 }]}>
                 We'll calculate your body fat percentage and build a personalised roadmap to your target physique.
               </Text>
 
-              <View style={[styles.card, { backgroundColor: card, width: "100%" }]}>
+              {/* Feature list */}
+              <View style={[styles.card, { borderColor: colors.separator }]}>
                 {[
                   { icon: "📐", text: "Calculate your body fat with 3 measurements" },
                   { icon: "🎯", text: "Set a realistic target and timeline" },
                   { icon: "📈", text: "Track your progress every workout" },
                 ].map((item, i) => (
-                  <View key={i} style={[styles.featureRow, i > 0 && { borderTopWidth: 0.5, borderTopColor: colors.separator }]}>
-                    <Text style={{ fontSize: 24 }}>{item.icon}</Text>
-                    <Text style={[typography.subheadline, { color: colors.label, flex: 1 }]}>{item.text}</Text>
+                  <View
+                    key={i}
+                    style={[styles.featureRow, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.separator }]}
+                  >
+                    <Text style={{ fontSize: 22 }}>{item.icon}</Text>
+                    <Text style={[typography.subheadline, { color: colors.labelSecondary, flex: 1 }]}>{item.text}</Text>
                   </View>
                 ))}
               </View>
@@ -336,55 +348,34 @@ export default function OnboardingScreen() {
                 Used to calculate your body fat accurately.
               </Text>
 
-              {/* Sex toggle */}
-              <Text style={[typography.subheadline, { color: colors.label, marginBottom: 10, fontWeight: "600" }]}>Sex</Text>
-              <View style={[styles.segmentRow, { backgroundColor: colors.backgroundSecondary, marginBottom: 24 }]}>
-                {(["male", "female"] as const).map((s) => (
-                  <TouchableOpacity
-                    key={s}
-                    onPress={() => setSex(s)}
-                    style={[
-                      styles.segment,
-                      sex === s && { backgroundColor: colors.accent },
-                    ]}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={[typography.subheadline, { color: sex === s ? "#fff" : colors.label, fontWeight: "600" }]}>
-                      {s === "male" ? "Male" : "Female"}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+              <Text style={styles.sectionLabel(colors)}>Sex</Text>
+              <SegmentControl
+                options={[{ label: "Male", value: "male" }, { label: "Female", value: "female" }]}
+                value={sex}
+                onChange={setSex}
+                colors={colors}
+              />
 
-              <NumInput label="Age" value={age} onChange={setAge} colors={colors} typography={typography} unit="yrs" />
-              <NumInput label="Height" value={height} onChange={setHeight} colors={colors} typography={typography} unit="cm" />
-              <NumInput label="Weight" value={weight} onChange={setWeight} colors={colors} typography={typography} unit="kg" />
+              <NumInput label="Age"    value={age}    onChange={setAge}    colors={colors} typography={typography} unit="yrs" />
+              <NumInput label="Height" value={height} onChange={setHeight} colors={colors} typography={typography} unit="cm"  />
+              <NumInput label="Weight" value={weight} onChange={setWeight} colors={colors} typography={typography} unit="kg"  />
             </Animated.View>
           )}
 
-          {/* ── Step 2: Measurements ── */}
+          {/* ── Step 2: Body Fat ── */}
           {step === 2 && (
             <Animated.View entering={FadeInRight.springify()}>
               <Text style={[typography.largeTitle, { color: colors.label, marginBottom: 6 }]}>Body Fat</Text>
-              <Text style={[typography.body, { color: colors.labelSecondary, marginBottom: 20 }]}>
+              <Text style={[typography.body, { color: colors.labelSecondary, marginBottom: 24 }]}>
                 Use a soft tape measure. Breathe normally — don't suck in.
               </Text>
 
-              {/* Mode toggle */}
-              <View style={[styles.segmentRow, { backgroundColor: card, marginBottom: 24 }]}>
-                {(["calculate", "manual"] as const).map((m) => (
-                  <TouchableOpacity
-                    key={m}
-                    onPress={() => setManualMode(m === "manual")}
-                    style={[styles.segment, manualMode === (m === "manual") && { backgroundColor: colors.accent }]}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={[typography.subheadline, { color: manualMode === (m === "manual") ? "#fff" : colors.label, fontWeight: "600" }]}>
-                      {m === "calculate" ? "Calculate" : "I know mine"}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+              <SegmentControl
+                options={[{ label: "Calculate", value: "calculate" }, { label: "I know mine", value: "manual" }]}
+                value={manualMode ? "manual" : "calculate"}
+                onChange={(v: string) => setManualMode(v === "manual")}
+                colors={colors}
+              />
 
               {manualMode ? (
                 <NumInput
@@ -398,53 +389,28 @@ export default function OnboardingScreen() {
                 />
               ) : (
                 <>
-                  <NumInput
-                    label="Neck"
-                    hint="Just below the adam's apple, perpendicular to neck axis"
-                    value={neck}
-                    onChange={setNeck}
-                    colors={colors}
-                    typography={typography}
-                    unit="cm"
-                  />
-                  <NumInput
-                    label="Waist"
-                    hint={sex === "male" ? "At the navel (belly button level)" : "At the narrowest point"}
-                    value={waist}
-                    onChange={setWaist}
-                    colors={colors}
-                    typography={typography}
-                    unit="cm"
-                  />
+                  <NumInput label="Neck"  hint="Just below the adam's apple, perpendicular to neck axis" value={neck}  onChange={setNeck}  colors={colors} typography={typography} unit="cm" />
+                  <NumInput label="Waist" hint={sex === "male" ? "At the navel (belly button level)" : "At the narrowest point"} value={waist} onChange={setWaist} colors={colors} typography={typography} unit="cm" />
                   {sex === "female" && (
-                    <NumInput
-                      label="Hips"
-                      hint="At the widest point around the buttocks"
-                      value={hip}
-                      onChange={setHip}
-                      colors={colors}
-                      typography={typography}
-                      unit="cm"
-                    />
+                    <NumInput label="Hips" hint="At the widest point around the buttocks" value={hip} onChange={setHip} colors={colors} typography={typography} unit="cm" />
                   )}
                 </>
               )}
 
-              {/* Live BF% preview */}
               {currentBf !== null && (
                 <Animated.View
                   entering={FadeInUp.springify()}
-                  style={[styles.card, { backgroundColor: card, alignItems: "center", marginTop: 8 }]}
+                  style={[styles.card, { borderColor: colors.separator, alignItems: "center", marginTop: 8 }]}
                 >
-                  <Text style={[typography.caption1, { color: colors.labelSecondary, marginBottom: 4 }]}>
-                    {manualMode ? "YOUR BODY FAT" : "ESTIMATED BODY FAT ±3%"}
+                  <Text style={{ fontSize: 10, color: colors.labelSecondary, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8 }}>
+                    {manualMode ? "Your Body Fat" : "Estimated Body Fat ±3%"}
                   </Text>
                   <Text style={{ fontSize: 64, fontWeight: "800", color: bfCategory(sex, currentBf).color }}>
                     {currentBf}%
                   </Text>
-                  <View style={[styles.badge, { backgroundColor: bfCategory(sex, currentBf).color + "22" }]}>
-                    <Text style={[typography.caption1, { color: bfCategory(sex, currentBf).color, fontWeight: "700" }]}>
-                      {bfCategory(sex, currentBf).label}
+                  <View style={[styles.badge, { borderColor: bfCategory(sex, currentBf).color }]}>
+                    <Text style={{ fontSize: 10, color: bfCategory(sex, currentBf).color, fontWeight: "700", letterSpacing: 1 }}>
+                      {bfCategory(sex, currentBf).label.toUpperCase()}
                     </Text>
                   </View>
                 </Animated.View>
@@ -460,70 +426,50 @@ export default function OnboardingScreen() {
                 You're at {currentBf}% — where do you want to be?
               </Text>
 
-              {/* Target presets */}
-              <Text style={[typography.subheadline, { color: colors.label, fontWeight: "600", marginBottom: 12 }]}>
-                Target body fat
-              </Text>
-              <View style={{ gap: 10, marginBottom: 28 }}>
+              <Text style={styles.sectionLabel(colors)}>Target body fat</Text>
+              <View style={{ gap: 8, marginBottom: 28 }}>
                 {targetPresets.map((p) => {
-                  const cat = bfCategory(sex, p.value);
+                  const cat      = bfCategory(sex, p.value);
                   const selected = targetBf === p.value;
                   return (
                     <TouchableOpacity
                       key={p.value}
                       onPress={() => setTargetBf(p.value)}
-                      style={[
-                        styles.goalRow,
-                        {
-                          backgroundColor: selected ? colors.accent + "18" : card,
-                          borderColor: selected ? colors.accent : "transparent",
-                          borderWidth: 1.5,
-                        },
-                      ]}
+                      style={[styles.goalRow, {
+                        borderColor: selected ? colors.accent : colors.separator,
+                      }]}
                       activeOpacity={0.8}
                     >
                       <View>
-                        <Text style={[typography.headline, { color: colors.label }]}>{p.label}</Text>
-                        <Text style={[typography.caption1, { color: colors.labelSecondary }]}>
+                        <Text style={[typography.headline, { color: selected ? colors.accent : colors.label }]}>
+                          {p.label}
+                        </Text>
+                        <Text style={{ fontSize: 11, color: colors.labelSecondary, marginTop: 2 }}>
                           {p.value}% body fat
                         </Text>
                       </View>
-                      <View style={[styles.badge, { backgroundColor: cat.color + "22" }]}>
-                        <Text style={[typography.caption1, { color: cat.color, fontWeight: "700" }]}>{cat.label}</Text>
-                      </View>
+                      <Text style={{ fontSize: 10, color: cat.color, letterSpacing: 1, textTransform: "uppercase", fontWeight: "700" }}>
+                        {cat.label}
+                      </Text>
                     </TouchableOpacity>
                   );
                 })}
               </View>
 
-              {/* Weekly commitment */}
-              <Text style={[typography.subheadline, { color: colors.label, fontWeight: "600", marginBottom: 12 }]}>
-                Workouts per week
-              </Text>
-              <View style={[styles.segmentRow, { backgroundColor: card, marginBottom: 28 }]}>
-                {WEEKLY_OPTIONS.map((n) => (
-                  <TouchableOpacity
-                    key={n}
-                    onPress={() => setWeeklyGoal(n)}
-                    style={[styles.segment, weeklyGoal === n && { backgroundColor: colors.accent }]}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={[typography.headline, { color: weeklyGoal === n ? "#fff" : colors.label, fontWeight: "700" }]}>
-                      {n}×
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+              <Text style={styles.sectionLabel(colors)}>Workouts per week</Text>
+              <SegmentControl
+                options={WEEKLY_OPTIONS.map((n) => ({ label: `${n}×`, value: n }))}
+                value={weeklyGoal}
+                onChange={setWeeklyGoal}
+                colors={colors}
+              />
 
-              {/* Journey preview */}
               {targetBf !== null && (
                 <Animated.View
                   entering={FadeInUp.springify()}
-                  style={[styles.card, { backgroundColor: card }]}
+                  style={[styles.card, { borderColor: colors.separator }]}
                 >
-                  <Text style={[typography.headline, { color: colors.label, marginBottom: 16 }]}>
-                    Your Journey
-                  </Text>
+                  <Text style={styles.sectionLabel(colors)}>Your Journey</Text>
                   <BfZoneBar
                     sex={sex}
                     current={currentBf}
@@ -532,8 +478,10 @@ export default function OnboardingScreen() {
                     typography={typography}
                   />
                   <View style={[styles.timeRow, { borderTopColor: colors.separator }]}>
-                    <Text style={[typography.subheadline, { color: colors.labelSecondary }]}>Estimated time</Text>
-                    <Text style={[typography.headline, { color: colors.accent, fontWeight: "700" }]}>
+                    <Text style={{ fontSize: 10, color: colors.labelSecondary, letterSpacing: 1.2, textTransform: "uppercase" }}>
+                      Estimated time
+                    </Text>
+                    <Text style={{ fontSize: 14, color: colors.accent, fontWeight: "700", letterSpacing: 0.5 }}>
                       {estimateMonths(currentBf, targetBf, weeklyGoal)}
                     </Text>
                   </View>
@@ -543,46 +491,32 @@ export default function OnboardingScreen() {
           )}
         </ScrollView>
 
-        {/* Bottom CTA */}
+        {/* Footer */}
         <View style={[styles.footer, { borderTopColor: colors.separator }]}>
           {step > 0 && (
             <TouchableOpacity
-              onPress={() => setStep(step - 1)}
-              style={[styles.backBtn, { backgroundColor: colors.fillSecondary }]}
+              onPress={() => setSt(step - 1)}
+              style={[styles.backBtn, { borderColor: colors.separator }]}
             >
-              <Text style={[typography.body, { color: colors.label, fontWeight: "600" }]}>Back</Text>
+              <Text style={{ fontSize: 11, letterSpacing: 2, textTransform: "uppercase", color: colors.labelSecondary }}>
+                Back
+              </Text>
             </TouchableOpacity>
           )}
 
           <TouchableOpacity
-            onPress={() => {
-              if (step === 3) handleSave();
-              else setStep(step + 1);
-            }}
-            disabled={
-              (step === 1 && !step1Valid) ||
-              (step === 2 && !step2Valid) ||
-              (step === 3 && !step3Valid) ||
-              saving
-            }
-            style={[
-              styles.nextBtn,
-              {
-                backgroundColor: colors.accent,
-                opacity:
-                  (step === 1 && !step1Valid) ||
-                  (step === 2 && !step2Valid) ||
-                  (step === 3 && !step3Valid)
-                    ? 0.45
-                    : 1,
-              },
-            ]}
+            onPress={() => { if (step === 3) handleSave(); else setSt(step + 1); }}
+            disabled={!canContinue() || saving}
+            style={[styles.nextBtn, {
+              borderColor: colors.accent,
+              opacity: !canContinue() ? 0.4 : 1,
+            }]}
             activeOpacity={0.85}
           >
             {saving ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={colors.accent} />
             ) : (
-              <Text style={{ color: "#fff", fontSize: 17, fontWeight: "700" }}>
+              <Text style={{ fontSize: 11, letterSpacing: 2, textTransform: "uppercase", color: colors.accent, fontWeight: "700" }}>
                 {step === 3 ? "Start Training" : "Continue"}
               </Text>
             )}
@@ -593,27 +527,17 @@ export default function OnboardingScreen() {
   );
 }
 
+// ── Styles ────────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
-  dots: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 6,
-    paddingTop: 12,
-    paddingBottom: 8,
-  },
-  dot: {
-    height: 8,
-    borderRadius: 4,
-  },
-  scroll: {
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 20,
-  },
+  progressBar:     { flexDirection: "row", gap: 4, paddingHorizontal: 24, paddingTop: 14, paddingBottom: 10 },
+  progressSegment: { flex: 1, height: 2, borderRadius: 1 },
+  scroll:          { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 20 },
+
   card: {
-    borderRadius: 20,
-    padding: 20,
+    borderRadius: 4,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: 18,
     marginBottom: 16,
   },
   featureRow: {
@@ -622,29 +546,19 @@ const styles = StyleSheet.create({
     gap: 14,
     paddingVertical: 14,
   },
-  segmentRow: {
-    flexDirection: "row",
-    borderRadius: 14,
-    padding: 4,
-    gap: 4,
-  },
-  segment: {
-    flex: 1,
-    alignItems: "center",
-    paddingVertical: 12,
-    borderRadius: 11,
-  },
   badge: {
     paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    marginTop: 8,
+    paddingVertical: 5,
+    borderRadius: 4,
+    borderWidth: 1,
+    marginTop: 10,
   },
   goalRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    borderRadius: 14,
+    borderRadius: 4,
+    borderWidth: 1,
     padding: 16,
   },
   timeRow: {
@@ -653,26 +567,35 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 16,
     paddingTop: 16,
-    borderTopWidth: 0.5,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
   footer: {
     flexDirection: "row",
     paddingHorizontal: 24,
     paddingBottom: 32,
     paddingTop: 16,
-    gap: 12,
-    borderTopWidth: 0.5,
+    gap: 10,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
   backBtn: {
     flex: 1,
     alignItems: "center",
     paddingVertical: 16,
-    borderRadius: 14,
+    borderRadius: 4,
+    borderWidth: 1,
   },
   nextBtn: {
     flex: 2,
     alignItems: "center",
     paddingVertical: 16,
-    borderRadius: 14,
+    borderRadius: 4,
+    borderWidth: 1,
   },
+  sectionLabel: (colors: any) => ({
+    fontSize: 10,
+    letterSpacing: 1.5,
+    textTransform: "uppercase" as const,
+    color: colors.labelSecondary,
+    marginBottom: 12,
+  }),
 });

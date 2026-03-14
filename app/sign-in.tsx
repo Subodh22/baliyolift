@@ -69,56 +69,79 @@ export default function SignInScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={styles.container}>
-        <Text style={[typography.largeTitle, { color: colors.label, fontWeight: "800", marginBottom: 8 }]}>
+        <Text style={[typography.largeTitle, { color: colors.label, fontWeight: "800", marginBottom: 6 }]}>
           BaliYoLift
         </Text>
-        <Text style={[typography.body, { color: colors.labelSecondary, marginBottom: 40 }]}>
+        <Text style={{ fontSize: 10, color: colors.labelSecondary, letterSpacing: 2, textTransform: "uppercase", marginBottom: 48 }}>
           RP-style hypertrophy tracking
         </Text>
 
+        {/* Google */}
         <TouchableOpacity
-          style={[styles.googleBtn, { backgroundColor: colors.backgroundSecondary, borderColor: colors.separator }]}
+          style={[styles.googleBtn, { borderColor: colors.separator }]}
           onPress={handleGoogleSignIn}
           activeOpacity={0.8}
           disabled={oauthLoading}
         >
           {oauthLoading ? <ActivityIndicator color={colors.label} /> : (
             <>
-              <Text style={styles.googleIcon}>G</Text>
-              <Text style={[typography.body, { color: colors.label, fontWeight: "600" }]}>Continue with Google</Text>
+              <Text style={[styles.googleIcon, { color: colors.labelSecondary }]}>G</Text>
+              <Text style={{ color: colors.labelSecondary, fontSize: 11, letterSpacing: 1.5, textTransform: "uppercase" }}>
+                Continue with Google
+              </Text>
             </>
           )}
         </TouchableOpacity>
 
+        {/* Divider */}
         <View style={styles.divider}>
           <View style={[styles.dividerLine, { backgroundColor: colors.separator }]} />
-          <Text style={[typography.footnote, { color: colors.labelTertiary, marginHorizontal: 12 }]}>or</Text>
+          <Text style={{ color: colors.labelTertiary, fontSize: 10, letterSpacing: 1.5, marginHorizontal: 14 }}>OR</Text>
           <View style={[styles.dividerLine, { backgroundColor: colors.separator }]} />
         </View>
 
+        {/* Inputs */}
         <TextInput
-          style={[styles.input, { backgroundColor: colors.backgroundSecondary, color: colors.label, borderColor: colors.separator }]}
-          placeholder="Email" placeholderTextColor={colors.labelTertiary}
-          autoCapitalize="none" keyboardType="email-address"
-          value={email} onChangeText={setEmail}
+          style={[styles.input, { color: colors.label, borderColor: colors.separator }]}
+          placeholder="Email"
+          placeholderTextColor={colors.labelTertiary}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          value={email}
+          onChangeText={setEmail}
         />
         <TextInput
-          style={[styles.input, { backgroundColor: colors.backgroundSecondary, color: colors.label, borderColor: colors.separator }]}
-          placeholder="Password" placeholderTextColor={colors.labelTertiary}
-          secureTextEntry value={password} onChangeText={setPassword}
+          style={[styles.input, { color: colors.label, borderColor: colors.separator }]}
+          placeholder="Password"
+          placeholderTextColor={colors.labelTertiary}
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
         />
 
-        <TouchableOpacity style={[styles.btn, { backgroundColor: colors.accent }]} onPress={handleSubmit} activeOpacity={0.8} disabled={loading}>
-          {loading ? <ActivityIndicator color="#FFF" /> : (
-            <Text style={{ color: "#FFF", fontWeight: "700", fontSize: 16 }}>
+        {/* Submit */}
+        <TouchableOpacity
+          style={[styles.btn, { borderColor: colors.accent, opacity: loading ? 0.5 : 1 }]}
+          onPress={handleSubmit}
+          activeOpacity={0.8}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color={colors.accent} />
+          ) : (
+            <Text style={{ color: colors.accent, fontSize: 11, letterSpacing: 2, textTransform: "uppercase", fontWeight: "700" }}>
               {mode === "sign_in" ? "Sign In" : "Create Account"}
             </Text>
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity style={{ marginTop: 20 }} onPress={() => setMode(m => m === "sign_in" ? "sign_up" : "sign_in")}>
-          <Text style={[typography.subheadline, { color: colors.accent }]}>
-            {mode === "sign_in" ? "No account? Sign up" : "Have an account? Sign in"}
+        {/* Toggle mode */}
+        <TouchableOpacity style={{ marginTop: 24, alignItems: "center" }} onPress={() => setMode(m => m === "sign_in" ? "sign_up" : "sign_in")}>
+          <Text style={{ color: colors.labelSecondary, fontSize: 11, letterSpacing: 1 }}>
+            {mode === "sign_in" ? "No account? " : "Have an account? "}
+            <Text style={{ color: colors.accent, fontWeight: "700" }}>
+              {mode === "sign_in" ? "Sign up" : "Sign in"}
+            </Text>
           </Text>
         </TouchableOpacity>
       </View>
@@ -127,11 +150,11 @@ export default function SignInScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 28, justifyContent: "center" },
-  googleBtn: { height: 52, borderRadius: 14, borderWidth: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 4 },
-  googleIcon: { fontSize: 18, fontWeight: "700", color: "#4285F4" },
-  divider: { flexDirection: "row", alignItems: "center", marginVertical: 20 },
-  dividerLine: { flex: 1, height: 0.5 },
-  input: { borderRadius: 12, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 14, fontSize: 16, marginBottom: 12 },
-  btn: { height: 52, borderRadius: 14, alignItems: "center", justifyContent: "center", marginTop: 8 },
+  container:   { flex: 1, padding: 28, justifyContent: "center" },
+  googleBtn:   { height: 52, borderRadius: 4, borderWidth: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 4 },
+  googleIcon:  { fontSize: 16, fontWeight: "700" },
+  divider:     { flexDirection: "row", alignItems: "center", marginVertical: 20 },
+  dividerLine: { flex: 1, height: StyleSheet.hairlineWidth },
+  input:       { borderRadius: 4, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 14, fontSize: 16, marginBottom: 10, backgroundColor: "transparent" },
+  btn:         { height: 52, borderRadius: 4, borderWidth: 1, alignItems: "center", justifyContent: "center", marginTop: 8 },
 });
