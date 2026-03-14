@@ -12,6 +12,7 @@ import type * as cardioSets from "../cardioSets.js";
 import type * as exercises from "../exercises.js";
 import type * as http from "../http.js";
 import type * as mesocycles from "../mesocycles.js";
+import type * as nutrition from "../nutrition.js";
 import type * as overload from "../overload.js";
 import type * as progress from "../progress.js";
 import type * as progressPhotos from "../progressPhotos.js";
@@ -20,6 +21,7 @@ import type * as sets from "../sets.js";
 import type * as templates from "../templates.js";
 import type * as userProfile from "../userProfile.js";
 import type * as users from "../users.js";
+import type * as weightTracking from "../weightTracking.js";
 import type * as workouts from "../workouts.js";
 
 import type {
@@ -33,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   exercises: typeof exercises;
   http: typeof http;
   mesocycles: typeof mesocycles;
+  nutrition: typeof nutrition;
   overload: typeof overload;
   progress: typeof progress;
   progressPhotos: typeof progressPhotos;
@@ -41,6 +44,7 @@ declare const fullApi: ApiFromModules<{
   templates: typeof templates;
   userProfile: typeof userProfile;
   users: typeof users;
+  weightTracking: typeof weightTracking;
   workouts: typeof workouts;
 }>;
 

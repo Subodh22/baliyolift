@@ -6,9 +6,9 @@ import { P } from "@/constants/colors";
 const TABS = [
   { name: "index",    label: "HOME",    symbol: "⌂" },
   { name: "plan",     label: "TRAIN",   symbol: "◫" },
+  { name: "fuel",     label: "FUEL",    symbol: "◉" },
   { name: "progress", label: "STATS",   symbol: "◈" },
-  { name: "history",  label: "LOG",     symbol: "◷" },
-  { name: "profile",  label: "PROFILE", symbol: "◎" },
+{ name: "profile",  label: "PROFILE", symbol: "◎" },
 ] as const;
 
 export default function TabLayout() {
@@ -62,6 +62,7 @@ export default function TabLayout() {
           }}
         />
       ))}
+      <Tabs.Screen name="history" options={{ href: null }} />
     </Tabs>
   );
 }

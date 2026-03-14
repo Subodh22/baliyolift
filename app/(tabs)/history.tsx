@@ -390,54 +390,6 @@ export default function HistoryScreen() {
               ))}
             </View>
 
-            {/* Volume + top muscle */}
-            {(monthVolume > 0 || topMuscle) && (
-              <View style={[s.card, { backgroundColor: colors.backgroundSecondary, borderColor: colors.separator, flexDirection: "row", padding: 0, overflow: "hidden" }]}>
-                {monthVolume > 0 && (
-                  <View style={[s.metaCell, { borderRightWidth: topMuscle ? 0.5 : 0, borderRightColor: colors.separator }]}>
-                    <Text style={{ fontFamily: "CormorantGaramond_300Light", fontSize: 20, color: colors.label, letterSpacing: -0.5 }}>
-                      {monthVolume >= 1000 ? `${(monthVolume/1000).toFixed(1)}t` : `${monthVolume.toLocaleString()}kg`}
-                    </Text>
-                    <Text style={{ fontFamily: "Outfit_300Light", fontSize: 10, color: colors.labelTertiary, marginTop: 4, letterSpacing: 0.5, textTransform: "uppercase" }}>Volume / month</Text>
-                  </View>
-                )}
-                {topMuscle && (
-                  <View style={s.metaCell}>
-                    <View style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 4, backgroundColor: (MUSCLE_BADGE_COLORS[topMuscle] ?? colors.accent) + "18" }}>
-                      <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 13, color: MUSCLE_BADGE_COLORS[topMuscle] ?? colors.accent }}>
-                        {(MUSCLE_DISPLAY_NAMES as any)[topMuscle] ?? topMuscle}
-                      </Text>
-                    </View>
-                    <Text style={{ fontFamily: "Outfit_300Light", fontSize: 10, color: colors.labelTertiary, marginTop: 6, letterSpacing: 0.5, textTransform: "uppercase" }}>Most trained</Text>
-                  </View>
-                )}
-              </View>
-            )}
-
-            {/* Frequency bar chart */}
-            <View style={[s.card, { backgroundColor: colors.backgroundSecondary, borderColor: colors.separator, padding: 16 }]}>
-              <Text style={[s.sectionLabel, { color: colors.labelSecondary, marginBottom: 16 }]}>Days / week · last 8 weeks</Text>
-              <View style={{ flexDirection: "row", alignItems: "flex-end", height: 48, gap: 4 }}>
-                {stats.weeklyFrequency.map((days, i) => (
-                  <View key={i} style={{ flex: 1, alignItems: "center", height: 60, justifyContent: "flex-end" }}>
-                    <View style={{ width: "100%", height: Math.max(2, (days / maxFreq) * 48), backgroundColor: days > 0 ? colors.accent : colors.fillSecondary, borderRadius: 2 }} />
-                    <Text style={{ fontFamily: "Outfit_300Light", fontSize: 9, color: colors.labelTertiary, marginTop: 4 }}>{days}</Text>
-                  </View>
-                ))}
-              </View>
-              <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 2 }}>
-                <Text style={{ fontFamily: "Outfit_300Light", fontSize: 9, color: colors.labelTertiary }}>8 wks ago</Text>
-                <Text style={{ fontFamily: "Outfit_300Light", fontSize: 9, color: colors.labelTertiary }}>This week</Text>
-              </View>
-            </View>
-
-            {/* Recent workouts */}
-            {recentWorkouts && recentWorkouts.length > 0 && (
-              <>
-                <Text style={[s.sectionLabel, { color: colors.labelSecondary }]}>Recent workouts</Text>
-                {recentWorkouts.map(w => <WorkoutCard key={w._id} workout={w} colors={colors} />)}
-              </>
-            )}
           </>
         )}
       </ScrollView>

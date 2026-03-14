@@ -204,4 +204,62 @@ export default defineSchema({
     targetBf: v.number(),
     weeklyGoal: v.number(),        // workouts per week commitment
   }).index("by_user", ["userId"]),
+
+  // --- Food Entries ---
+  foodEntries: defineTable({
+    userId: v.id("users"),
+    date: v.string(),              // "YYYY-MM-DD"
+    mealType: v.union(
+      v.literal("breakfast"),
+      v.literal("lunch"),
+      v.literal("dinner"),
+      v.literal("snack"),
+    ),
+    name: v.string(),
+    calories: v.number(),
+    proteinG: v.number(),
+    carbsG: v.number(),
+    fatG: v.number(),
+    timestamp: v.number(),
+  })
+    .index("by_user_date", ["userId", "date"])
+    .index("by_user", ["userId"]),
+
+  // --- Food Targets (Katch-McArdle TDEE + RP macro split) ---
+  foodTargets: defineTable({
+    userId: v.id("users"),
+    calories: v.number(),
+    proteinG: v.number(),
+    carbsG: v.number(),
+    fatG: v.number(),
+    goal: v.union(
+      v.literal("cut"),
+      v.literal("bulk"),
+      v.literal("maintain"),
+    ),
+    updatedAt: v.number(),
+  }).index("by_user", ["userId"]),
+
+  // --- Custom Foods (user-saved food library) ---
+  customFoods: defineTable({
+    userId: v.id("users"),
+    name: v.string(),
+    serving: v.string(),    // display string e.g. "100g", "1 scoop (30g)"
+    servingG: v.number(),   // grams per serving (base for scaling)
+    calories: v.number(),   // per servingG
+    proteinG: v.number(),
+    carbsG: v.number(),
+    fatG: v.number(),
+    createdAt: v.number(),
+  }).index("by_user", ["userId"]),
+
+  // --- Weight Entries (daily weigh-ins) ---
+  weightEntries: defineTable({
+    userId: v.id("users"),
+    date: v.string(),      // "YYYY-MM-DD"
+    weightKg: v.number(),
+    timestamp: v.number(),
+  })
+    .index("by_user_date", ["userId", "date"])
+    .index("by_user", ["userId"]),
 });

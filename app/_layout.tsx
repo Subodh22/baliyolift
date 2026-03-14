@@ -82,6 +82,10 @@ function AppStack() {
         name="camera"
         options={{ presentation: "fullScreenModal", animation: "slide_from_bottom" }}
       />
+      <Stack.Screen
+        name="add-food"
+        options={{ presentation: "modal", animation: "slide_from_bottom" }}
+      />
     </Stack>
   );
 }
