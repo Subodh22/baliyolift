@@ -123,14 +123,15 @@ export const complete = mutation({
 export const deleteMesocycle = mutation({
   args: { mesocycleId: v.id("mesocycles") },
   handler: async (ctx, { mesocycleId }) => {
+    const meso = await ctx.db.get(mesocycleId);
+    if (!meso) return;
     const sessions = await ctx.db.query("sessions").withIndex("by_mesocycle", (q) => q.eq("mesocycleId", mesocycleId)).collect();
     for (const session of sessions) {
       const seExs = await ctx.db.query("sessionExercises").withIndex("by_session", (q) => q.eq("sessionId", session._id)).collect();
       for (const se of seExs) await ctx.db.delete(se._id);
       await ctx.db.delete(session._id);
     }
-    // Delete associated workouts and their sets
-    const workouts = await ctx.db.query("workouts").withIndex("by_user", (q) => q.eq("userId", (await ctx.db.get(mesocycleId))!.userId))
+    const workouts = await ctx.db.query("workouts").withIndex("by_user", (q) => q.eq("userId", meso.userId))
       .filter((q) => q.eq(q.field("mesocycleId"), mesocycleId)).collect();
     for (const workout of workouts) {
       const sets = await ctx.db.query("sets").withIndex("by_workout", (q) => q.eq("workoutId", workout._id)).collect();
