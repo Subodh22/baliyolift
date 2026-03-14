@@ -7,6 +7,7 @@ import {
   Pressable,
   StyleSheet,
   Alert,
+  Modal,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, router } from "expo-router";
@@ -240,19 +241,19 @@ function MuscleBadge({ muscle }: { muscle: string }) {
 
 // ─── Set row ──────────────────────────────────────────────────────────────────
 
-function SetRow({ set, setIdx, totalSets, exId, activeCell, onFocus, onLog, onMenu, colors }: {
+function SetRow({ set, setIdx, totalSets, exId, activeCell, onFocus, onLog, onMenu, onDelete, colors }: {
   set: LocalSet; setIdx: number; totalSets: number; exId: string;
   activeCell: WState["activeCell"]; onFocus: (f: "weight" | "reps") => void;
-  onLog: () => void; onMenu: () => void; colors: any;
+  onLog: () => void; onMenu: () => void; onDelete: () => void; colors: any;
 }) {
   const wActive = activeCell?.exId === exId && activeCell.setIdx === setIdx && activeCell.field === "weight";
   const rActive = activeCell?.exId === exId && activeCell.setIdx === setIdx && activeCell.field === "reps";
   return (
     <View style={[styles.setRow, { backgroundColor: setIdx % 2 === 0 ? colors.setRowBg : colors.setRowAlt }]}>
-      <TouchableOpacity onPress={onMenu} hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }} style={{ width: 32, alignItems: "center" }}>
+      <TouchableOpacity onPress={set.isLogged ? onMenu : onDelete} hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }} style={{ width: 32, alignItems: "center" }}>
         {set.isLogged
           ? <Text style={{ fontSize: 12, fontFamily: "Outfit_400Regular", color: colors.loggedCheckBg }}>✓</Text>
-          : <Text style={{ fontSize: 11, fontFamily: "Outfit_400Regular", color: colors.labelTertiary }}>{setIdx + 1}/{totalSets}</Text>
+          : <Text style={{ fontSize: 18, fontFamily: "Outfit_400Regular", color: colors.labelTertiary, lineHeight: 22 }}>−</Text>
         }
       </TouchableOpacity>
       <Pressable style={[styles.cell, { backgroundColor: wActive ? colors.repRangeBg : "transparent" }]} onPress={() => onFocus("weight")}>
@@ -280,6 +281,7 @@ function ExCard({ se, originalExId, exState, suggestion, activeCell, dispatch, w
   const logMut = useMutation(api.sets.logSet);
   const deleteMut = useMutation(api.sets.deleteSet);
   const updateSetTypeMut = useMutation(api.mesocycles.updateSetType);
+  const updateTargetSetsMut = useMutation(api.mesocycles.updateTargetSets);
   const ex = se.exercise;
 
   useEffect(() => {
@@ -306,7 +308,7 @@ function ExCard({ se, originalExId, exState, suggestion, activeCell, dispatch, w
     if (!set || set.isLogged) return;
     const w = parseFloat(set.weight) || 0;
     const r = parseInt(set.reps) || 0;
-    if (!w || !r) { Alert.alert("Enter weight and reps first"); return; }
+    if (!r) { Alert.alert("Enter reps first"); return; }
     impactMedium();
     // Use se.exercise._id (may be overridden) for actual DB logging
     const sid = await logMut({ workoutId, exerciseId: se.exercise._id, userId, weight: w, reps: r, rir: set.rir, targetRir: suggestion?.targetRir ?? 2, setNumber: setIdx + 1, isWarmup: false });
@@ -315,11 +317,35 @@ function ExCard({ se, originalExId, exState, suggestion, activeCell, dispatch, w
 
   const showMenu = (setIdx: number) => {
     Alert.alert("Set options", undefined, [
-      { text: "Add set below", onPress: () => dispatch({ type: "ADD_SET", exId: originalExId }) },
-      { text: "Delete", style: "destructive", onPress: () => dispatch({ type: "DEL_SET", exId: originalExId, setIdx }) },
+      { text: "Add set below", onPress: () => {
+        dispatch({ type: "ADD_SET", exId: originalExId });
+        if (!se.isLegacy && se._id) {
+          const newCount = (exState?.sets.length ?? 0) + 1;
+          updateTargetSetsMut({ sessionExerciseId: se._id, targetSets: newCount }).catch(() => {});
+        }
+      }},
+      { text: "Delete", style: "destructive", onPress: () => setConfirmDeleteIdx(setIdx) },
       { text: "Cancel", style: "cancel" },
     ]);
   };
+
+  const [confirmDeleteIdx, setConfirmDeleteIdx] = useState<number | null>(null);
+
+  const handleDeleteSet = useCallback((setIdx: number) => {
+    setConfirmDeleteIdx(setIdx);
+  }, []);
+
+  const confirmDelete = useCallback(async () => {
+    if (confirmDeleteIdx === null || !exState) return;
+    const set = exState.sets[confirmDeleteIdx];
+    if (set?.isLogged && set.convexSetId) await deleteMut({ setId: set.convexSetId });
+    dispatch({ type: "DEL_SET", exId: originalExId, setIdx: confirmDeleteIdx });
+    if (!se.isLegacy && se._id) {
+      const newCount = Math.max(1, exState.sets.length - 1);
+      updateTargetSetsMut({ sessionExerciseId: se._id, targetSets: newCount }).catch(() => {});
+    }
+    setConfirmDeleteIdx(null);
+  }, [confirmDeleteIdx, exState, deleteMut, originalExId, se, updateTargetSetsMut]);
 
   if (!ex) return null;
   const sets = exState?.sets ?? [];
@@ -423,11 +449,11 @@ function ExCard({ se, originalExId, exState, suggestion, activeCell, dispatch, w
       {sets.map((set, idx) => (
         <SetRow key={set.localId} set={set} setIdx={idx} totalSets={sets.length} exId={originalExId} activeCell={activeCell}
           onFocus={(f) => dispatch({ type: "FOCUS", exId: originalExId, setIdx: idx, field: f, val: f === "weight" ? set.weight : set.reps })}
-          onLog={() => set.isLogged ? handleUnlog(idx) : handleLog(idx)} onMenu={() => showMenu(idx)} colors={colors} />
+          onLog={() => set.isLogged ? handleUnlog(idx) : handleLog(idx)} onMenu={() => showMenu(idx)} onDelete={() => handleDeleteSet(idx)} colors={colors} />
       ))}
 
       {/* Add set */}
-      <TouchableOpacity onPress={() => { selectionAsync(); dispatch({ type: "ADD_SET", exId: originalExId }); }} style={{ alignItems: "center", paddingVertical: 10 }}>
+      <TouchableOpacity onPress={() => { selectionAsync(); dispatch({ type: "ADD_SET", exId: originalExId }); if (!se.isLegacy && se._id) { const newCount = (exState?.sets.length ?? 0) + 1; updateTargetSetsMut({ sessionExerciseId: se._id, targetSets: newCount }).catch(() => {}); } }} style={{ alignItems: "center", paddingVertical: 10 }}>
         <Text style={[typography.subheadline, { color: colors.accent }]}>+ Add set</Text>
       </TouchableOpacity>
 
@@ -447,6 +473,36 @@ function ExCard({ se, originalExId, exState, suggestion, activeCell, dispatch, w
           </Pressable>
         ))}
       </View>
+
+      {/* Delete set confirmation popup */}
+      <Modal visible={confirmDeleteIdx !== null} transparent animationType="fade" onRequestClose={() => setConfirmDeleteIdx(null)}>
+        <Pressable style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "center", alignItems: "center" }} onPress={() => setConfirmDeleteIdx(null)}>
+          <Pressable onPress={() => {}} style={{ backgroundColor: colors.backgroundSecondary, borderRadius: 16, padding: 24, width: 280, borderWidth: 1, borderColor: colors.separator }}>
+            <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 17, color: colors.label, textAlign: "center", marginBottom: 6 }}>
+              Delete Set?
+            </Text>
+            <Text style={{ fontFamily: "Outfit_300Light", fontSize: 13, color: colors.labelSecondary, textAlign: "center", marginBottom: 24 }}>
+              {confirmDeleteIdx !== null && exState?.sets[confirmDeleteIdx]?.isLogged
+                ? "This set has been logged and will be removed."
+                : "This set will be removed."}
+            </Text>
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <TouchableOpacity
+                onPress={() => setConfirmDeleteIdx(null)}
+                style={{ flex: 1, paddingVertical: 12, borderRadius: 10, backgroundColor: colors.fillSecondary, alignItems: "center" }}
+              >
+                <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 15, color: colors.labelSecondary }}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={confirmDelete}
+                style={{ flex: 1, paddingVertical: 12, borderRadius: 10, backgroundColor: "#FF3B3022", borderWidth: 1, borderColor: "#FF3B30", alignItems: "center" }}
+              >
+                <Text style={{ fontFamily: "Outfit_400Regular", fontSize: 15, color: "#FF3B30" }}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </Animated.View>
   );
 }
@@ -1038,15 +1094,16 @@ export default function WorkoutScreen() {
       </Animated.View>
 
       {/* Rest timer — single instance; compact prop toggled to preserve state */}
-      {state.restVisible && !state.activeCell && (
+      {state.restVisible && (
         <TouchableOpacity
           activeOpacity={restExpanded ? 1 : 0.85}
           onPress={restExpanded ? undefined : () => setRestExpanded(true)}
-          style={
+          style={[
             restExpanded
               ? [styles.restSheet, { backgroundColor: colors.backgroundSecondary, borderTopColor: colors.separator }]
-              : [styles.restBar, { backgroundColor: colors.headerBg }]
-          }
+              : [styles.restBar, { backgroundColor: colors.headerBg }],
+            !!state.activeCell && { display: "none" },
+          ]}
         >
           {restExpanded ? (
             <View style={styles.restSheetHandle}>

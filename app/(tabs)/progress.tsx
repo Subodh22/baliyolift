@@ -1068,7 +1068,7 @@ const s = StyleSheet.create({
   tabBtn:         { paddingVertical: 10, paddingHorizontal: 4, marginRight: 24 },
   tabBtnActive:   { borderBottomWidth: 1, borderBottomColor: P.gold },
   tabBtnText:     { fontFamily: OUT_L, fontSize: 11, letterSpacing: 3 },
-  weightInputRow: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: P.border, backgroundColor: P.s2, paddingHorizontal: 10, paddingVertical: 6, gap: 4, minWidth: 90 },
-  weightInput:    { fontFamily: OUT_L, fontSize: 16, color: P.ink, minWidth: 60, textAlign: "right" },
+  weightInputRow: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: P.border, backgroundColor: P.s2, paddingHorizontal: 10, paddingVertical: 6, gap: 4, width: 110 },
+  weightInput:    { fontFamily: OUT_L, fontSize: 16, color: P.ink, flex: 1, textAlign: "right" },
   logBtn:         { backgroundColor: P.gold, paddingHorizontal: 16, paddingVertical: 7, alignItems: "center" },
 });

@@ -473,6 +473,18 @@ export const removeExerciseByIds = mutation({
   },
 });
 
+export const updateTargetSets = mutation({
+  args: {
+    sessionExerciseId: v.id("sessionExercises"),
+    targetSets: v.number(),
+  },
+  handler: async (ctx, { sessionExerciseId, targetSets }) => {
+    const se = await ctx.db.get(sessionExerciseId);
+    if (!se) return;
+    await ctx.db.patch(sessionExerciseId, { targetSets });
+  },
+});
+
 export const updateSetType = mutation({
   args: {
     sessionExerciseId: v.id("sessionExercises"),
