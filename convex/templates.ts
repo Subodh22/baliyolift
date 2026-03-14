@@ -166,7 +166,7 @@ export const createPPLTemplate = mutation({
 });
 
 /**
- * Laxman 4-day split — Shoulders/Biceps · Back · Triceps/Back · Legs
+ * Laxman 4-day split — Shoulders/Biceps · Chest/Triceps · Back · Legs
  * High-volume, super-set focused program from coach Laxman.
  */
 export const createLaxmanTemplate = mutation({

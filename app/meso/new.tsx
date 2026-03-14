@@ -71,7 +71,7 @@ const TEMPLATES = [
   {
     id: "laxman",
     name: "Laxman",
-    subtitle: "4 days · Shoulders/Bi · Back · Triceps/Back · Legs",
+    subtitle: "4 days · Shoulders/Bi · Chest/Tri · Back · Legs",
     tag: "High Volume",
     tagColor: "#FF6B35",
     description: "Super-set heavy 4-day split with drop sets and pre-fatigue protocols.",
