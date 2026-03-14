@@ -319,7 +319,7 @@ export default function FuelScreen() {
                       borderRadius: 1,
                     }} />
                   </View>
-                  <Text style={{ fontFamily: OUT_L, fontSize: 9, color: P.dim, marginTop: 3 }}>
+                  <Text style={{ fontFamily: OUT_L, fontSize: 12, color: P.dim, marginTop: 3 }}>
                     {t}g goal
                   </Text>
                 </View>
