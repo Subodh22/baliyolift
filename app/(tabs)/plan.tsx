@@ -136,7 +136,7 @@ function MesoCard({
           ))}
 
           {/* Action buttons */}
-          <View style={s.actionRow}>
+          <View style={[s.actionRow, { gap: 8 }]}>
             {isActive ? (
               <Pressable onPress={onEnd} style={[s.actionBtn, s.dangerBtn]}>
                 <Text style={{ fontFamily: OUT_L, fontSize: 12, color: "#CF4444", letterSpacing: 1 }}>
