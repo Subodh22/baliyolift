@@ -390,24 +390,59 @@ export default function FuelScreen() {
         <TouchableOpacity style={s.overlay} activeOpacity={1} onPress={() => setMacroEditorOpen(false)} />
         <View style={{ backgroundColor: P.s1, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 24, paddingBottom: 40, borderTopWidth: 1, borderColor: P.border }}>
           <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: P.border, alignSelf: "center", marginBottom: 20 }} />
-          <Text style={{ fontFamily: OUT_L, fontSize: 10, letterSpacing: 4, color: P.mid, marginBottom: 20 }}>ADJUST TARGETS</Text>
+          <Text style={{ fontFamily: OUT_L, fontSize: 10, letterSpacing: 4, color: P.mid, marginBottom: 16 }}>ADJUST TARGETS</Text>
 
-          {[
-            { label: "CALORIES",  val: draftCals,  setVal: setDraftCals,  min: 1200, max: 5000, step: 50,  color: P.gold },
-            { label: "PROTEIN",   val: draftPro,   setVal: setDraftPro,   min: 50,   max: 400,  step: 5,   color: C_PROTEIN },
-            { label: "CARBS",     val: draftCarbs, setVal: setDraftCarbs, min: 0,    max: 700,  step: 5,   color: C_CARBS },
-            { label: "FAT",       val: draftFat,   setVal: setDraftFat,   min: 20,   max: 300,  step: 5,   color: C_FAT },
-          ].map(({ label, val, setVal, min, max, step, color }) => (
-            <View key={label} style={{ marginBottom: 20 }}>
-              <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
-                <Text style={{ fontFamily: OUT_L, fontSize: 10, letterSpacing: 2, color: P.mid }}>{label}</Text>
-                <Text style={{ fontFamily: CG, fontSize: 18, color: P.ink, letterSpacing: -0.5 }}>
-                  {val}{label === "CALORIES" ? " kcal" : "g"}
+          {/* Calorie budget — stepper, no slider */}
+          {(() => {
+            const usedCals = draftPro * 4 + draftCarbs * 4 + draftFat * 9;
+            const remaining = draftCals - usedCals;
+            const overBudget = remaining < 0;
+            return (
+              <View style={{ marginBottom: 20, padding: 14, backgroundColor: P.s2, borderRadius: 10, borderWidth: 1, borderColor: overBudget ? P.red : P.border }}>
+                <Text style={{ fontFamily: OUT_L, fontSize: 9, letterSpacing: 2, color: P.mid, marginBottom: 8 }}>CALORIE BUDGET</Text>
+                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                  <TouchableOpacity onPress={() => { const n = draftCals - 50; if (n >= 1200) { setDraftCals(n); setDraftCarbs(Math.max(0, Math.round((n - draftPro * 4 - draftFat * 9) / 4))); }}} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: P.border, alignItems: "center", justifyContent: "center" }}>
+                    <Text style={{ fontFamily: CG, fontSize: 20, color: P.ink, lineHeight: 24 }}>−</Text>
+                  </TouchableOpacity>
+                  <Text style={{ fontFamily: CG, fontSize: 32, color: P.gold, letterSpacing: -1 }}>{draftCals} <Text style={{ fontFamily: OUT_L, fontSize: 12, color: P.mid }}>kcal</Text></Text>
+                  <TouchableOpacity onPress={() => { const n = draftCals + 50; if (n <= 6000) { setDraftCals(n); setDraftCarbs(Math.max(0, Math.round((n - draftPro * 4 - draftFat * 9) / 4))); }}} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: P.border, alignItems: "center", justifyContent: "center" }}>
+                    <Text style={{ fontFamily: CG, fontSize: 20, color: P.ink, lineHeight: 24 }}>+</Text>
+                  </TouchableOpacity>
+                </View>
+                {/* Used bar */}
+                <View style={{ height: 3, backgroundColor: P.border, borderRadius: 2, marginTop: 12 }}>
+                  <View style={{ height: 3, width: `${Math.min(usedCals / draftCals * 100, 100)}%` as any, backgroundColor: overBudget ? P.red : P.gold, borderRadius: 2 }} />
+                </View>
+                <Text style={{ fontFamily: OUT_L, fontSize: 9, color: overBudget ? P.red : P.mid, marginTop: 6, textAlign: "right" }}>
+                  {overBudget ? `${Math.abs(remaining)} over budget` : `${remaining} kcal remaining`}
                 </Text>
               </View>
-              <MacroSlider value={val} min={min} max={max} step={step} color={color} onChange={setVal} />
-            </View>
-          ))}
+            );
+          })()}
+
+          {/* Macro sliders — carbs auto-fills remaining */}
+          {[
+            { label: "PROTEIN", val: draftPro,   color: C_PROTEIN, kcalPer: 4, max: 400, step: 5,
+              onChange: (v: number) => { setDraftPro(v); setDraftCarbs(Math.max(0, Math.round((draftCals - v * 4 - draftFat * 9) / 4))); } },
+            { label: "FAT",     val: draftFat,   color: C_FAT,     kcalPer: 9, max: 200, step: 5,
+              onChange: (v: number) => { setDraftFat(v); setDraftCarbs(Math.max(0, Math.round((draftCals - draftPro * 4 - v * 9) / 4))); } },
+            { label: "CARBS",   val: draftCarbs, color: C_CARBS,   kcalPer: 4, max: 700, step: 5,
+              onChange: (v: number) => { const max = Math.max(0, Math.round((draftCals - draftPro * 4 - draftFat * 9) / 4)); setDraftCarbs(Math.min(v, max)); } },
+          ].map(({ label, val, color, kcalPer, max, step, onChange }) => {
+            const pct = draftCals > 0 ? Math.round(val * kcalPer / draftCals * 100) : 0;
+            return (
+              <View key={label} style={{ marginBottom: 20 }}>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 8 }}>
+                  <Text style={{ fontFamily: OUT_L, fontSize: 10, letterSpacing: 2, color: P.mid }}>{label}</Text>
+                  <View style={{ flexDirection: "row", alignItems: "baseline", gap: 6 }}>
+                    <Text style={{ fontFamily: CG, fontSize: 22, color: P.ink, letterSpacing: -0.5 }}>{val}g</Text>
+                    <Text style={{ fontFamily: OUT_L, fontSize: 10, color }}>{pct}%</Text>
+                  </View>
+                </View>
+                <MacroSlider value={val} min={0} max={max} step={step} color={color} onChange={onChange} />
+              </View>
+            );
+          })}
 
           <View style={{ flexDirection: "row", gap: 10, marginTop: 4 }}>
             <TouchableOpacity onPress={() => setMacroEditorOpen(false)}
