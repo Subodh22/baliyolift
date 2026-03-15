@@ -98,6 +98,16 @@ export const listAll = query({
   },
 });
 
+export const setVideoUrl = mutation({
+  args: {
+    exerciseId: v.id("exercises"),
+    videoUrl: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.exerciseId, { videoUrl: args.videoUrl });
+  },
+});
+
 export const create = mutation({
   args: {
     userId: v.id("users"),

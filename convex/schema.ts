@@ -44,6 +44,7 @@ export default defineSchema({
     isCustom: v.boolean(),
     userId: v.optional(v.id("users")),
     instructions: v.optional(v.string()),
+    videoUrl: v.optional(v.string()),
     // Cardio-specific fields
     category: v.optional(v.union(v.literal("strength"), v.literal("cardio"))),
     cardioMode: v.optional(v.union(

@@ -30,6 +30,7 @@ import { FeedbackModal } from "@/components/FeedbackModal";
 import { RestTimer } from "@/components/RestTimer";
 import { SwapSheet } from "@/components/SwapSheet";
 import { VideoModal } from "@/components/VideoModal";
+import { AddVideoModal } from "@/components/AddVideoModal";
 import { AddExSheet, type PickedExercise } from "@/components/AddExSheet";
 import { ExMenuSheet } from "@/components/ExMenuSheet";
 import { getVideoId } from "@/data/exerciseVideos";
@@ -822,6 +823,7 @@ export default function WorkoutScreen() {
   } | null>(null);
 
   const [videoTarget, setVideoTarget] = useState<{ name: string; videoId: string } | null>(null);
+  const [addVideoTarget, setAddVideoTarget] = useState<{ name: string; exerciseId: Id<"exercises"> } | null>(null);
 
   const meso = useQuery(api.mesocycles.getActiveWithDetails, userId ? { userId } : "skip");
 
@@ -1006,8 +1008,13 @@ export default function WorkoutScreen() {
               mesoId={meso?._id ?? null}
               onOpenSwap={() => setSwapTarget({ seId, exercise: se.exercise, oldExId })}
               onOpenVideo={() => {
-                const vid = getVideoId(effectiveSe.exercise?.name ?? "");
-                if (vid) setVideoTarget({ name: effectiveSe.exercise?.name ?? "", videoId: vid });
+                const exName = effectiveSe.exercise?.name ?? "";
+                const exId = effectiveSe.exercise?._id as Id<"exercises">;
+                const storedUrl = (effectiveSe.exercise as any)?.videoUrl as string | undefined;
+                const storedId = storedUrl ? (storedUrl.match(/(?:v=|\/shorts\/|\/embed\/|youtu\.be\/)([A-Za-z0-9_-]{11})/)?.[1] ?? (/^[A-Za-z0-9_-]{11}$/.test(storedUrl.trim()) ? storedUrl.trim() : null)) : null;
+                const vid = storedId ?? getVideoId(exName);
+                if (vid) setVideoTarget({ name: exName, videoId: vid });
+                else setAddVideoTarget({ name: exName, exerciseId: exId });
               }}
               onDelete={(scope) => handleDeleteExercise(oldExId, seId, scope)}
             />
@@ -1056,8 +1063,11 @@ export default function WorkoutScreen() {
               mesoId={meso?._id ?? null}
               onOpenSwap={() => {}}
               onOpenVideo={() => {
-                const vid = getVideoId(ex.name);
+                const storedUrl = (ex as any)?.videoUrl as string | undefined;
+                const storedId = storedUrl ? (storedUrl.match(/(?:v=|\/shorts\/|\/embed\/|youtu\.be\/)([A-Za-z0-9_-]{11})/)?.[1] ?? (/^[A-Za-z0-9_-]{11}$/.test(storedUrl.trim()) ? storedUrl.trim() : null)) : null;
+                const vid = storedId ?? getVideoId(ex.name);
                 if (vid) setVideoTarget({ name: ex.name, videoId: vid });
+                else setAddVideoTarget({ name: ex.name, exerciseId: ex._id as Id<"exercises"> });
               }}
               onDelete={(scope) => handleDeleteExercise(exId, ex.seId, scope)}
             />
@@ -1165,6 +1175,19 @@ export default function WorkoutScreen() {
           exerciseName={videoTarget.name}
           videoId={videoTarget.videoId}
           onClose={() => setVideoTarget(null)}
+        />
+      )}
+
+      {/* Add video modal */}
+      {addVideoTarget && (
+        <AddVideoModal
+          exerciseName={addVideoTarget.name}
+          exerciseId={addVideoTarget.exerciseId}
+          onClose={() => setAddVideoTarget(null)}
+          onSaved={(videoId) => {
+            setAddVideoTarget(null);
+            setVideoTarget({ name: addVideoTarget.name, videoId });
+          }}
         />
       )}
 
