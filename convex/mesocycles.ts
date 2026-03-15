@@ -302,7 +302,7 @@ export const getSessionExercises = query({
           targetSets: 3,
           setType: "regular" as const,
           isLegacy: true,
-          exercise: { _id: ex!._id, name: ex!.name, muscleGroup: ex!.muscleGroup, equipment: ex!.equipment, sfr: ex!.sfr, category: ex!.category ?? null, cardioMode: ex!.cardioMode ?? null },
+          exercise: { _id: ex!._id, name: ex!.name, muscleGroup: ex!.muscleGroup, equipment: ex!.equipment, sfr: ex!.sfr, category: ex!.category ?? null, cardioMode: ex!.cardioMode ?? null, videoUrl: ex!.videoUrl ?? null },
         }));
     }
 
@@ -315,7 +315,7 @@ export const getSessionExercises = query({
           ...se,
           isLegacy: false,
           exercise: exercise
-            ? { _id: exercise._id, name: exercise.name, muscleGroup: exercise.muscleGroup, equipment: exercise.equipment, sfr: exercise.sfr, category: exercise.category ?? null, cardioMode: exercise.cardioMode ?? null }
+            ? { _id: exercise._id, name: exercise.name, muscleGroup: exercise.muscleGroup, equipment: exercise.equipment, sfr: exercise.sfr, category: exercise.category ?? null, cardioMode: exercise.cardioMode ?? null, videoUrl: exercise.videoUrl ?? null }
             : null,
         };
       })
