@@ -309,7 +309,7 @@ export default function FuelScreen() {
                 <View key={label} style={{ flex: 1 }}>
                   <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 5 }}>
                     <Text style={[s.sectionLabel, { fontSize: 9, letterSpacing: 2 }]}>{label}</Text>
-                    <Text style={{ fontFamily: OUT_L, fontSize: 10, color: P.mid }}>{val}g</Text>
+                    <Text style={{ fontFamily: OUT_L, fontSize: 10, color: P.mid }}>{Math.round(val)}g</Text>
                   </View>
                   <View style={{ height: 2, backgroundColor: P.border, borderRadius: 1 }}>
                     <View style={{
