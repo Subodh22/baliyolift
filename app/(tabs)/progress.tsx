@@ -711,6 +711,7 @@ function PhotoModal({ visible, dateStr, userId, weight, cals, onClose }: any) {
 // ── Main Screen ───────────────────────────────────────────────────────────────
 export default function StatsScreen() {
   const { userId } = useCurrentUser();
+  const { width } = useWindowDimensions();
   const today = todayStr();
 
   const [calView, setCalView]                     = useState<"week" | "month" | "year">("week");
@@ -854,13 +855,13 @@ export default function StatsScreen() {
                     </View>
 
                     {/* Log input */}
-                    <View style={{ width: 110, alignItems: "flex-end", gap: 6 }}>
+                    <View style={{ alignItems: "flex-end", gap: 6 }}>
                       <Text style={{ fontFamily: OUT_L, fontSize: 10, letterSpacing: 2, color: P.mid }}>
                         {todayWeight ? "UPDATE" : "LOG TODAY"}
                       </Text>
                       <View style={[s.weightInputRow, weightFocused && { borderColor: P.gold }]}>
                         <TextInput
-                          style={s.weightInput}
+                          style={[s.weightInput, { outlineWidth: 0, outlineStyle: "none" } as any]}
                           value={weightInput}
                           onChangeText={setWeightInput}
                           onFocus={() => setWeightFocused(true)}
@@ -1078,7 +1079,7 @@ const s = StyleSheet.create({
   tabBtn:         { paddingVertical: 10, paddingHorizontal: 4, marginRight: 24 },
   tabBtnActive:   { borderBottomWidth: 1, borderBottomColor: P.gold },
   tabBtnText:     { fontFamily: OUT_L, fontSize: 11, letterSpacing: 3 },
-  weightInputRow: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: P.border, backgroundColor: P.s2, paddingHorizontal: 10, paddingVertical: 6, gap: 4 },
-  weightInput:    { fontFamily: OUT_L, fontSize: 16, color: P.ink, flex: 1, textAlign: "right", borderWidth: 0 },
-  logBtn:         { backgroundColor: P.gold, paddingHorizontal: 16, paddingVertical: 7, alignItems: "center" },
+  weightInputRow: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: P.border, backgroundColor: P.s2, paddingHorizontal: 8, paddingVertical: 5, gap: 3, width: 86, overflow: "hidden" },
+  weightInput:    { fontFamily: OUT_L, fontSize: 13, color: P.ink, width: 52, textAlign: "right", borderWidth: 0 },
+  logBtn:         { backgroundColor: P.gold, paddingHorizontal: 10, paddingVertical: 6, alignItems: "center", width: 86 },
 });
