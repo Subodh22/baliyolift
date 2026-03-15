@@ -50,7 +50,7 @@ function formatVol(v: number): string {
 // ── Weight Chart ──────────────────────────────────────────────────────────────
 function WeightChart({ entries }: { entries: { date: string; weightKg: number }[] }) {
   const { width } = useWindowDimensions();
-  const chartW = width - 48 - 40; // padding + y-axis label width
+  const chartW = width - 48 - 40 - 32; // scroll padding (48) + card padding (40) + y-axis marginLeft (32)
   const chartH = 80;
 
   const { min, max, points, avgLine } = useMemo(() => {
@@ -88,7 +88,7 @@ function WeightChart({ entries }: { entries: { date: string; weightKg: number }[
     : "";
 
   return (
-    <View style={{ height: chartH + 20, marginTop: 8 }}>
+    <View style={{ height: chartH + 20, marginTop: 8, overflow: "hidden" }}>
       {/* Y axis labels */}
       <View style={{ position: "absolute", left: 0, top: 0, height: chartH, justifyContent: "space-between" }}>
         <Text style={{ fontFamily: OUT_L, fontSize: 9, color: P.dim }}>{max.toFixed(1)}</Text>
@@ -836,8 +836,8 @@ export default function StatsScreen() {
           <>
                 {/* ── Weight Card ─────────────────────────────────── */}
                 <Animated.View entering={FadeInDown.springify()} style={s.card}>
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
-                    <View>
+                  <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
+                    <View style={{ flex: 1, minWidth: 0 }}>
                       <Text style={s.sectionLabel}>BODY WEIGHT</Text>
                       {todayWeight ? (
                         <View style={{ flexDirection: "row", alignItems: "baseline", gap: 4, marginTop: 10 }}>
@@ -854,7 +854,7 @@ export default function StatsScreen() {
                     </View>
 
                     {/* Log input */}
-                    <View style={{ alignItems: "flex-end", gap: 6 }}>
+                    <View style={{ width: 110, alignItems: "flex-end", gap: 6 }}>
                       <Text style={{ fontFamily: OUT_L, fontSize: 10, letterSpacing: 2, color: P.mid }}>
                         {todayWeight ? "UPDATE" : "LOG TODAY"}
                       </Text>
@@ -1063,7 +1063,7 @@ const s = StyleSheet.create({
   eyebrow:        { fontFamily: OUT_L, fontSize: 10, letterSpacing: 4, color: P.gold, textTransform: "uppercase" },
   heroItalic:     { fontFamily: CG_ITALIC, fontSize: 52, letterSpacing: -0.5, lineHeight: 58, marginTop: 10, color: P.ink },
   sectionLabel:   { fontFamily: OUT_L, fontSize: 10, letterSpacing: 4, color: P.mid, textTransform: "uppercase" },
-  card:           { backgroundColor: P.s1, padding: 20, borderWidth: 1, borderColor: P.border },
+  card:           { backgroundColor: P.s1, padding: 20, borderWidth: 1, borderColor: P.border, overflow: "hidden" },
   divRow:         { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 20, paddingTop: 16, borderTopWidth: 1 },
   statRow:        { flexDirection: "row", justifyContent: "space-around" },
   statItem:       { alignItems: "center" },
@@ -1078,7 +1078,7 @@ const s = StyleSheet.create({
   tabBtn:         { paddingVertical: 10, paddingHorizontal: 4, marginRight: 24 },
   tabBtnActive:   { borderBottomWidth: 1, borderBottomColor: P.gold },
   tabBtnText:     { fontFamily: OUT_L, fontSize: 11, letterSpacing: 3 },
-  weightInputRow: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: P.border, backgroundColor: P.s2, paddingHorizontal: 10, paddingVertical: 6, gap: 4, width: 110 },
-  weightInput:    { fontFamily: OUT_L, fontSize: 16, color: P.ink, flex: 1, textAlign: "right" },
+  weightInputRow: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: P.border, backgroundColor: P.s2, paddingHorizontal: 10, paddingVertical: 6, gap: 4 },
+  weightInput:    { fontFamily: OUT_L, fontSize: 16, color: P.ink, flex: 1, textAlign: "right", borderWidth: 0 },
   logBtn:         { backgroundColor: P.gold, paddingHorizontal: 16, paddingVertical: 7, alignItems: "center" },
 });
