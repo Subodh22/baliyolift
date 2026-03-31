@@ -10,7 +10,12 @@
 
 import type * as cardioSets from "../cardioSets.js";
 import type * as exercises from "../exercises.js";
+import type * as foodPreferences from "../foodPreferences.js";
 import type * as http from "../http.js";
+import type * as importFoods from "../importFoods.js";
+import type * as importRecipes from "../importRecipes.js";
+import type * as mealPlanSlots from "../mealPlanSlots.js";
+import type * as mealPlans from "../mealPlans.js";
 import type * as mesocycles from "../mesocycles.js";
 import type * as nutrition from "../nutrition.js";
 import type * as overload from "../overload.js";
@@ -33,7 +38,12 @@ import type {
 declare const fullApi: ApiFromModules<{
   cardioSets: typeof cardioSets;
   exercises: typeof exercises;
+  foodPreferences: typeof foodPreferences;
   http: typeof http;
+  importFoods: typeof importFoods;
+  importRecipes: typeof importRecipes;
+  mealPlanSlots: typeof mealPlanSlots;
+  mealPlans: typeof mealPlans;
   mesocycles: typeof mesocycles;
   nutrition: typeof nutrition;
   overload: typeof overload;

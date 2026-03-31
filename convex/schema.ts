@@ -263,4 +263,82 @@ export default defineSchema({
   })
     .index("by_user_date", ["userId", "date"])
     .index("by_user", ["userId"]),
+
+  // --- Weekly Meal Planner Items (multiple per slot, with portions) ---
+  mealPlanSlots: defineTable({
+    userId:    v.id("users"),
+    weekStart: v.string(),   // "YYYY-MM-DD" — always the Monday of that week
+    dayIndex:  v.number(),   // 0=Mon … 6=Sun
+    mealType:  v.union(
+      v.literal("breakfast"),
+      v.literal("lunch"),
+      v.literal("dinner"),
+      v.literal("snack"),
+    ),
+    recipeId:  v.string(),
+    portion:   v.optional(v.number()),   // multiplier: 0.5=half, 1.0=full, 2.0=double
+    order:     v.optional(v.number()),   // display order within the meal slot
+  })
+    .index("by_user_week", ["userId", "weekStart"])
+    .index("by_user_week_day", ["userId", "weekStart", "dayIndex"]),
+
+  // --- Saved Meal Plan Recipes ---
+  savedMealPlans: defineTable({
+    userId: v.id("users"),
+    recipeId: v.string(),
+    savedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_recipe", ["userId", "recipeId"]),
+
+  // --- Food Preferences (per-user, drives smart autofill + grocery list) ---
+  foodPreferences: defineTable({
+    userId:              v.id("users"),
+    proteinSources:      v.array(v.string()),  // ["chicken","beef","eggs","fish","turkey","plant"]
+    carbSources:         v.array(v.string()),  // ["rice","oats","pasta","potato","sweetPotato","bread"]
+    fatSources:          v.array(v.string()),  // ["oliveOil","avocado","nuts","dairy"]
+    excludedIngredients: v.array(v.string()),  // lowercased substrings to avoid
+    plannedMealTypes:    v.array(v.string()),  // subset of ["breakfast","lunch","dinner","snack"]
+    varietyLevel:        v.number(),           // 1=repeat  2=balanced  3=variety
+    updatedAt:           v.number(),
+  }).index("by_user", ["userId"]),
+
+  // --- Global Recipe Library (shared across all users) ---
+  recipes: defineTable({
+    recipeId:     v.string(),   // slug e.g. "cut-egg-white-omelette"
+    name:         v.string(),
+    description:  v.string(),
+    goal:         v.union(v.literal("cut"), v.literal("bulk"), v.literal("maintain")),
+    mealType:     v.union(
+      v.literal("breakfast"),
+      v.literal("lunch"),
+      v.literal("dinner"),
+      v.literal("snack"),
+      v.literal("post-workout"),
+      v.literal("sauce"),
+      v.literal("smoothie"),
+      v.literal("dessert"),
+    ),
+    prepTimeMins: v.number(),
+    cookTimeMins: v.number(),
+    tags:         v.array(v.string()),
+    ingredients:  v.array(v.object({
+      name:     v.string(),
+      amount:   v.string(),
+      calories: v.optional(v.number()),
+      proteinG: v.optional(v.number()),
+      carbsG:   v.optional(v.number()),
+      fatG:     v.optional(v.number()),
+    })),
+    instructions: v.array(v.string()),
+    totalMacros:  v.object({
+      calories: v.number(),
+      proteinG: v.number(),
+      carbsG:   v.number(),
+      fatG:     v.number(),
+    }),
+  })
+    .index("by_recipe_id", ["recipeId"])
+    .index("by_goal", ["goal"])
+    .index("by_meal_type", ["mealType"]),
 });

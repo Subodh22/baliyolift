@@ -86,6 +86,22 @@ function AppStack() {
         name="add-food"
         options={{ presentation: "modal", animation: "slide_from_bottom" }}
       />
+      <Stack.Screen
+        name="meal-plans"
+        options={{ animation: "slide_from_right" }}
+      />
+      <Stack.Screen
+        name="meal-planner"
+        options={{ animation: "slide_from_right" }}
+      />
+      <Stack.Screen
+        name="food-preferences-onboarding"
+        options={{ animation: "slide_from_right" }}
+      />
+      <Stack.Screen
+        name="grocery-list"
+        options={{ animation: "slide_from_right" }}
+      />
     </Stack>
   );
 }

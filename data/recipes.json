@@ -1,0 +1,931 @@
+[
+  {
+    "id": "roadhouse-toast",
+    "name": "Roadhouse Toast",
+    "description": "Bacon-wrapped eggs on buttered low-carb toast, air-fried to crispy perfection.",
+    "goal": "maintain",
+    "mealType": "breakfast",
+    "prepTimeMins": 2,
+    "cookTimeMins": 8,
+    "tags": ["high-protein", "quick"],
+    "ingredients": [
+      {"name": "Low-carb bread", "amount": "2 slices"},
+      {"name": "Butter, softened", "amount": "to taste"},
+      {"name": "Eggs", "amount": "2"},
+      {"name": "Bacon", "amount": "2 slices"},
+      {"name": "Pepper", "amount": "to taste"},
+      {"name": "Mashed avocado", "amount": "optional"}
+    ],
+    "instructions": [
+      "Butter your bread.",
+      "Wrap bacon in circles around each slice.",
+      "Crack the eggs in your bacon circle.",
+      "Pepper on top.",
+      "Air fry at 370°F for 8 minutes.",
+      "Add mashed avocado.",
+      "Enjoy! This recipe makes two servings."
+    ],
+    "totalMacros": {"calories": 538, "proteinG": 33, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "shredded-breakfast-wraps",
+    "name": "Shredded Breakfast Wraps",
+    "description": "Chicken apple sausage, eggs and peppers wrapped in a toasted low-carb tortilla.",
+    "goal": "maintain",
+    "mealType": "breakfast",
+    "prepTimeMins": 5,
+    "cookTimeMins": 15,
+    "tags": ["high-protein", "meal-prep"],
+    "ingredients": [
+      {"name": "Small onion", "amount": "1, diced"},
+      {"name": "Green bell pepper", "amount": "1, sliced"},
+      {"name": "Salt, pepper, garlic powder, paprika", "amount": "to taste"},
+      {"name": "Chicken apple sausage", "amount": "12oz, diced"},
+      {"name": "Eggs", "amount": "6"},
+      {"name": "Reduced fat shredded cheese", "amount": "to taste"},
+      {"name": "Low-carb tortillas", "amount": "3"}
+    ],
+    "instructions": [
+      "To an oiled pan, add diced onion and green bell pepper and season with salt, pepper, garlic powder, and paprika.",
+      "Once onions are sweating, add in your diced chicken apple sausage.",
+      "Push everything to the side of the pan and add six eggs, seasoning with pepper.",
+      "Mix everything and then add spoonfuls to a warm tortilla with cheese.",
+      "Fold sides and roll into a wrap.",
+      "For a crunchy wrap, toast it in the pan for a couple minutes.",
+      "Enjoy with Shredded Jalapeño Ranch. Makes about 3 wraps."
+    ],
+    "totalMacros": {"calories": 534, "proteinG": 33, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "high-protein-egg-bites",
+    "name": "High-Protein Egg Bites",
+    "description": "Blended eggs and cottage cheese baked into protein-packed muffin bites with bacon and spinach.",
+    "goal": "cut",
+    "mealType": "breakfast",
+    "prepTimeMins": 10,
+    "cookTimeMins": 20,
+    "tags": ["high-protein", "meal-prep"],
+    "ingredients": [
+      {"name": "Eggs", "amount": "12"},
+      {"name": "Cottage cheese", "amount": "2 cups"},
+      {"name": "Salt and pepper", "amount": "to taste"},
+      {"name": "Bacon, uncooked and chopped", "amount": "8oz"},
+      {"name": "Spinach", "amount": "handful"},
+      {"name": "Reduced-fat cheese", "amount": "to taste"}
+    ],
+    "instructions": [
+      "Crack a dozen eggs into a blender.",
+      "Add cottage cheese, salt and pepper to blender.",
+      "Blend it together.",
+      "Pour mixture into bowl.",
+      "Mix in bacon, spinach, and cheese.",
+      "Pour into muffin tray and bake at 375°F for 20 minutes.",
+      "Enjoy! This recipe makes 12 bites."
+    ],
+    "totalMacros": {"calories": 150, "proteinG": 12, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "egg-chicken-quesadilla",
+    "name": "Egg Chicken Quesadilla",
+    "description": "Egg white base with chicken, spinach and cheese folded in a low-carb tortilla.",
+    "goal": "maintain",
+    "mealType": "lunch",
+    "prepTimeMins": 5,
+    "cookTimeMins": 10,
+    "tags": ["high-protein", "quick"],
+    "ingredients": [
+      {"name": "Large low-carb tortilla", "amount": "1"},
+      {"name": "Egg whites", "amount": "6oz"},
+      {"name": "Butter", "amount": "1oz"},
+      {"name": "Salt, pepper, paprika", "amount": "to taste"},
+      {"name": "Low-fat shredded cheese", "amount": "3oz"},
+      {"name": "Spinach", "amount": "handful"},
+      {"name": "Cooked chicken breast, sliced", "amount": "6oz"}
+    ],
+    "instructions": [
+      "Melt your pat of butter in a large pan on medium heat.",
+      "Add your egg whites and cook through.",
+      "Once whites begin to solidify, place large tortilla in pan.",
+      "Flip your tortilla: put lid on pan, turn pan upside down, then lower lid and slide tortilla off.",
+      "Once flipped, add salt, pepper, paprika, shredded cheese, spinach, and cooked chicken breast.",
+      "Fold and press down with spatula.",
+      "Remove from pan, slice into smaller pieces, and enjoy! Makes one large serving."
+    ],
+    "totalMacros": {"calories": 569, "proteinG": 82, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "teriyaki-chicken-wrap",
+    "name": "Teriyaki Chicken Wrap",
+    "description": "Teriyaki-marinated air-fried chicken thighs with cabbage and carrots in a toasted wrap.",
+    "goal": "maintain",
+    "mealType": "lunch",
+    "prepTimeMins": 10,
+    "cookTimeMins": 15,
+    "tags": ["high-protein", "meal-prep"],
+    "ingredients": [
+      {"name": "Low-carb tortillas or spinach wraps", "amount": "4"},
+      {"name": "Chicken thighs", "amount": "16oz"},
+      {"name": "Teriyaki sauce", "amount": "4oz"},
+      {"name": "Salt and pepper", "amount": "to taste"},
+      {"name": "Purple cabbage", "amount": "1 head, chopped"},
+      {"name": "Shredded carrots", "amount": "to taste"}
+    ],
+    "instructions": [
+      "In a bowl, mix chicken thighs with teriyaki sauce, salt and pepper.",
+      "Air fry at 390°F for 15 minutes.",
+      "Slice cooked chicken.",
+      "Set out with warm tortilla, shredded carrots, and cabbage.",
+      "Put everything in your tortilla.",
+      "Fold into wrap.",
+      "Toast wrap in air fryer for 3 minutes. Makes about 4 wraps."
+    ],
+    "totalMacros": {"calories": 293, "proteinG": 32, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "lemon-pepper-gyros",
+    "name": "Lemon Pepper Gyros",
+    "description": "Lemon-marinated air-fried chicken with hummus, cucumber, tomato and onion on warm pita.",
+    "goal": "maintain",
+    "mealType": "lunch",
+    "prepTimeMins": 10,
+    "cookTimeMins": 15,
+    "tags": ["high-protein"],
+    "ingredients": [
+      {"name": "Chicken breast, uncooked", "amount": "16oz"},
+      {"name": "Lemon, zested and juiced", "amount": "1"},
+      {"name": "Salt, pepper, garlic powder", "amount": "to taste"},
+      {"name": "Cucumber, diced", "amount": "1"},
+      {"name": "Roma tomatoes, diced", "amount": "2"},
+      {"name": "Red onion, diced", "amount": "1/2"},
+      {"name": "Hummus", "amount": "to taste"},
+      {"name": "Pita bread", "amount": "3"}
+    ],
+    "instructions": [
+      "In bowl, mix chicken breast with lemon zest, lemon juice, salt and pepper.",
+      "Air fry at 390°F for 15 minutes.",
+      "Once cooked, slice chicken.",
+      "Spread hummus on a warm pita.",
+      "Add your chicken, tomato, onion, and cucumber.",
+      "Fold and enjoy! Makes about 3 gyros."
+    ],
+    "totalMacros": {"calories": 570, "proteinG": 52, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "high-protein-grilled-cheese",
+    "name": "High-Protein Grilled Cheese",
+    "description": "Rotisserie chicken and gouda melted between low-carb bread slices.",
+    "goal": "maintain",
+    "mealType": "lunch",
+    "prepTimeMins": 5,
+    "cookTimeMins": 5,
+    "tags": ["high-protein", "quick"],
+    "ingredients": [
+      {"name": "Low-carb bread", "amount": "2 slices"},
+      {"name": "Cooked rotisserie chicken", "amount": "6oz"},
+      {"name": "Butter", "amount": "to taste"},
+      {"name": "Gouda cheese", "amount": "2-3 slices"}
+    ],
+    "instructions": [
+      "Butter bread.",
+      "Add cheese.",
+      "Add shredded chicken.",
+      "Air fry at 375°F or cook in lightly oiled pan on each side until golden brown.",
+      "Slice and enjoy! Makes one serving."
+    ],
+    "totalMacros": {"calories": 582, "proteinG": 51, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "carnivore-quesadilla",
+    "name": "Carnivore Quesadilla",
+    "description": "Seasoned carne asada with oaxaca cheese in a toasted low-carb tortilla.",
+    "goal": "maintain",
+    "mealType": "lunch",
+    "prepTimeMins": 5,
+    "cookTimeMins": 10,
+    "tags": ["high-protein"],
+    "ingredients": [
+      {"name": "Carne asada", "amount": "10oz"},
+      {"name": "Salt, pepper, garlic powder, chili lime seasoning", "amount": "to taste"},
+      {"name": "Oil and butter", "amount": "to taste"},
+      {"name": "Low-carb tortillas", "amount": "2"},
+      {"name": "Shredded oaxaca cheese", "amount": "to taste"}
+    ],
+    "instructions": [
+      "Season carne asada with salt, pepper, garlic powder, and chili lime seasoning.",
+      "Cook for a few minutes on each side until browned.",
+      "Add tortilla to the asada pan with oaxaca cheese and sliced carne asada.",
+      "Place second tortilla on top and flip, cooking both sides evenly.",
+      "Slice and enjoy! Makes one large serving."
+    ],
+    "totalMacros": {"calories": 750, "proteinG": 57, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "buffalo-chicken-wraps",
+    "name": "Buffalo Chicken Wraps",
+    "description": "Buffalo-marinated air-fried chicken with lettuce, tomato and cheese in a toasted tortilla.",
+    "goal": "cut",
+    "mealType": "lunch",
+    "prepTimeMins": 10,
+    "cookTimeMins": 15,
+    "tags": ["high-protein", "meal-prep"],
+    "ingredients": [
+      {"name": "Chicken breasts", "amount": "3 medium"},
+      {"name": "Buffalo sauce", "amount": "1/2 cup"},
+      {"name": "Minced garlic", "amount": "3 cloves"},
+      {"name": "Salt and pepper", "amount": "to taste"},
+      {"name": "Shredded Mexican cheese", "amount": "to taste"},
+      {"name": "Shredded lettuce", "amount": "to taste"},
+      {"name": "Roma tomato, diced", "amount": "1"},
+      {"name": "Low-carb tortillas", "amount": "3"}
+    ],
+    "instructions": [
+      "Add buffalo sauce, minced garlic, salt and pepper to chicken breasts.",
+      "Stir together and marinate a few minutes.",
+      "Air fry at 380°F for 15 minutes.",
+      "Slice chicken into strips.",
+      "Warm tortilla and add cheese, chicken, lettuce, and tomato.",
+      "Roll wrap and toast in air fryer for 5 minutes.",
+      "Makes about 3 wraps."
+    ],
+    "totalMacros": {"calories": 275, "proteinG": 44, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "orange-honey-chicken-bowls",
+    "name": "Orange Honey Chicken Bowls",
+    "description": "Orange-honey marinated chicken thighs over quinoa with avocado.",
+    "goal": "maintain",
+    "mealType": "dinner",
+    "prepTimeMins": 15,
+    "cookTimeMins": 15,
+    "tags": ["high-protein"],
+    "ingredients": [
+      {"name": "Orange juice", "amount": "1 orange"},
+      {"name": "Honey", "amount": "1 tbsp"},
+      {"name": "Garlic", "amount": "1 tbsp"},
+      {"name": "Chili paste", "amount": "1 tbsp"},
+      {"name": "Salt and pepper", "amount": "to taste"},
+      {"name": "Chicken thighs", "amount": "16oz"},
+      {"name": "Boiled quinoa or microwavable quinoa packet", "amount": "1 cup"},
+      {"name": "Avocado, diced", "amount": "1"}
+    ],
+    "instructions": [
+      "Combine orange juice, honey, garlic, chili paste, salt and pepper.",
+      "Fork chicken thighs and pour in marinade. Let sit 10 minutes.",
+      "Air fry at 380°F for 15 minutes.",
+      "Dice up the chicken.",
+      "Add to a bowl with quinoa.",
+      "Add avocado and Shredded Jalapeño Ranch.",
+      "Makes about 1 large bowl."
+    ],
+    "totalMacros": {"calories": 472, "proteinG": 61, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "chili-sesame-beef-bowl",
+    "name": "Chili Sesame Beef Bowl",
+    "description": "Seasoned ground beef with sesame and sweet chili sauce over rice with avocado and pickles.",
+    "goal": "maintain",
+    "mealType": "dinner",
+    "prepTimeMins": 5,
+    "cookTimeMins": 10,
+    "tags": ["high-protein", "quick"],
+    "ingredients": [
+      {"name": "Onion, diced", "amount": "1"},
+      {"name": "Ground beef", "amount": "8oz"},
+      {"name": "Salt, pepper, paprika, garlic powder", "amount": "to taste"},
+      {"name": "Chili paste", "amount": "1 tbsp"},
+      {"name": "Sesame seeds", "amount": "to taste"},
+      {"name": "Sweet chili sauce", "amount": "to taste"},
+      {"name": "Chopped pickles", "amount": "to taste"},
+      {"name": "Avocado, diced", "amount": "1/2"},
+      {"name": "White rice or microwavable packet", "amount": "1 cup"}
+    ],
+    "instructions": [
+      "Cook diced onion in oiled pan until softened.",
+      "Add ground beef, then salt, pepper, paprika, garlic powder, and chili paste.",
+      "Near end of cooking, add sesame seeds and sweet chili sauce to taste.",
+      "Add beef to a bowl with white rice, avocado, and pickles.",
+      "Enjoy! Makes one serving."
+    ],
+    "totalMacros": {"calories": 584, "proteinG": 48, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "white-cheddar-turkey-burgers",
+    "name": "White Cheddar Turkey Burgers",
+    "description": "Lean turkey patties with garlic, chili paste and white cheddar on a toasted bun.",
+    "goal": "cut",
+    "mealType": "dinner",
+    "prepTimeMins": 10,
+    "cookTimeMins": 10,
+    "tags": ["high-protein"],
+    "ingredients": [
+      {"name": "Red onion, diced", "amount": "1"},
+      {"name": "Lean ground turkey", "amount": "16oz"},
+      {"name": "Salt, pepper, paprika", "amount": "to taste"},
+      {"name": "Minced garlic", "amount": "1 tbsp"},
+      {"name": "Chili paste", "amount": "1 tbsp"},
+      {"name": "Bread crumbs", "amount": "2 tbsp"},
+      {"name": "Shredded white cheddar cheese", "amount": "to taste"},
+      {"name": "Low-carb or brioche buns", "amount": "4"}
+    ],
+    "instructions": [
+      "Dice a red onion.",
+      "Combine red onion, ground turkey, salt, pepper, paprika, minced garlic, chili paste, and bread crumbs.",
+      "Form patties.",
+      "Cook in oiled pan on medium heat.",
+      "After flipping, add white cheddar cheese. Cover with lid to melt.",
+      "Add mashed avocado to toasted bun.",
+      "Place turkey patty over top. Makes about 4 burgers."
+    ],
+    "totalMacros": {"calories": 296, "proteinG": 41, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "honey-garlic-salmon-bowls",
+    "name": "Honey Garlic Salmon Bowls",
+    "description": "Honey soy glazed air-fried salmon over rice with avocado, carrots, and cucumber.",
+    "goal": "maintain",
+    "mealType": "dinner",
+    "prepTimeMins": 5,
+    "cookTimeMins": 10,
+    "tags": ["high-protein", "omega-3"],
+    "ingredients": [
+      {"name": "Salmon, uncooked", "amount": "12oz"},
+      {"name": "Avocado oil", "amount": "to taste"},
+      {"name": "Salt, pepper, garlic powder, paprika", "amount": "to taste"},
+      {"name": "Honey", "amount": "2 tbsp"},
+      {"name": "Soy sauce", "amount": "2 tbsp"},
+      {"name": "White rice or microwavable packet", "amount": "1 cup"},
+      {"name": "Shredded carrots", "amount": "to taste"},
+      {"name": "Cucumber, peeled and diced", "amount": "1"},
+      {"name": "Avocado, diced", "amount": "1/2"}
+    ],
+    "instructions": [
+      "Brush salmon with oil, salt, pepper, garlic powder, paprika, honey and soy sauce.",
+      "Air fry at 400°F for 10 minutes.",
+      "Add to bowl with rice, carrots, cucumber, and avocado.",
+      "Enjoy!"
+    ],
+    "totalMacros": {"calories": 630, "proteinG": 53, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "pineapple-pork-tacos",
+    "name": "Pineapple Pork Tacos",
+    "description": "Ground pork with crushed pineapple and a lemon crema with quick-pickled onion.",
+    "goal": "maintain",
+    "mealType": "dinner",
+    "prepTimeMins": 10,
+    "cookTimeMins": 15,
+    "tags": ["high-protein"],
+    "ingredients": [
+      {"name": "Crushed pineapple", "amount": "1 can"},
+      {"name": "Red onion, chopped", "amount": "1"},
+      {"name": "Ground pork (or beef pork blend)", "amount": "1lb"},
+      {"name": "Salt, pepper, cayenne, garlic powder, paprika", "amount": "to taste"},
+      {"name": "Lemon, juiced and zested", "amount": "1"},
+      {"name": "Radishes, sliced", "amount": "4"},
+      {"name": "Low-fat sour cream", "amount": "3 tbsp"}
+    ],
+    "instructions": [
+      "Add crushed pineapple to oiled pan on medium heat.",
+      "Add half the red onion, then ground pork and seasonings.",
+      "Cook until browned and set aside.",
+      "Put remaining onion, sliced radish, and lemon juice in bowl. Microwave 45 seconds.",
+      "Add lemon zest and sour cream to bowl and stir.",
+      "Add cooked pork and pickled onion mixture.",
+      "Makes about 3 servings (6 tacos)."
+    ],
+    "totalMacros": {"calories": 400, "proteinG": 30, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "minotaur-munchies",
+    "name": "Minotaur Munchies",
+    "description": "Seasoned ground beef with eggs and rice in a hearty one-pan meal.",
+    "goal": "maintain",
+    "mealType": "dinner",
+    "prepTimeMins": 5,
+    "cookTimeMins": 10,
+    "tags": ["high-protein", "quick"],
+    "ingredients": [
+      {"name": "Ground beef", "amount": "16oz"},
+      {"name": "Salt, pepper, paprika, garlic powder", "amount": "to taste"},
+      {"name": "Eggs", "amount": "4"},
+      {"name": "Roma tomato, diced", "amount": "1"},
+      {"name": "Microwavable rice packet", "amount": "1"}
+    ],
+    "instructions": [
+      "Cook ground beef in oiled pan, seasoning with salt, pepper, paprika, garlic powder.",
+      "Once halfway cooked, add 4 eggs and stir to cook through.",
+      "Add cooked rice and roma tomato, stir to combine.",
+      "Add to bowl and top with hot sauce.",
+      "Makes two servings."
+    ],
+    "totalMacros": {"calories": 496, "proteinG": 41, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "shredded-jalapeno-ranch",
+    "name": "Shredded Jalapeño Ranch",
+    "description": "Creamy blended jalapeño ranch sauce made with Greek yogurt.",
+    "goal": "maintain",
+    "mealType": "sauce",
+    "prepTimeMins": 5,
+    "cookTimeMins": 0,
+    "tags": ["sauce", "low-calorie"],
+    "ingredients": [
+      {"name": "Jalapeños, seeds removed", "amount": "3"},
+      {"name": "0% fat Greek yogurt", "amount": "1 and 3/4 cup"},
+      {"name": "Olive oil", "amount": "1/4 cup"},
+      {"name": "White vinegar", "amount": "1 tbsp"},
+      {"name": "Garlic cloves", "amount": "3"},
+      {"name": "Chopped parsley", "amount": "1/4 cup"},
+      {"name": "Fresh cilantro", "amount": "2 tbsp"},
+      {"name": "Dried dill", "amount": "2 tsp"},
+      {"name": "Onion powder", "amount": "2 tsp"},
+      {"name": "Salt and pepper", "amount": "to taste"}
+    ],
+    "instructions": [
+      "Blend all ingredients together.",
+      "One serving is about 2 tbsp."
+    ],
+    "totalMacros": {"calories": 55, "proteinG": 3, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "ole-reliable-sauce",
+    "name": "Ole Reliable Sauce",
+    "description": "Quick 4-ingredient sauce with avocado oil, dijon, sriracha and hot honey.",
+    "goal": "maintain",
+    "mealType": "sauce",
+    "prepTimeMins": 5,
+    "cookTimeMins": 0,
+    "tags": ["sauce", "quick"],
+    "ingredients": [
+      {"name": "Avocado oil", "amount": "1 tbsp"},
+      {"name": "Dijon mustard", "amount": "1 tbsp"},
+      {"name": "Sriracha", "amount": "1 tbsp"},
+      {"name": "Hot honey", "amount": "1 tbsp"}
+    ],
+    "instructions": [
+      "Combine all ingredients in a bowl or shake in an airtight container.",
+      "Makes one serving."
+    ],
+    "totalMacros": {"calories": 190, "proteinG": 1, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "shredded-honey-mustard",
+    "name": "Shredded Honey Mustard",
+    "description": "Greek yogurt-based honey mustard sauce with dijon and white vinegar.",
+    "goal": "maintain",
+    "mealType": "sauce",
+    "prepTimeMins": 5,
+    "cookTimeMins": 0,
+    "tags": ["sauce", "low-calorie"],
+    "ingredients": [
+      {"name": "0% fat Greek yogurt", "amount": "3/4 cup"},
+      {"name": "Dijon mustard", "amount": "1/4 cup"},
+      {"name": "Honey", "amount": "1/4 cup"},
+      {"name": "White vinegar", "amount": "1 tbsp"},
+      {"name": "Salt and pepper", "amount": "to taste"}
+    ],
+    "instructions": [
+      "Mix all ingredients together.",
+      "Store in airtight container.",
+      "One serving is about 2 tbsp."
+    ],
+    "totalMacros": {"calories": 35, "proteinG": 2, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "honey-chicken-wraps",
+    "name": "Honey Chicken Wraps",
+    "description": "Honey taco-seasoned chicken thighs with cheese, red onion and spinach in toasted tortillas.",
+    "goal": "maintain",
+    "mealType": "lunch",
+    "prepTimeMins": 5,
+    "cookTimeMins": 15,
+    "tags": ["high-protein", "meal-prep"],
+    "ingredients": [
+      {"name": "Chicken thighs", "amount": "16oz"},
+      {"name": "Honey", "amount": "to taste"},
+      {"name": "Taco seasoning and black pepper", "amount": "to taste"},
+      {"name": "Low-carb tortillas", "amount": "4"},
+      {"name": "Low-fat shredded cheese", "amount": "to taste"},
+      {"name": "Sliced red onion", "amount": "to taste"},
+      {"name": "Spinach", "amount": "to taste"}
+    ],
+    "instructions": [
+      "Mix chicken thighs with oil, taco seasoning, black pepper, and honey.",
+      "Air fry at 390°F for 15 minutes.",
+      "Slice chicken and add to warm tortilla with cheese, red onion, spinach.",
+      "Wrap it up.",
+      "Toast in air fryer for 3-4 minutes until tortilla browns.",
+      "Wrap extras in foil and refrigerate for up to a week.",
+      "Makes about 4 servings."
+    ],
+    "totalMacros": {"calories": 453, "proteinG": 42, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "protein-penne-spicy-meatballs",
+    "name": "Protein Penne Spicy Meatballs",
+    "description": "Ground turkey meatballs air-fried and served with protein penne in rosé tomato sauce.",
+    "goal": "maintain",
+    "mealType": "dinner",
+    "prepTimeMins": 10,
+    "cookTimeMins": 15,
+    "tags": ["high-protein", "meal-prep"],
+    "ingredients": [
+      {"name": "Lean ground turkey", "amount": "16oz"},
+      {"name": "Minced garlic", "amount": "1 tbsp"},
+      {"name": "Chili paste", "amount": "1 tbsp"},
+      {"name": "Salt and pepper", "amount": "to taste"},
+      {"name": "Chopped parsley", "amount": "to taste"},
+      {"name": "Egg", "amount": "1"},
+      {"name": "Bread crumbs", "amount": "2 tbsp"},
+      {"name": "Penne protein pasta", "amount": "16oz"},
+      {"name": "Rosé tomato sauce", "amount": "1 jar"}
+    ],
+    "instructions": [
+      "Mash ground turkey with garlic, chili paste, salt, pepper, parsley, egg, and bread crumbs.",
+      "Form about 9 balls.",
+      "Air fry at 400°F for 10 minutes.",
+      "While meatballs cook, boil protein pasta until cooked through.",
+      "Heat tomato sauce and add meatballs, stirring to absorb flavor.",
+      "Add cooked pasta and stir everything together.",
+      "Store in meal prep containers. Makes about 4 servings."
+    ],
+    "totalMacros": {"calories": 488, "proteinG": 45, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "honey-garlic-chicken-fried-rice",
+    "name": "Honey Garlic Chicken Fried Rice",
+    "description": "Honey garlic sesame chicken with egg whites, veggies and rice for meal prep.",
+    "goal": "maintain",
+    "mealType": "dinner",
+    "prepTimeMins": 10,
+    "cookTimeMins": 20,
+    "tags": ["high-protein", "meal-prep"],
+    "ingredients": [
+      {"name": "Chicken breasts, cubed", "amount": "5 uncooked"},
+      {"name": "Salt and pepper", "amount": "to taste"},
+      {"name": "Honey", "amount": "2 tbsp"},
+      {"name": "Soy sauce", "amount": "2 tbsp plus extra for drizzling"},
+      {"name": "Minced garlic", "amount": "1 tbsp"},
+      {"name": "Sesame oil", "amount": "1 tbsp"},
+      {"name": "Frozen veggie mix", "amount": "to taste"},
+      {"name": "Egg whites", "amount": "12oz"},
+      {"name": "Boiled white rice or microwavable rice packet", "amount": "2 cups"}
+    ],
+    "instructions": [
+      "Cube chicken and mix with salt, pepper, honey, soy sauce, garlic, and sesame oil.",
+      "Cook in pan. Once cooked, remove chicken.",
+      "In same pan, cook frozen veggies then push to side and cook egg whites.",
+      "Mix veggies and egg whites, add rice and drizzle with soy sauce.",
+      "Add chicken and mix everything together.",
+      "Divide into meal prep containers. Makes about 4 servings."
+    ],
+    "totalMacros": {"calories": 270, "proteinG": 20, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "rosemary-garlic-sirloin-roast",
+    "name": "Rosemary Garlic Sirloin Roast",
+    "description": "Slow-cooked sirloin roast with potatoes, carrots and a savory herb broth.",
+    "goal": "maintain",
+    "mealType": "dinner",
+    "prepTimeMins": 15,
+    "cookTimeMins": 480,
+    "tags": ["high-protein", "meal-prep", "slow-cooker"],
+    "ingredients": [
+      {"name": "Baby potatoes", "amount": "1lb"},
+      {"name": "Baby carrots", "amount": "10oz"},
+      {"name": "Yellow onion, diced", "amount": "1"},
+      {"name": "Butter, cubed", "amount": "3 tbsp"},
+      {"name": "Sirloin roast", "amount": "2.5lb"},
+      {"name": "Beef broth", "amount": "1 cup"},
+      {"name": "Apple cider vinegar", "amount": "4 tbsp"},
+      {"name": "Soy sauce", "amount": "3 tbsp"},
+      {"name": "Worcestershire sauce", "amount": "2 tbsp"},
+      {"name": "Salt, pepper, garlic powder, onion powder, paprika, dried parsley, chopped rosemary", "amount": "to taste"}
+    ],
+    "instructions": [
+      "Grab a crock pot or slow cooker.",
+      "Drizzle oil and spread baby potatoes, diced onion, baby carrots, and cubed butter.",
+      "Add sirloin roast on top.",
+      "Mix beef broth, vinegar, soy sauce, worcestershire, and all spices in a bowl. Pour over roast.",
+      "Close lid and cook on low for 8-10 hours.",
+      "Once cooked, shred sirloin and return to pot, stirring everything together.",
+      "Makes about 5 servings."
+    ],
+    "totalMacros": {"calories": 461, "proteinG": 53, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "hot-honey-chicken-quinoa",
+    "name": "Hot Honey Chicken Quinoa",
+    "description": "Blackened air-fried chicken with quinoa drizzled in Ole Reliable Sauce.",
+    "goal": "maintain",
+    "mealType": "dinner",
+    "prepTimeMins": 10,
+    "cookTimeMins": 15,
+    "tags": ["high-protein", "meal-prep"],
+    "ingredients": [
+      {"name": "Chicken breasts", "amount": "4 medium"},
+      {"name": "Oil, salt, pepper, paprika, blackened seasoning", "amount": "to taste"},
+      {"name": "Boiled quinoa or microwavable packet", "amount": "1 cup"},
+      {"name": "Avocado oil", "amount": "1 tbsp"},
+      {"name": "Dijon mustard", "amount": "1 tbsp"},
+      {"name": "Sriracha", "amount": "1 tbsp"},
+      {"name": "Hot honey", "amount": "1 tbsp"}
+    ],
+    "instructions": [
+      "Season chicken with oil, salt, pepper, paprika, and blackened seasoning.",
+      "Air fry at 390°F for 15 minutes.",
+      "Make Ole Reliable Sauce by stirring together avocado oil, dijon, sriracha, and hot honey.",
+      "Slice cooked chicken and place in meal prep container next to quinoa.",
+      "Pour sauce over top and enjoy!"
+    ],
+    "totalMacros": {"calories": 483, "proteinG": 57, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "chocolate-cherry-protein-smoothie",
+    "name": "Chocolate Cherry Protein Smoothie",
+    "description": "Rich chocolate and cherry protein smoothie with Greek yogurt and peanut butter powder.",
+    "goal": "maintain",
+    "mealType": "smoothie",
+    "prepTimeMins": 5,
+    "cookTimeMins": 0,
+    "tags": ["high-protein", "quick", "no-cook"],
+    "ingredients": [
+      {"name": "Greek yogurt", "amount": "3/4 cup"},
+      {"name": "Banana", "amount": "1"},
+      {"name": "Frozen cherries", "amount": "1/2 cup"},
+      {"name": "Peanut butter powder", "amount": "1 tbsp"},
+      {"name": "Cocoa powder", "amount": "1 tbsp"},
+      {"name": "Protein powder", "amount": "1 scoop"}
+    ],
+    "instructions": [
+      "Blend all ingredients together.",
+      "Garnish with dark chocolate pieces and hemp seeds if desired.",
+      "Makes one serving."
+    ],
+    "totalMacros": {"calories": 421, "proteinG": 50, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "wild-berry-cutting-smoothie",
+    "name": "Wild Berry Cutting Smoothie",
+    "description": "Dairy-free berry smoothie with oats and double protein powder for cutting phases.",
+    "goal": "cut",
+    "mealType": "smoothie",
+    "prepTimeMins": 5,
+    "cookTimeMins": 0,
+    "tags": ["high-protein", "quick", "no-cook"],
+    "ingredients": [
+      {"name": "Oats", "amount": "1/4 cup"},
+      {"name": "Unsweetened vanilla almond milk", "amount": "1 cup"},
+      {"name": "Banana", "amount": "1/2"},
+      {"name": "Frozen berry blend", "amount": "1 cup"},
+      {"name": "Dairy-free yogurt", "amount": "3/4 cup"},
+      {"name": "Peanut butter powder", "amount": "1 tbsp"},
+      {"name": "Protein powder", "amount": "2 scoops"}
+    ],
+    "instructions": [
+      "Blend all ingredients together.",
+      "Makes one serving."
+    ],
+    "totalMacros": {"calories": 593, "proteinG": 40, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "feel-better-smoothie",
+    "name": "Feel Better Smoothie",
+    "description": "Immunity-boosting smoothie with ginger, orange, pineapple, spinach and Greek yogurt.",
+    "goal": "maintain",
+    "mealType": "smoothie",
+    "prepTimeMins": 5,
+    "cookTimeMins": 0,
+    "tags": ["high-protein", "quick", "no-cook"],
+    "ingredients": [
+      {"name": "Orange juice", "amount": "1 orange"},
+      {"name": "Green apple", "amount": "1"},
+      {"name": "Fresh ginger, peeled", "amount": "1 small piece"},
+      {"name": "Banana", "amount": "1/2"},
+      {"name": "Frozen pineapple", "amount": "1/2 cup"},
+      {"name": "Greek yogurt", "amount": "1 cup"},
+      {"name": "Spinach", "amount": "1 handful"},
+      {"name": "Cayenne pepper", "amount": "to taste"}
+    ],
+    "instructions": [
+      "Blend all ingredients together.",
+      "Enjoy! Makes one serving."
+    ],
+    "totalMacros": {"calories": 400, "proteinG": 30, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "giga-smoothie",
+    "name": "Giga Smoothie",
+    "description": "100g protein mega smoothie with berries, frozen banana, Greek yogurt and vanilla protein.",
+    "goal": "bulk",
+    "mealType": "smoothie",
+    "prepTimeMins": 5,
+    "cookTimeMins": 0,
+    "tags": ["high-protein", "quick", "no-cook"],
+    "ingredients": [
+      {"name": "Frozen berry blend", "amount": "1 cup"},
+      {"name": "Frozen banana", "amount": "2/3 cup"},
+      {"name": "0% fat Greek yogurt", "amount": "1 and 1/2 cup"},
+      {"name": "Milk", "amount": "1/3 cup"},
+      {"name": "Vanilla protein powder", "amount": "2 scoops"}
+    ],
+    "instructions": [
+      "Blend all ingredients together.",
+      "Makes one large serving."
+    ],
+    "totalMacros": {"calories": 750, "proteinG": 100, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "vegan-chocolate-mousse",
+    "name": "Vegan Chocolate Mousse",
+    "description": "Thick blended tofu, dates and cocoa mousse — vegan, high protein and indulgent.",
+    "goal": "maintain",
+    "mealType": "dessert",
+    "prepTimeMins": 5,
+    "cookTimeMins": 0,
+    "tags": ["vegan", "high-protein", "no-cook"],
+    "ingredients": [
+      {"name": "Tofu", "amount": "14oz"},
+      {"name": "Dates", "amount": "10"},
+      {"name": "Cocoa powder", "amount": "1/2 cup"},
+      {"name": "Almond milk", "amount": "1 cup"}
+    ],
+    "instructions": [
+      "Blend everything together.",
+      "Makes one large serving."
+    ],
+    "totalMacros": {"calories": 595, "proteinG": 45, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "strawberry-coco-progurt",
+    "name": "Strawberry Coco Progurt",
+    "description": "Greek yogurt mixed with chocolate protein powder, topped with fresh strawberries.",
+    "goal": "cut",
+    "mealType": "dessert",
+    "prepTimeMins": 5,
+    "cookTimeMins": 0,
+    "tags": ["high-protein", "no-cook", "quick"],
+    "ingredients": [
+      {"name": "0% fat Greek yogurt", "amount": "1 and 1/2 cup"},
+      {"name": "Cocoa or chocolate protein powder", "amount": "2 scoops"},
+      {"name": "Sliced strawberries", "amount": "to taste (optional)"}
+    ],
+    "instructions": [
+      "Mix Greek yogurt and protein powder vigorously until thoroughly combined.",
+      "Top with fresh strawberries.",
+      "Makes one large serving."
+    ],
+    "totalMacros": {"calories": 400, "proteinG": 82, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "jacked-banana-bread",
+    "name": "Jacked Banana Bread",
+    "description": "High-protein banana bread with plant-based protein powder and Reese's peanut butter chips.",
+    "goal": "bulk",
+    "mealType": "dessert",
+    "prepTimeMins": 15,
+    "cookTimeMins": 45,
+    "tags": ["high-protein", "baked"],
+    "ingredients": [
+      {"name": "Old bananas, mashed", "amount": "3"},
+      {"name": "Milk", "amount": "1 cup"},
+      {"name": "Apple cider vinegar", "amount": "1 tbsp"},
+      {"name": "Vanilla extract", "amount": "2 tsp"},
+      {"name": "Almond flour", "amount": "1/2 cup"},
+      {"name": "Self-rising flour", "amount": "2 cups"},
+      {"name": "Plant-based or casein protein powder", "amount": "2 scoops"},
+      {"name": "Splenda brown sugar", "amount": "1/2 cup"},
+      {"name": "Reese's peanut butter chips", "amount": "optional"}
+    ],
+    "instructions": [
+      "Mash 3 old bananas.",
+      "Mix wet ingredients: milk, apple cider vinegar, and vanilla extract.",
+      "Add dry ingredients: flour, protein powder, and brown sugar. Mix together.",
+      "Fold in Reese's peanut butter chips.",
+      "Pour into bread pan lined with parchment paper.",
+      "Bake at 375°F for 45 minutes.",
+      "Makes about 7 servings."
+    ],
+    "totalMacros": {"calories": 320, "proteinG": 18, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "ripped-reeses-bowl",
+    "name": "Ripped Reese's Bowl",
+    "description": "Blended peanut butter chocolate protein smoothie bowl — like a Reese's in a bowl.",
+    "goal": "bulk",
+    "mealType": "dessert",
+    "prepTimeMins": 5,
+    "cookTimeMins": 0,
+    "tags": ["high-protein", "no-cook", "quick"],
+    "ingredients": [
+      {"name": "Frozen banana", "amount": "1 cup"},
+      {"name": "0% fat Greek yogurt", "amount": "1 and 1/2 cup"},
+      {"name": "Peanut butter powder", "amount": "4 tbsp"},
+      {"name": "Chocolate protein powder", "amount": "2 scoops"},
+      {"name": "Milk (Fairlife for higher protein)", "amount": "1/2 cup"}
+    ],
+    "instructions": [
+      "Blend all ingredients together.",
+      "Pour into a bowl.",
+      "Garnish with a little dark chocolate.",
+      "Makes one large serving."
+    ],
+    "totalMacros": {"calories": 600, "proteinG": 70, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "balsamic-sprouts",
+    "name": "Balsamic Sprouts",
+    "description": "Brussels sprouts tossed in balsamic, olive oil and hot honey, air-fried until caramelized.",
+    "goal": "maintain",
+    "mealType": "snack",
+    "prepTimeMins": 5,
+    "cookTimeMins": 15,
+    "tags": ["low-calorie", "vegan"],
+    "ingredients": [
+      {"name": "Brussels sprouts, halved and stems removed", "amount": "12oz"},
+      {"name": "Olive oil", "amount": "1 tbsp"},
+      {"name": "Balsamic vinegar", "amount": "1 tbsp"},
+      {"name": "Salt, pepper, paprika", "amount": "to taste"},
+      {"name": "Hot honey or low-cal brown sugar", "amount": "2 tbsp"}
+    ],
+    "instructions": [
+      "Slice sprouts in half and cut off stems.",
+      "Mix in bowl with oil, balsamic vinegar, salt, pepper, paprika, and hot honey.",
+      "Set on oven-safe tray and air fry at 375°F for 15 minutes.",
+      "Transfer to bowl and enjoy! Makes about two servings."
+    ],
+    "totalMacros": {"calories": 150, "proteinG": 5, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "jacked-chicken-nuggets",
+    "name": "Jacked Chicken Nuggets",
+    "description": "Ground chicken nuggets breaded in nutritional yeast and breadcrumbs, air-fried.",
+    "goal": "cut",
+    "mealType": "snack",
+    "prepTimeMins": 10,
+    "cookTimeMins": 10,
+    "tags": ["high-protein", "quick"],
+    "ingredients": [
+      {"name": "Ground chicken", "amount": "16oz"},
+      {"name": "Salt, pepper, onion powder, paprika", "amount": "to taste"},
+      {"name": "Nutritional yeast", "amount": "1 cup"},
+      {"name": "Bread crumbs", "amount": "1/2 cup"}
+    ],
+    "instructions": [
+      "Mix ground chicken with salt, pepper, onion powder, and paprika.",
+      "Combine nutritional yeast and bread crumbs to form breading.",
+      "Using your hands, form nuggets and coat in breading.",
+      "Set coated nuggets on oven-safe tray.",
+      "Air fry at 400°F for 10 minutes.",
+      "Makes about 9 nuggets."
+    ],
+    "totalMacros": {"calories": 280, "proteinG": 40, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "the-5-minute-pizza",
+    "name": "The 5-Minute Pizza",
+    "description": "Quick pita pizza with tomato sauce, mozzarella and turkey pepperoni in the air fryer.",
+    "goal": "maintain",
+    "mealType": "snack",
+    "prepTimeMins": 1,
+    "cookTimeMins": 4,
+    "tags": ["quick", "high-protein"],
+    "ingredients": [
+      {"name": "Pita bread", "amount": "1"},
+      {"name": "Tomato sauce", "amount": "2 tbsp"},
+      {"name": "Shredded mozzarella cheese", "amount": "1 and 1/4 oz"},
+      {"name": "Turkey pepperoni", "amount": "7 slices"}
+    ],
+    "instructions": [
+      "Spoon pizza sauce onto pita bread.",
+      "Add cheese and turkey pepperoni.",
+      "Air fry at 400°F for 4 minutes.",
+      "Slice and enjoy! Makes one serving."
+    ],
+    "totalMacros": {"calories": 310, "proteinG": 20, "carbsG": 0, "fatG": 0}
+  },
+  {
+    "id": "easy-protein-tortilla",
+    "name": "Easy Protein Tortilla",
+    "description": "Homemade 2-ingredient protein tortillas made from Greek yogurt and flour.",
+    "goal": "maintain",
+    "mealType": "snack",
+    "prepTimeMins": 10,
+    "cookTimeMins": 10,
+    "tags": ["high-protein"],
+    "ingredients": [
+      {"name": "0% fat Greek yogurt", "amount": "1 cup"},
+      {"name": "Flour", "amount": "1 cup"},
+      {"name": "Salt", "amount": "2 tsp"}
+    ],
+    "instructions": [
+      "Mix Greek yogurt, flour, and salt with a spoon.",
+      "Transfer to a floured surface and knead to form a dough.",
+      "Cut into 6 smaller balls of dough.",
+      "Roll dough balls into flat tortillas using a rolling pin.",
+      "Cook in oiled pan on medium heat until browned on either side.",
+      "Makes about 6 tortillas."
+    ],
+    "totalMacros": {"calories": 120, "proteinG": 8, "carbsG": 0, "fatG": 0}
+  }
+]

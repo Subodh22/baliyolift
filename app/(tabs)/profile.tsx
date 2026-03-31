@@ -104,8 +104,16 @@ export default function ProfileScreen() {
           </View>
         </Animated.View>
 
-        {/* Data */}
+        {/* Nutrition */}
         <Animated.View entering={FadeInDown.delay(240).springify()}>
+          <Text style={s.sectionLabel}>NUTRITION</Text>
+          <RowGroup>
+            <Row label="Meal Plans" value="25 recipes" onPress={() => router.push("/meal-plans")} />
+          </RowGroup>
+        </Animated.View>
+
+        {/* Data */}
+        <Animated.View entering={FadeInDown.delay(300).springify()}>
           <Text style={s.sectionLabel}>DATA</Text>
           <RowGroup>
             <Row label="Export to CSV" onPress={() => {}} />
@@ -114,7 +122,7 @@ export default function ProfileScreen() {
         </Animated.View>
 
         {/* Account */}
-        <Animated.View entering={FadeInDown.delay(300).springify()}>
+        <Animated.View entering={FadeInDown.delay(360).springify()}>
           <Text style={s.sectionLabel}>ACCOUNT</Text>
           <RowGroup>
             <Row label="Sign Out" onPress={handleSignOut} showChevron={false} />
