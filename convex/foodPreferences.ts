@@ -20,6 +20,18 @@ export const save = mutation({
     excludedIngredients: v.array(v.string()),
     plannedMealTypes:    v.array(v.string()),
     varietyLevel:        v.number(),
+    mealFrequency:       v.optional(v.object({
+      breakfast: v.number(),
+      lunch:     v.number(),
+      dinner:    v.number(),
+      snack:     v.number(),
+    })),
+    mealVariety:         v.optional(v.object({
+      breakfast: v.number(),
+      lunch:     v.number(),
+      dinner:    v.number(),
+      snack:     v.number(),
+    })),
   },
   handler: async (ctx, { userId, ...data }) => {
     const existing = await ctx.db

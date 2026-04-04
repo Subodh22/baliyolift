@@ -13,9 +13,26 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { P } from "@/constants/colors";
 import { CG, CG_ITALIC, OUT_L, OUT } from "@/constants/typography";
 import {
-  RECIPES, GOAL_COLORS, MEAL_TYPE_LABELS,
+  GOAL_COLORS, MEAL_TYPE_LABELS,
   type Recipe, type GoalType, type MealType,
 } from "@/data/mealPlans";
+
+// ── Meal variety (unique recipes to rotate per meal type) ─────────────────────
+type MealVariety = { breakfast: number; lunch: number; dinner: number; snack: number };
+const DEFAULT_MEAL_VARIETY: MealVariety = { breakfast: 2, lunch: 2, dinner: 2, snack: 1 };
+const VARIETY_MEALS: { key: keyof MealVariety; label: string }[] = [
+  { key: "breakfast", label: "BREAKFAST" },
+  { key: "lunch",     label: "LUNCH"     },
+  { key: "dinner",    label: "DINNER"    },
+  { key: "snack",     label: "SNACKS"    },
+];
+// Colours for rotation slots A/B/C…
+const ROT_COLORS = [P.gold, "#5A9FD4", "#4DAA7A", "#E88C35", "#C084D4", "#E05555", "#9BAEC8"];
+function varietyBatchNote(n: number): string {
+  if (n === 1) return "1 recipe · same all week";
+  if (n === 7) return "7 recipes · different every day";
+  return `${n} recipes · rotates every ${Math.floor(7 / n)}–${Math.ceil(7 / n)} days`;
+}
 
 // ── Food preferences type (mirrors Convex schema) ────────────────────────────
 type FoodPrefs = {
@@ -25,6 +42,8 @@ type FoodPrefs = {
   excludedIngredients: string[];
   plannedMealTypes:    string[];
   varietyLevel:        number;
+  mealFrequency?:      { breakfast: number; lunch: number; dinner: number; snack: number };
+  mealVariety?:        { breakfast: number; lunch: number; dinner: number; snack: number };
 } | null | undefined;
 
 // ── Preference scoring keyword maps ──────────────────────────────────────────
@@ -122,7 +141,6 @@ const PORTION_STEPS = [0.5, 1, 1.5, 2, 3];
 const PORTION_LABELS: Record<number, string> = { 0.5: "×½", 1: "×1", 1.5: "×1½", 2: "×2", 3: "×3" };
 
 // ── Recipe map & types ──────────────────────────────────────────────────────
-const RECIPE_MAP = new Map<string, Recipe>(RECIPES.map(r => [r.id, r]));
 
 type SlotItem = {
   _id: Id<"mealPlanSlots">;
@@ -142,10 +160,10 @@ function scaledMacros(recipe: Recipe, portion: number): MacroTarget {
     fatG:     round1(recipe.totalMacros.fatG      * portion),
   };
 }
-function sumMacros(items: SlotItem[]): MacroTarget {
+function sumMacros(items: SlotItem[], recipeMap: Map<string, Recipe>): MacroTarget {
   let calories = 0, proteinG = 0, carbsG = 0, fatG = 0;
   for (const item of items) {
-    const r = RECIPE_MAP.get(item.recipeId);
+    const r = recipeMap.get(item.recipeId);
     if (!r) continue;
     calories += r.totalMacros.calories * item.portion;
     proteinG += r.totalMacros.proteinG * item.portion;
@@ -156,9 +174,9 @@ function sumMacros(items: SlotItem[]): MacroTarget {
 }
 
 // ── Similarity: top N recipes closest in macros to given recipe ─────────────
-function getSimilar(recipe: Recipe, n = 5): Recipe[] {
+function getSimilar(recipe: Recipe, n = 5, recipes: Recipe[] = []): Recipe[] {
   const m = recipe.totalMacros;
-  return RECIPES
+  return recipes
     .filter(r => r.id !== recipe.id)
     .map(r => {
       const score =
@@ -191,6 +209,8 @@ function autofillDay(
   target: MacroTarget,
   goal: GoalType,
   existingSlots: Partial<Record<MealType, SlotItem[]>>,
+  allRecipes: Recipe[],
+  recipeMap: Map<string, Recipe>,
   usedThisWeek: Set<string> = new Set(),
   prefs: FoodPrefs = null,
   weekRecipes: Recipe[] = [],
@@ -215,9 +235,9 @@ function autofillDay(
 
   const getCandidates = (mealType: MealType) => {
     const notOverused = (r: Recipe) => (usageCount.get(r.id) ?? 0) < maxRep;
-    let c = RECIPES.filter((r) => r.mealType === mealType && r.goal === goal && !usedThisDay.has(r.id) && notOverused(r));
-    if (!c.length) c = RECIPES.filter((r) => r.mealType === mealType && !usedThisDay.has(r.id) && notOverused(r));
-    if (!c.length) c = RECIPES.filter((r) => r.mealType === mealType);
+    let c = allRecipes.filter((r) => r.mealType === mealType && r.goal === goal && !usedThisDay.has(r.id) && notOverused(r));
+    if (!c.length) c = allRecipes.filter((r) => r.mealType === mealType && !usedThisDay.has(r.id) && notOverused(r));
+    if (!c.length) c = allRecipes.filter((r) => r.mealType === mealType);
     return c;
   };
 
@@ -245,9 +265,9 @@ function autofillDay(
   // Pass 2: snack fills the remaining calorie gap
   if (activeMeals.includes("snack") && (existingSlots["snack"]?.length ?? 0) === 0) {
     let usedCals = 0;
-    for (const items of Object.values(existingSlots)) usedCals += sumMacros(items ?? []).calories;
+    for (const items of Object.values(existingSlots)) usedCals += sumMacros(items ?? [], recipeMap).calories;
     for (const entry of Object.values(result)) {
-      const r = RECIPE_MAP.get(entry.recipeId);
+      const r = recipeMap.get(entry.recipeId);
       if (r) usedCals += r.totalMacros.calories * entry.portion;
     }
     const remaining = target.calories - usedCals;
@@ -269,15 +289,15 @@ function autofillDay(
   return result;
 }
 
-function projectAutofill(target: MacroTarget, goal: GoalType, existingSlots: Partial<Record<MealType, SlotItem[]>>): MacroTarget {
-  const filled = autofillDay(target, goal, existingSlots);
+function projectAutofill(target: MacroTarget, goal: GoalType, existingSlots: Partial<Record<MealType, SlotItem[]>>, allRecipes: Recipe[], recipeMap: Map<string, Recipe>): MacroTarget {
+  const filled = autofillDay(target, goal, existingSlots, allRecipes, recipeMap);
   let calories = 0, proteinG = 0, carbsG = 0, fatG = 0;
   for (const items of Object.values(existingSlots)) {
-    const m = sumMacros(items ?? []);
+    const m = sumMacros(items ?? [], recipeMap);
     calories += m.calories; proteinG += m.proteinG; carbsG += m.carbsG; fatG += m.fatG;
   }
   for (const entry of Object.values(filled)) {
-    const r = RECIPE_MAP.get(entry.recipeId);
+    const r = recipeMap.get(entry.recipeId);
     if (!r) continue;
     calories += r.totalMacros.calories * entry.portion;
     proteinG += r.totalMacros.proteinG * entry.portion;
@@ -318,6 +338,8 @@ const mbar = StyleSheet.create({
 function ItemDetailModal({
   item,
   mealType,
+  recipeMap,
+  recipes,
   onUpdatePortion,
   onSwap,
   onRemove,
@@ -325,16 +347,18 @@ function ItemDetailModal({
 }: {
   item:     SlotItem;
   mealType: MealType;
+  recipeMap: Map<string, Recipe>;
+  recipes:   Recipe[];
   onUpdatePortion: (portion: number) => void;
   onSwap:   (recipeId: string) => void;
   onRemove: () => void;
   onClose:  () => void;
 }) {
-  const recipe = RECIPE_MAP.get(item.recipeId);
+  const recipe = recipeMap.get(item.recipeId);
   const [portion, setPortion] = useState(item.portion);
   const [showSwap, setShowSwap] = useState(false);
   // useMemo must be called before any early return (Rules of Hooks)
-  const similar = useMemo(() => recipe ? getSimilar(recipe, 5) : [], [recipe?.id]);
+  const similar = useMemo(() => recipe ? getSimilar(recipe, 5, recipes) : [], [recipe?.id, recipes]);
 
   if (!recipe) return (
     <SafeAreaView style={{ flex: 1, backgroundColor: P.bg, alignItems: "center", justifyContent: "center" }} edges={["top","bottom"]}>
@@ -548,74 +572,266 @@ const id = StyleSheet.create({
   swapAction:      { fontFamily: OUT_L, fontSize: 9, letterSpacing: 2, color: P.gold },
 });
 
+// ── Recipe picker filter definitions ─────────────────────────────────────────
+
+const PROTEIN_FILTER_OPTS = [
+  { key: "chicken", label: "Chicken", kws: ["chicken"] },
+  { key: "beef",    label: "Beef",    kws: ["beef", "mince"] },
+  { key: "fish",    label: "Fish",    kws: ["salmon", "tuna", "fish", "cod"] },
+  { key: "eggs",    label: "Eggs",    kws: ["egg"] },
+  { key: "turkey",  label: "Turkey",  kws: ["turkey"] },
+  { key: "plant",   label: "Plant",   kws: ["tofu", "tempeh", "lentil", "bean", "chickpea"] },
+];
+
+const CARB_FILTER_OPTS = [
+  { key: "rice",    label: "Rice",    kws: ["rice"] },
+  { key: "oats",    label: "Oats",    kws: ["oat"] },
+  { key: "pasta",   label: "Pasta",   kws: ["pasta"] },
+  { key: "potato",  label: "Potato",  kws: ["potato"] },
+  { key: "bread",   label: "Bread",   kws: ["bread", "tortilla", "wrap"] },
+];
+
+type SortKey = "default" | "protein_desc" | "cal_asc" | "cal_desc";
+
+const SORT_OPTS: { key: SortKey; label: string }[] = [
+  { key: "default",      label: "BEST MATCH" },
+  { key: "protein_desc", label: "PROTEIN ↓"  },
+  { key: "cal_asc",      label: "CALORIES ↑" },
+  { key: "cal_desc",     label: "CALORIES ↓" },
+];
+
+function ingredientNames(r: Recipe) {
+  return r.ingredients.map(i => i.name.toLowerCase());
+}
+
+function matchesKeywords(names: string[], kws: string[]): boolean {
+  return names.some(n => kws.some(kw => n.includes(kw)));
+}
+
 // ── Recipe Picker Modal ─────────────────────────────────────────────────────
 function RecipePicker({
   mealType,
+  recipes,
   onPick,
   onClose,
-}: { mealType: MealType; onPick: (r: Recipe) => void; onClose: () => void }) {
-  const [goalFilter, setGoalFilter] = useState<"all" | GoalType>("all");
-  const filtered = useMemo(() =>
-    RECIPES
-      .filter(r => goalFilter === "all" || r.goal === goalFilter)
-      .sort((a, b) => (a.mealType === mealType ? 0 : 1) - (b.mealType === mealType ? 0 : 1))
-  , [goalFilter, mealType]);
+}: { mealType: MealType; recipes: Recipe[]; onPick: (r: Recipe) => void; onClose: () => void }) {
+  const [goalFilter,    setGoalFilter]    = useState<"all" | GoalType>("all");
+  const [proteinFilter, setProteinFilter] = useState<string[]>([]);
+  const [carbFilter,    setCarbFilter]    = useState<string[]>([]);
+  const [sortKey,       setSortKey]       = useState<SortKey>("default");
 
-  const GOAL_OPTS: { key: "all" | GoalType; label: string }[] = [
-    { key: "all", label: "ALL" }, { key: "cut", label: "CUT" },
-    { key: "bulk", label: "BULK" }, { key: "maintain", label: "MAINTAIN" },
-  ];
+  const toggleArr = (arr: string[], key: string) =>
+    arr.includes(key) ? arr.filter(k => k !== key) : [...arr, key];
+
+  const hasFilters = goalFilter !== "all" || proteinFilter.length > 0 || carbFilter.length > 0;
+
+  const filtered = useMemo(() => {
+    let list = recipes;
+
+    if (goalFilter !== "all")
+      list = list.filter(r => r.goal === goalFilter);
+
+    if (proteinFilter.length > 0)
+      list = list.filter(r => {
+        const names = ingredientNames(r);
+        return proteinFilter.some(pk => {
+          const kws = PROTEIN_FILTER_OPTS.find(o => o.key === pk)?.kws ?? [];
+          return matchesKeywords(names, kws);
+        });
+      });
+
+    if (carbFilter.length > 0)
+      list = list.filter(r => {
+        const names = ingredientNames(r);
+        return carbFilter.some(ck => {
+          const kws = CARB_FILTER_OPTS.find(o => o.key === ck)?.kws ?? [];
+          return matchesKeywords(names, kws);
+        });
+      });
+
+    return [...list].sort((a, b) => {
+      if (sortKey === "protein_desc") return b.totalMacros.proteinG - a.totalMacros.proteinG;
+      if (sortKey === "cal_asc")      return a.totalMacros.calories - b.totalMacros.calories;
+      if (sortKey === "cal_desc")     return b.totalMacros.calories - a.totalMacros.calories;
+      // default: meal type match first
+      return (a.mealType === mealType ? 0 : 1) - (b.mealType === mealType ? 0 : 1);
+    });
+  }, [recipes, goalFilter, proteinFilter, carbFilter, sortKey, mealType]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: P.bg }} edges={["top","bottom"]}>
+
+      {/* Header */}
       <View style={rp.header}>
-        <TouchableOpacity onPress={onClose} hitSlop={12}><Text style={rp.closeText}>×</Text></TouchableOpacity>
+        <TouchableOpacity onPress={onClose} hitSlop={12}>
+          <Text style={rp.closeText}>×</Text>
+        </TouchableOpacity>
         <Text style={rp.title}>ADD TO {MEAL_TYPE_LABELS[mealType].toUpperCase()}</Text>
-        <View style={{ width: 32 }} />
+        <Text style={rp.count}>{filtered.length}</Text>
       </View>
-      <View style={rp.goalRow}>
-        {GOAL_OPTS.map(opt => (
-          <TouchableOpacity key={opt.key} style={[rp.goalBtn, goalFilter === opt.key && rp.goalBtnActive]} onPress={() => setGoalFilter(opt.key)}>
-            <Text style={[rp.goalBtnText, goalFilter === opt.key && { color: P.gold }]}>{opt.label}</Text>
+
+      {/* ── Protein filter ── */}
+      <View style={rp.filterBlock}>
+        <Text style={rp.filterLabel}>PROTEIN</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={rp.chipRow}>
+          {PROTEIN_FILTER_OPTS.map(opt => {
+            const active = proteinFilter.includes(opt.key);
+            return (
+              <TouchableOpacity
+                key={opt.key}
+                style={[rp.chip, active && rp.chipActive]}
+                onPress={() => setProteinFilter(v => toggleArr(v, opt.key))}
+                activeOpacity={0.75}
+              >
+                <Text style={[rp.chipText, active && rp.chipTextActive]}>{opt.label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
+
+      {/* ── Carb filter ── */}
+      <View style={rp.filterBlock}>
+        <Text style={rp.filterLabel}>CARBS</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={rp.chipRow}>
+          {CARB_FILTER_OPTS.map(opt => {
+            const active = carbFilter.includes(opt.key);
+            return (
+              <TouchableOpacity
+                key={opt.key}
+                style={[rp.chip, active && rp.chipActive]}
+                onPress={() => setCarbFilter(v => toggleArr(v, opt.key))}
+                activeOpacity={0.75}
+              >
+                <Text style={[rp.chipText, active && rp.chipTextActive]}>{opt.label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
+
+      {/* ── Goal + Sort row ── */}
+      <View style={rp.goalSortRow}>
+        {/* Goal */}
+        {(["all","cut","bulk","maintain"] as const).map(g => (
+          <TouchableOpacity
+            key={g}
+            style={[rp.goalBtn, goalFilter === g && rp.goalBtnActive]}
+            onPress={() => setGoalFilter(g)}
+          >
+            <Text style={[rp.goalBtnText, goalFilter === g && { color: P.gold }]}>
+              {g === "all" ? "ALL" : g.toUpperCase()}
+            </Text>
           </TouchableOpacity>
         ))}
+
+        {/* Sort */}
+        <TouchableOpacity
+          style={rp.sortBtn}
+          onPress={() => {
+            const keys = SORT_OPTS.map(o => o.key);
+            const idx  = keys.indexOf(sortKey);
+            setSortKey(keys[(idx + 1) % keys.length]);
+          }}
+        >
+          <Text style={rp.sortBtnText} numberOfLines={1}>
+            {SORT_OPTS.find(o => o.key === sortKey)?.label}
+          </Text>
+        </TouchableOpacity>
       </View>
+
+      {/* Clear + result count */}
+      <View style={rp.bar}>
+        <Text style={rp.barCount}>{filtered.length} RECIPE{filtered.length !== 1 ? "S" : ""}</Text>
+        {hasFilters && (
+          <TouchableOpacity onPress={() => {
+            setGoalFilter("all"); setProteinFilter([]); setCarbFilter([]); setSortKey("default");
+          }} hitSlop={8}>
+            <Text style={rp.clearText}>CLEAR FILTERS</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* Recipe list */}
       <ScrollView contentContainerStyle={rp.list} showsVerticalScrollIndicator={false}>
-        {filtered.map(recipe => {
-          const m = recipe.totalMacros;
-          return (
-            <TouchableOpacity key={recipe.id} style={rp.row} onPress={() => onPick(recipe)} activeOpacity={0.75}>
-              <View style={{ flex: 1 }}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                  <GoalBadge goal={recipe.goal} />
-                  <Text style={rp.mealTypeLabel}>{MEAL_TYPE_LABELS[recipe.mealType].toUpperCase()}</Text>
+        {filtered.length === 0 ? (
+          <View style={rp.empty}>
+            <Text style={rp.emptyText}>No recipes match these filters.</Text>
+          </View>
+        ) : (
+          filtered.map(recipe => {
+            const m = recipe.totalMacros;
+            return (
+              <TouchableOpacity key={recipe.id} style={rp.row} onPress={() => onPick(recipe)} activeOpacity={0.75}>
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                    <GoalBadge goal={recipe.goal} />
+                    <Text style={rp.mealTypeLabel}>{MEAL_TYPE_LABELS[recipe.mealType].toUpperCase()}</Text>
+                    <Text style={rp.timeLabel}>⏱ {recipe.prepTimeMins + recipe.cookTimeMins}m</Text>
+                  </View>
+                  <Text style={rp.name}>{recipe.name}</Text>
+                  <View style={rp.macroRow}>
+                    <Text style={[rp.macroVal, { color: P.gold }]}>{m.calories}</Text>
+                    <Text style={rp.macroUnit}>kcal</Text>
+                    <Text style={rp.macroDot}>·</Text>
+                    <Text style={[rp.macroVal, { color: "#D4A017" }]}>{round1(m.proteinG)}</Text>
+                    <Text style={rp.macroUnit}>P</Text>
+                    <Text style={rp.macroDot}>·</Text>
+                    <Text style={[rp.macroVal, { color: "#5A9FD4" }]}>{round1(m.carbsG)}</Text>
+                    <Text style={rp.macroUnit}>C</Text>
+                    <Text style={rp.macroDot}>·</Text>
+                    <Text style={[rp.macroVal, { color: "#E88C35" }]}>{round1(m.fatG)}</Text>
+                    <Text style={rp.macroUnit}>F</Text>
+                  </View>
                 </View>
-                <Text style={rp.name}>{recipe.name}</Text>
-                <Text style={rp.macroLine}>{m.calories} kcal · P{round1(m.proteinG)}g · C{round1(m.carbsG)}g · F{round1(m.fatG)}g</Text>
-              </View>
-              <Text style={rp.addText}>+ ADD</Text>
-            </TouchableOpacity>
-          );
-        })}
+                <Text style={rp.addText}>+ ADD</Text>
+              </TouchableOpacity>
+            );
+          })
+        )}
         <View style={{ height: 60 }} />
       </ScrollView>
     </SafeAreaView>
   );
 }
+
 const rp = StyleSheet.create({
-  header:       { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: P.border },
-  closeText:    { fontFamily: OUT_L, fontSize: 26, color: P.mid, lineHeight: 28 },
-  title:        { fontFamily: OUT_L, fontSize: 10, letterSpacing: 3, color: P.ink, textTransform: "uppercase" },
-  goalRow:      { flexDirection: "row", paddingHorizontal: 16, gap: 6, paddingVertical: 12 },
-  goalBtn:      { flex: 1, paddingVertical: 7, borderWidth: StyleSheet.hairlineWidth, borderColor: P.border, alignItems: "center" },
-  goalBtnActive:{ borderColor: P.gold, backgroundColor: P.goldDim },
-  goalBtnText:  { fontFamily: OUT_L, fontSize: 8, letterSpacing: 2, color: P.dim, textTransform: "uppercase" },
-  list:         { paddingHorizontal: 16 },
-  row:          { flexDirection: "row", alignItems: "center", paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: P.border, gap: 12 },
-  mealTypeLabel:{ fontFamily: OUT_L, fontSize: 8, letterSpacing: 2, color: P.dim },
-  name:         { fontFamily: OUT, fontSize: 14, color: P.ink, marginBottom: 3 },
-  macroLine:    { fontFamily: OUT_L, fontSize: 11, color: P.mid },
-  addText:      { fontFamily: OUT_L, fontSize: 9, letterSpacing: 2, color: P.gold },
+  header:        { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: P.border },
+  closeText:     { fontFamily: OUT_L, fontSize: 26, color: P.mid, lineHeight: 28 },
+  title:         { fontFamily: OUT_L, fontSize: 10, letterSpacing: 3, color: P.ink, textTransform: "uppercase" },
+  count:         { fontFamily: CG, fontSize: 16, color: P.gold, minWidth: 32, textAlign: "right" },
+
+  filterBlock:   { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 6, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: P.border },
+  filterLabel:   { fontFamily: OUT_L, fontSize: 8, letterSpacing: 3, color: P.dim, textTransform: "uppercase", marginBottom: 8 },
+  chipRow:       { gap: 6, paddingBottom: 2 },
+  chip:          { paddingHorizontal: 14, paddingVertical: 7, borderWidth: StyleSheet.hairlineWidth, borderColor: P.border },
+  chipActive:    { borderColor: P.gold, backgroundColor: P.goldDim },
+  chipText:      { fontFamily: OUT_L, fontSize: 12, color: P.mid },
+  chipTextActive:{ color: P.gold },
+
+  goalSortRow:   { flexDirection: "row", paddingHorizontal: 12, gap: 5, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: P.border },
+  goalBtn:       { flex: 1, paddingVertical: 6, borderWidth: StyleSheet.hairlineWidth, borderColor: P.border, alignItems: "center" },
+  goalBtnActive: { borderColor: P.gold, backgroundColor: P.goldDim },
+  goalBtnText:   { fontFamily: OUT_L, fontSize: 7, letterSpacing: 1.5, color: P.dim, textTransform: "uppercase" },
+  sortBtn:       { paddingHorizontal: 10, paddingVertical: 6, borderWidth: StyleSheet.hairlineWidth, borderColor: P.border },
+  sortBtnText:   { fontFamily: OUT_L, fontSize: 7, letterSpacing: 1, color: P.mid, textTransform: "uppercase" },
+
+  bar:           { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingVertical: 8 },
+  barCount:      { fontFamily: OUT_L, fontSize: 9, letterSpacing: 2, color: P.dim },
+  clearText:     { fontFamily: OUT_L, fontSize: 9, letterSpacing: 2, color: P.gold, textDecorationLine: "underline" },
+
+  list:          { paddingHorizontal: 16 },
+  empty:         { paddingTop: 48, alignItems: "center" },
+  emptyText:     { fontFamily: OUT_L, fontSize: 13, color: P.dim },
+  row:           { flexDirection: "row", alignItems: "center", paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: P.border, gap: 12 },
+  mealTypeLabel: { fontFamily: OUT_L, fontSize: 8, letterSpacing: 2, color: P.dim },
+  timeLabel:     { fontFamily: OUT_L, fontSize: 9, color: P.dim, marginLeft: "auto" },
+  name:          { fontFamily: OUT, fontSize: 14, color: P.ink, marginBottom: 6 },
+  macroRow:      { flexDirection: "row", alignItems: "baseline", gap: 4 },
+  macroVal:      { fontFamily: CG, fontSize: 15, lineHeight: 18 },
+  macroUnit:     { fontFamily: OUT_L, fontSize: 9, color: P.mid },
+  macroDot:      { fontFamily: OUT_L, fontSize: 9, color: P.dim },
+  addText:       { fontFamily: OUT_L, fontSize: 9, letterSpacing: 2, color: P.gold },
 });
 
 // ── Copy Day Modal ──────────────────────────────────────────────────────────
@@ -648,18 +864,20 @@ const cd = StyleSheet.create({
 
 // ── AutoFill Modal ──────────────────────────────────────────────────────────
 function AutoFillModal({
-  target, defaultGoal, existingSlots, filling,
+  target, defaultGoal, existingSlots, filling, recipes, recipeMap,
   onFillDay, onFillWeek, onClose,
 }: {
   target: MacroTarget; defaultGoal: GoalType;
   existingSlots: Partial<Record<MealType, SlotItem[]>>;
   filling: boolean;
+  recipes: Recipe[];
+  recipeMap: Map<string, Recipe>;
   onFillDay:  (goal: GoalType) => void;
   onFillWeek: (goal: GoalType) => void;
   onClose: () => void;
 }) {
   const [goal, setGoal] = useState<GoalType>(defaultGoal);
-  const preview = useMemo(() => projectAutofill(target, goal, existingSlots), [target, goal, existingSlots]);
+  const preview = useMemo(() => projectAutofill(target, goal, existingSlots, recipes, recipeMap), [target, goal, existingSlots, recipes, recipeMap]);
   const calPct  = target.calories > 0 ? preview.calories / target.calories : 0;
   const calOver = preview.calories > target.calories;
 
@@ -750,8 +968,12 @@ export default function MealPlannerScreen() {
   const weekStart = toDateStr(weekMonday);
 
   // ── UI state ─────────────────────────────────────────────────────────────
+  const [viewMode,     setViewMode]     = useState<"week" | "setup">("week");
   const [activeDay,    setActiveDay]    = useState(0);
   const [pickerMeal,   setPickerMeal]   = useState<MealType | null>(null);
+  // slot recipe assignment: { breakfast: { A: Recipe, B: Recipe }, ... }
+  const [chosenSlots,  setChosenSlots]  = useState<Partial<Record<MealType, Record<string, Recipe>>>>({});
+  const [pickingSlot,  setPickingSlot]  = useState<{ mealType: MealType; letter: string } | null>(null);
   const [activeItem,   setActiveItem]   = useState<{ item: SlotItem; mealType: MealType } | null>(null);
   const [copyFrom,     setCopyFrom]     = useState<number | null>(null);
   const [autofillOpen, setAutofillOpen] = useState(false);
@@ -761,9 +983,11 @@ export default function MealPlannerScreen() {
   const [resetConfirmOpen,  setResetConfirmOpen]  = useState(false);
 
   // ── Convex ───────────────────────────────────────────────────────────────
-  const rawSlots  = useQuery(api.mealPlanSlots.getWeekSlots, userId ? { userId, weekStart } : "skip") ?? [];
-  const targets   = useQuery(api.nutrition.getFoodTarget,    userId ? { userId } : "skip");
-  const prefs     = useQuery(api.foodPreferences.get,        userId ? { userId } : "skip");
+  const rawSlots      = useQuery(api.mealPlanSlots.getWeekSlots, userId ? { userId, weekStart } : "skip") ?? [];
+  const targets       = useQuery(api.nutrition.getFoodTarget,    userId ? { userId } : "skip");
+  const prefs         = useQuery(api.foodPreferences.get,        userId ? { userId } : "skip");
+  const convexRecipesData = useQuery(api.mealPlans.listRecipes);
+  const convexRecipes     = convexRecipesData ?? [];
   const addItem        = useMutation(api.mealPlanSlots.addItem);
   const updatePortion  = useMutation(api.mealPlanSlots.updatePortion);
   const swapItem       = useMutation(api.mealPlanSlots.swapItem);
@@ -771,6 +995,35 @@ export default function MealPlannerScreen() {
   const copyDay        = useMutation(api.mealPlanSlots.copyDay);
   const deleteItems        = useMutation(api.mealPlanSlots.deleteItems);
   const clearAllUserSlots  = useMutation(api.mealPlanSlots.clearAllUserSlots);
+  const savePrefs          = useMutation(api.foodPreferences.save);
+
+  // ── Recipe pool (from Convex) ─────────────────────────────────────────────
+  const allRecipes = useMemo<Recipe[]>(() =>
+    convexRecipes.map(r => ({
+      id:           r.recipeId,
+      name:         r.name,
+      description:  r.description,
+      goal:         r.goal,
+      mealType:     r.mealType as MealType,
+      prepTimeMins: r.prepTimeMins,
+      cookTimeMins: r.cookTimeMins,
+      tags:         r.tags,
+      ingredients:  r.ingredients.map(i => ({
+        name:     i.name,
+        amount:   i.amount,
+        calories: i.calories ?? 0,
+        proteinG: i.proteinG ?? 0,
+        carbsG:   i.carbsG   ?? 0,
+        fatG:     i.fatG     ?? 0,
+      })),
+      instructions: r.instructions,
+      totalMacros:  r.totalMacros,
+    }))
+  , [convexRecipes]);
+
+  const recipeMap = useMemo(() =>
+    new Map<string, Recipe>(allRecipes.map(r => [r.id, r]))
+  , [allRecipes]);
 
   // ── Slot map ─────────────────────────────────────────────────────────────
   const slotMap: SlotMap = useMemo(() => {
@@ -790,13 +1043,13 @@ export default function MealPlannerScreen() {
     Array.from({ length: 7 }, (_, i) => {
       let total = { calories: 0, proteinG: 0, carbsG: 0, fatG: 0 };
       for (const items of Object.values(slotMap[i] ?? {})) {
-        const m = sumMacros(items ?? []);
+        const m = sumMacros(items ?? [], recipeMap);
         total.calories += m.calories; total.proteinG += m.proteinG;
         total.carbsG   += m.carbsG;   total.fatG     += m.fatG;
       }
       return { calories: Math.round(total.calories), proteinG: round1(total.proteinG), carbsG: round1(total.carbsG), fatG: round1(total.fatG) };
     })
-  , [slotMap]);
+  , [slotMap, recipeMap]);
 
   // ── Weekly average ────────────────────────────────────────────────────────
   const weeklyAvg = useMemo(() => {
@@ -856,7 +1109,15 @@ export default function MealPlannerScreen() {
     if (!userId) return;
     setFilling(true); setAutofillOpen(false);
     try {
-      const filled = autofillDay(tgt, goal, activeDaySlots, new Set(), prefs ?? null);
+      // Respect meal frequency: only fill meal types with frequency > 0
+      let dayPrefs = prefs ?? null;
+      if (dayPrefs?.mealFrequency) {
+        const freq = dayPrefs.mealFrequency;
+        const activeMeals = (["breakfast", "lunch", "dinner", "snack"] as const)
+          .filter(mt => (freq[mt] ?? 7) > 0) as string[];
+        dayPrefs = { ...dayPrefs, plannedMealTypes: activeMeals };
+      }
+      const filled = autofillDay(tgt, goal, activeDaySlots, allRecipes, recipeMap, new Set(), dayPrefs);
       for (const [mealType, entry] of Object.entries(filled) as [MealType, AutofillEntry][]) {
         if (!entry) continue;
         await addItem({ userId, weekStart, dayIndex: activeDay, mealType, recipeId: entry.recipeId, portion: entry.portion });
@@ -868,18 +1129,109 @@ export default function MealPlannerScreen() {
     if (!userId) return;
     setFilling(true); setAutofillOpen(false);
     try {
-      const used        = new Set<string>();
-      const weekRecipes: Recipe[] = [];
-      const usageCount  = new Map<string, number>();
+      const variety = prefs?.mealVariety ?? DEFAULT_MEAL_VARIETY;
+      const mealTypes: MealType[] = ["breakfast", "lunch", "dinner", "snack"];
+
+      // ── Step 1: build recipe pool per meal type ─────────────────────────
+      //   Honour user-chosen slot recipes; auto-pick the rest.
+      const weekPool: Partial<Record<MealType, Recipe[]>> = {};
+
+      for (const mt of mealTypes) {
+        const n        = variety[mt];
+        const slotCal  = tgt.calories * SLOT_WEIGHTS[mt];
+        const slotProt = tgt.proteinG * SLOT_WEIGHTS[mt];
+        const slotCarb = tgt.carbsG   * SLOT_WEIGHTS[mt];
+        const slotFat  = tgt.fatG     * SLOT_WEIGHTS[mt];
+
+        const usedIds  = new Set<string>();
+        const pool: Recipe[] = [];
+
+        for (let i = 0; i < n; i++) {
+          const letter = String.fromCharCode(65 + i);
+          const chosen = chosenSlots[mt]?.[letter];
+
+          if (chosen) {
+            pool.push(chosen);
+            usedIds.add(chosen.id);
+          } else {
+            // Auto-pick: best-scoring recipe not already in pool
+            const best = allRecipes
+              .filter(r => r.mealType === mt && !usedIds.has(r.id))
+              .map(r => {
+                const macroS =
+                  Math.abs(r.totalMacros.calories - slotCal)  / (slotCal  || 1) +
+                  Math.abs(r.totalMacros.proteinG - slotProt) / (slotProt || 1) * 0.6 +
+                  Math.abs(r.totalMacros.carbsG   - slotCarb) / (slotCarb || 1) * 0.3 +
+                  Math.abs(r.totalMacros.fatG     - slotFat)  / (slotFat  || 1) * 0.2;
+                const pref = prefScore(r, prefs ?? null);
+                if (!isFinite(pref)) return null;
+                return { r, score: macroS - pref * 1.5 + (r.goal === goal ? -0.3 : 0) };
+              })
+              .filter((x): x is { r: Recipe; score: number } => x !== null)
+              .sort((a, b) => a.score - b.score)[0]?.r;
+
+            if (best) { pool.push(best); usedIds.add(best.id); }
+          }
+        }
+
+        weekPool[mt] = pool;
+      }
+
+      // ── Step 2: assign to each day by rotation ─────────────────────────
       for (let d = 0; d < 7; d++) {
-        const filled = autofillDay(tgt, goal, slotMap[d] ?? {}, used, prefs ?? null, weekRecipes, usageCount);
-        for (const [mealType, entry] of Object.entries(filled) as [MealType, AutofillEntry][]) {
-          if (!entry) continue;
-          await addItem({ userId, weekStart, dayIndex: d, mealType, recipeId: entry.recipeId, portion: entry.portion });
-          used.add(entry.recipeId);
+        for (const mt of mealTypes) {
+          const pool = weekPool[mt];
+          if (!pool?.length) continue;
+          if ((slotMap[d][mt]?.length ?? 0) > 0) continue; // skip already filled
+
+          const recipe = pool[d % pool.length];
+          const rawPortion = recipe.totalMacros.calories > 0
+            ? (tgt.calories * SLOT_WEIGHTS[mt]) / recipe.totalMacros.calories
+            : 1;
+          await addItem({
+            userId, weekStart,
+            dayIndex: d, mealType: mt,
+            recipeId: recipe.id,
+            portion: snapPortion(rawPortion),
+          });
         }
       }
     } finally { setFilling(false); }
+  };
+
+  // ── Meal-plan setup helpers ───────────────────────────────────────────────
+  const curVariety: MealVariety = prefs?.mealVariety ?? DEFAULT_MEAL_VARIETY;
+
+  const handleSlotPick = (recipe: Recipe) => {
+    if (!pickingSlot) return;
+    setChosenSlots(prev => ({
+      ...prev,
+      [pickingSlot.mealType]: { ...(prev[pickingSlot.mealType] ?? {}), [pickingSlot.letter]: recipe },
+    }));
+    setPickingSlot(null);
+  };
+
+  const handleSlotClear = (mealType: MealType, letter: string) => {
+    setChosenSlots(prev => {
+      const copy = { ...(prev[mealType] ?? {}) };
+      delete copy[letter];
+      return { ...prev, [mealType]: copy };
+    });
+  };
+
+  const updateMealVariety = (key: keyof MealVariety, delta: number) => {
+    if (!userId) return;
+    const next = { ...curVariety, [key]: Math.max(1, Math.min(7, curVariety[key] + delta)) };
+    savePrefs({
+      userId,
+      proteinSources:      prefs?.proteinSources      ?? [],
+      carbSources:         prefs?.carbSources          ?? [],
+      fatSources:          prefs?.fatSources           ?? [],
+      excludedIngredients: prefs?.excludedIngredients  ?? [],
+      varietyLevel:        prefs?.varietyLevel         ?? 2,
+      plannedMealTypes:    prefs?.plannedMealTypes      ?? ["breakfast","lunch","dinner","snack"],
+      mealVariety:         next,
+    });
   };
 
   const prevWeek = () => setWeekMonday(d => addDays(d, -7));
@@ -926,6 +1278,13 @@ export default function MealPlannerScreen() {
           <Text style={s.listBtnText}>LIST</Text>
         </TouchableOpacity>
         <TouchableOpacity
+          onPress={() => router.push({ pathname: "/batch-prep", params: { weekStart } })}
+          hitSlop={12}
+          style={s.prepBtn}
+        >
+          <Text style={s.prepBtnText}>PREP</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
           onPress={handleResetWeek}
           hitSlop={12}
           style={[s.resetBtn, resetting && { opacity: 0.4 }]}
@@ -937,6 +1296,24 @@ export default function MealPlannerScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* Mode toggle */}
+      <View style={s.modeRow}>
+        <TouchableOpacity
+          style={[s.modeTab, viewMode === "week" && s.modeTabActive]}
+          onPress={() => setViewMode("week")}
+        >
+          <Text style={[s.modeTabText, viewMode === "week" && s.modeTabTextActive]}>WEEK</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[s.modeTab, viewMode === "setup" && s.modeTabActive]}
+          onPress={() => setViewMode("setup")}
+        >
+          <Text style={[s.modeTabText, viewMode === "setup" && s.modeTabTextActive]}>MEAL PLAN</Text>
+        </TouchableOpacity>
+      </View>
+
+      {viewMode === "week" && (
+        <>
       {/* Day tabs */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.dayTabs}>
         {DAY_LABELS.map((label, idx) => {
@@ -1001,11 +1378,14 @@ export default function MealPlannerScreen() {
               {copying ? <ActivityIndicator size="small" color={P.gold} /> : <Text style={s.actionBtnText}>COPY</Text>}
             </TouchableOpacity>
             <TouchableOpacity
-              style={[s.actionBtnGold, filling && { opacity: 0.4 }]}
+              style={[s.actionBtnGold, (filling || !convexRecipesData) && { opacity: 0.4 }]}
               onPress={() => setAutofillOpen(true)}
-              disabled={filling}
+              disabled={filling || !convexRecipesData}
             >
-              {filling ? <ActivityIndicator size="small" color={P.gold} /> : <Text style={s.actionBtnGoldText}>AUTO-FILL ✦</Text>}
+              {filling
+                ? <ActivityIndicator size="small" color={P.gold} />
+                : <Text style={s.actionBtnGoldText}>{convexRecipesData ? "AUTO-FILL ✦" : "LOADING..."}</Text>
+              }
             </TouchableOpacity>
           </View>
         </View>
@@ -1013,7 +1393,7 @@ export default function MealPlannerScreen() {
         {/* ── Meal slots ───────────────────────────────────────────────── */}
         {MEAL_ORDER.map(mealType => {
           const items = activeDaySlots[mealType] ?? [];
-          const slotTotal = sumMacros(items);
+          const slotTotal = sumMacros(items, recipeMap);
           return (
             <Animated.View key={mealType} entering={FadeInDown.springify().damping(22)}>
               <View style={s.slotWrap}>
@@ -1029,7 +1409,7 @@ export default function MealPlannerScreen() {
 
                 {/* Existing items */}
                 {items.map(item => {
-                  const recipe = RECIPE_MAP.get(item.recipeId);
+                  const recipe = recipeMap.get(item.recipeId);
                   if (!recipe) return null;
                   const macros = scaledMacros(recipe, item.portion);
                   return (
@@ -1108,7 +1488,7 @@ export default function MealPlannerScreen() {
                       .join(" · ")}
                   </Text>
                 </View>
-                <TouchableOpacity onPress={() => router.push("/food-preferences-onboarding")} hitSlop={8}>
+                <TouchableOpacity onPress={() => setViewMode("setup")} hitSlop={8}>
                   <Text style={s.prefEditBtn}>EDIT ›</Text>
                 </TouchableOpacity>
               </>
@@ -1119,7 +1499,7 @@ export default function MealPlannerScreen() {
                   <Text style={s.prefHint}>Set preferences for smarter auto-fill</Text>
                 </View>
                 <TouchableOpacity
-                  onPress={() => router.push("/food-preferences-onboarding")}
+                  onPress={() => setViewMode("setup")}
                   style={s.prefSetupBtn}
                 >
                   <Text style={s.prefSetupBtnText}>SET UP ✦</Text>
@@ -1131,6 +1511,137 @@ export default function MealPlannerScreen() {
 
         <View style={{ height: 80 }} />
       </ScrollView>
+        </>
+      )}
+
+      {/* ── MEAL PLAN setup tab ──────────────────────────────────────────── */}
+      {viewMode === "setup" && (
+        <ScrollView contentContainerStyle={su.scroll} showsVerticalScrollIndicator={false}>
+
+          <Text style={su.sectionLabel}>HOW MANY VARIETIES?</Text>
+          <Text style={su.sectionNote}>
+            Pick how many different recipes to rotate through each meal type per week.
+            Fewer varieties = bigger batches = easier meal prep.
+          </Text>
+
+          {VARIETY_MEALS.map(({ key, label }) => {
+            const n = curVariety[key];
+            return (
+              <View key={key} style={su.row}>
+
+                {/* Label + batch note */}
+                <View style={su.rowTop}>
+                  <Text style={su.mealLabel}>{label}</Text>
+                  <Text style={su.batchNote}>{varietyBatchNote(n)}</Text>
+                </View>
+
+                {/* Stepper */}
+                <View style={su.stepper}>
+                  <TouchableOpacity
+                    style={[su.stepBtn, n === 1 && su.stepBtnDim]}
+                    onPress={() => updateMealVariety(key, -1)}
+                    disabled={n === 1}
+                    hitSlop={8}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[su.stepBtnTxt, n === 1 && { color: P.dim }]}>−</Text>
+                  </TouchableOpacity>
+                  <View style={su.countBox}>
+                    <Text style={su.countNum}>{n}</Text>
+                    <Text style={su.countUnit}>RECIPES</Text>
+                  </View>
+                  <TouchableOpacity
+                    style={[su.stepBtn, n === 7 && su.stepBtnDim]}
+                    onPress={() => updateMealVariety(key, 1)}
+                    disabled={n === 7}
+                    hitSlop={8}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[su.stepBtnTxt, n === 7 && { color: P.dim }]}>+</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Rotation grid — tap any box to pick that slot's recipe */}
+                <View style={su.rotRow}>
+                  {["M","T","W","T","F","S","S"].map((day, d) => {
+                    const slot   = d % n;
+                    const letter = String.fromCharCode(65 + slot);
+                    const color  = ROT_COLORS[slot];
+                    const picked = !!chosenSlots[key]?.[letter];
+                    return (
+                      <TouchableOpacity
+                        key={d}
+                        style={su.rotCell}
+                        onPress={() => setPickingSlot({ mealType: key, letter })}
+                        activeOpacity={0.7}
+                      >
+                        <View style={[
+                          su.rotBox,
+                          { backgroundColor: color + (picked ? "45" : "20"), borderColor: color + (picked ? "BB" : "60") },
+                        ]}>
+                          <Text style={[su.rotLetter, { color }]}>{letter}</Text>
+                        </View>
+                        <Text style={su.rotDay}>{day}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+
+                {/* Slot assignment rows */}
+                <View style={su.slotList}>
+                  {Array.from({ length: n }, (_, i) => {
+                    const letter  = String.fromCharCode(65 + i);
+                    const color   = ROT_COLORS[i];
+                    const chosen  = chosenSlots[key]?.[letter];
+                    return (
+                      <View key={letter} style={su.slotRow}>
+                        <View style={[su.slotBadge, { backgroundColor: color + "25", borderColor: color + "70" }]}>
+                          <Text style={[su.slotBadgeTxt, { color }]}>{letter}</Text>
+                        </View>
+                        <TouchableOpacity
+                          style={su.slotNameBtn}
+                          onPress={() => setPickingSlot({ mealType: key, letter })}
+                          activeOpacity={0.8}
+                        >
+                          <Text style={[su.slotName, !chosen && su.slotNameAuto]} numberOfLines={1}>
+                            {chosen ? chosen.name : "Tap to choose a recipe"}
+                          </Text>
+                          {chosen && (
+                            <Text style={su.slotMacros}>
+                              {chosen.totalMacros.calories} kcal · P{chosen.totalMacros.proteinG}g
+                            </Text>
+                          )}
+                        </TouchableOpacity>
+                        {chosen ? (
+                          <TouchableOpacity onPress={() => handleSlotClear(key, letter)} hitSlop={10} style={su.slotClearBtn}>
+                            <Text style={su.slotClearTxt}>×</Text>
+                          </TouchableOpacity>
+                        ) : (
+                          <Text style={su.slotChooseTxt}>AUTO</Text>
+                        )}
+                      </View>
+                    );
+                  })}
+                </View>
+
+              </View>
+            );
+          })}
+
+          <View style={su.divider} />
+
+          <TouchableOpacity
+            style={[su.fillBtn, (filling || !convexRecipesData) && { opacity: 0.4 }]}
+            onPress={() => { setViewMode("week"); setAutofillOpen(true); }}
+            disabled={filling || !convexRecipesData}
+            activeOpacity={0.85}
+          >
+            <Text style={su.fillBtnText}>AUTO-FILL WEEK WITH THESE SETTINGS  ✦</Text>
+          </TouchableOpacity>
+
+          <View style={{ height: 60 }} />
+        </ScrollView>
+      )}
 
       {/* ── Item Detail Modal ────────────────────────────────────────────── */}
       <Modal visible={activeItem !== null} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setActiveItem(null)}>
@@ -1138,6 +1649,8 @@ export default function MealPlannerScreen() {
           <ItemDetailModal
             item={activeItem.item}
             mealType={activeItem.mealType}
+            recipeMap={recipeMap}
+            recipes={allRecipes}
             onUpdatePortion={handleUpdatePortion}
             onSwap={handleSwap}
             onRemove={handleRemoveItem}
@@ -1148,7 +1661,19 @@ export default function MealPlannerScreen() {
 
       {/* ── Recipe Picker Modal ──────────────────────────────────────────── */}
       <Modal visible={pickerMeal !== null} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setPickerMeal(null)}>
-        {pickerMeal && <RecipePicker mealType={pickerMeal} onPick={handlePickRecipe} onClose={() => setPickerMeal(null)} />}
+        {pickerMeal && <RecipePicker mealType={pickerMeal} recipes={allRecipes} onPick={handlePickRecipe} onClose={() => setPickerMeal(null)} />}
+      </Modal>
+
+      {/* ── Slot Recipe Picker Modal (MEAL PLAN tab) ─────────────────────── */}
+      <Modal visible={pickingSlot !== null} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setPickingSlot(null)}>
+        {pickingSlot && (
+          <RecipePicker
+            mealType={pickingSlot.mealType}
+            recipes={allRecipes}
+            onPick={handleSlotPick}
+            onClose={() => setPickingSlot(null)}
+          />
+        )}
       </Modal>
 
       {/* ── Copy Day Modal ───────────────────────────────────────────────── */}
@@ -1166,6 +1691,8 @@ export default function MealPlannerScreen() {
             defaultGoal={(targets?.goal as GoalType) ?? "maintain"}
             existingSlots={activeDaySlots}
             filling={filling}
+            recipes={allRecipes}
+            recipeMap={recipeMap}
             onFillDay={handleAutofillDay}
             onFillWeek={handleAutofillWeek}
             onClose={() => setAutofillOpen(false)}
@@ -1210,6 +1737,8 @@ const s = StyleSheet.create({
   weekLabel:        { flex: 1, fontFamily: OUT_L, fontSize: 13, color: P.ink, textAlign: "center", letterSpacing: 0.5 },
   listBtn:          { borderWidth: StyleSheet.hairlineWidth, borderColor: P.gold + "80", paddingHorizontal: 10, paddingVertical: 5 },
   listBtnText:      { fontFamily: OUT_L, fontSize: 8, letterSpacing: 2, color: P.gold },
+  prepBtn:          { borderWidth: StyleSheet.hairlineWidth, borderColor: P.gold, backgroundColor: P.goldDim, paddingHorizontal: 10, paddingVertical: 5 },
+  prepBtnText:      { fontFamily: OUT_L, fontSize: 8, letterSpacing: 2, color: P.gold },
   resetBtn:         { borderWidth: StyleSheet.hairlineWidth, borderColor: P.red + "80", paddingHorizontal: 10, paddingVertical: 5 },
   resetBtnText:     { fontFamily: OUT_L, fontSize: 8, letterSpacing: 2, color: P.red },
   resetModal:       { marginHorizontal: 32, backgroundColor: P.s1, borderWidth: StyleSheet.hairlineWidth, borderColor: P.border, padding: 24, gap: 12 },
@@ -1299,4 +1828,55 @@ const s = StyleSheet.create({
   prefSetupBtnText: { fontFamily: OUT_L, fontSize: 8, letterSpacing: 2, color: P.gold },
 
   modalOverlay:     { flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "center" },
+
+  // Mode toggle
+  modeRow:          { flexDirection: "row", paddingHorizontal: 20, gap: 6, paddingBottom: 10 },
+  modeTab:          { flex: 1, paddingVertical: 8, borderWidth: StyleSheet.hairlineWidth, borderColor: P.border, alignItems: "center" },
+  modeTabActive:    { borderColor: P.gold, backgroundColor: P.goldDim },
+  modeTabText:      { fontFamily: OUT_L, fontSize: 9, letterSpacing: 3, color: P.dim, textTransform: "uppercase" },
+  modeTabTextActive:{ color: P.gold },
+});
+
+// ── Setup tab styles ─────────────────────────────────────────────────────────
+const su = StyleSheet.create({
+  scroll:      { paddingHorizontal: 20, paddingTop: 16 },
+  sectionLabel:{ fontFamily: OUT_L, fontSize: 9, letterSpacing: 3, color: P.gold, textTransform: "uppercase", marginBottom: 6 },
+  sectionNote: { fontFamily: OUT_L, fontSize: 12, color: P.dim, lineHeight: 18, marginBottom: 24 },
+  divider:     { height: StyleSheet.hairlineWidth, backgroundColor: P.border, marginVertical: 24 },
+
+  row:         { marginBottom: 28 },
+  rowTop:      { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 },
+  mealLabel:   { fontFamily: OUT_L, fontSize: 10, letterSpacing: 3, color: P.ink, textTransform: "uppercase" },
+  batchNote:   { fontFamily: OUT_L, fontSize: 10, color: P.gold },
+
+  stepper:     { flexDirection: "row", marginBottom: 10 },
+  stepBtn:     { width: 56, height: 56, borderWidth: StyleSheet.hairlineWidth, borderColor: P.gold, alignItems: "center", justifyContent: "center" },
+  stepBtnDim:  { borderColor: P.border },
+  stepBtnTxt:  { fontFamily: CG, fontSize: 28, color: P.gold, lineHeight: 32 },
+  countBox:    { flex: 1, alignItems: "center", justifyContent: "center", borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: P.gold, height: 56, gap: 1 },
+  countNum:    { fontFamily: CG, fontSize: 28, color: P.gold, lineHeight: 32 },
+  countUnit:   { fontFamily: OUT_L, fontSize: 7, letterSpacing: 2, color: P.dim, textTransform: "uppercase" },
+
+  // Rotation preview
+  rotRow:      { flexDirection: "row", gap: 4 },
+  rotCell:     { flex: 1, alignItems: "center", gap: 4 },
+  rotBox:      { width: "100%", aspectRatio: 1, borderWidth: StyleSheet.hairlineWidth, alignItems: "center", justifyContent: "center" },
+  rotLetter:   { fontFamily: CG, fontSize: 14, lineHeight: 18 },
+  rotDay:      { fontFamily: OUT_L, fontSize: 7, color: P.dim, letterSpacing: 0.5 },
+
+  // Slot assignment rows
+  slotList:       { gap: 6, marginTop: 4 },
+  slotRow:        { flexDirection: "row", alignItems: "center", gap: 10, borderWidth: StyleSheet.hairlineWidth, borderColor: P.border, paddingVertical: 10, paddingHorizontal: 12 },
+  slotBadge:      { width: 28, height: 28, borderWidth: StyleSheet.hairlineWidth, alignItems: "center", justifyContent: "center" },
+  slotBadgeTxt:   { fontFamily: CG, fontSize: 14, lineHeight: 18 },
+  slotNameBtn:    { flex: 1, gap: 2 },
+  slotName:       { fontFamily: OUT_L, fontSize: 13, color: P.ink },
+  slotNameAuto:   { color: P.dim, fontStyle: "italic" },
+  slotMacros:     { fontFamily: OUT_L, fontSize: 10, color: P.mid },
+  slotClearBtn:   { padding: 4 },
+  slotClearTxt:   { fontFamily: CG, fontSize: 20, color: P.dim, lineHeight: 22 },
+  slotChooseTxt:  { fontFamily: OUT_L, fontSize: 8, letterSpacing: 2, color: P.dim },
+
+  fillBtn:     { height: 56, borderWidth: StyleSheet.hairlineWidth, borderColor: P.gold, backgroundColor: P.goldDim, alignItems: "center", justifyContent: "center" },
+  fillBtnText: { fontFamily: OUT_L, fontSize: 10, letterSpacing: 3, color: P.gold, textTransform: "uppercase" },
 });

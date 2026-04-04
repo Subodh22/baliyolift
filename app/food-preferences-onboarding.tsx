@@ -15,6 +15,8 @@ import { CG, CG_ITALIC, OUT_L, OUT } from "@/constants/typography";
 
 type GoalType = "cut" | "bulk" | "maintain";
 
+type MealFreq = { breakfast: number; lunch: number; dinner: number; snack: number };
+
 type Prefs = {
   proteinSources:      string[];
   carbSources:         string[];
@@ -22,9 +24,12 @@ type Prefs = {
   excludedIngredients: string[];
   plannedMealTypes:    string[];
   varietyLevel:        number;
+  mealFrequency:       MealFreq;
 };
 
 // ── Goal-based defaults ─────────────────────���────────────────────────────────
+
+const DEFAULT_FREQ: MealFreq = { breakfast: 7, lunch: 7, dinner: 7, snack: 7 };
 
 const DEFAULTS_BY_GOAL: Record<GoalType, Prefs> = {
   cut: {
@@ -34,6 +39,7 @@ const DEFAULTS_BY_GOAL: Record<GoalType, Prefs> = {
     excludedIngredients: [],
     plannedMealTypes:    ["breakfast", "lunch", "dinner", "snack"],
     varietyLevel:        2,
+    mealFrequency:       DEFAULT_FREQ,
   },
   bulk: {
     proteinSources:      ["chicken", "beef", "eggs"],
@@ -42,6 +48,7 @@ const DEFAULTS_BY_GOAL: Record<GoalType, Prefs> = {
     excludedIngredients: [],
     plannedMealTypes:    ["breakfast", "lunch", "dinner", "snack"],
     varietyLevel:        2,
+    mealFrequency:       DEFAULT_FREQ,
   },
   maintain: {
     proteinSources:      ["chicken", "eggs", "fish"],
@@ -50,8 +57,16 @@ const DEFAULTS_BY_GOAL: Record<GoalType, Prefs> = {
     excludedIngredients: [],
     plannedMealTypes:    ["breakfast", "lunch", "dinner", "snack"],
     varietyLevel:        2,
+    mealFrequency:       DEFAULT_FREQ,
   },
 };
+
+const FREQ_MEALS: { key: keyof MealFreq; label: string }[] = [
+  { key: "breakfast", label: "BREAKFAST" },
+  { key: "lunch",     label: "LUNCH"     },
+  { key: "dinner",    label: "DINNER"    },
+  { key: "snack",     label: "SNACKS"    },
+];
 
 // ── Option definitions ─────────────────────���────────────────────────────��─────
 
@@ -145,6 +160,15 @@ const ch = StyleSheet.create({
   chipTextActive:{ fontFamily: OUT_L, fontSize: 13, color: P.gold },
 });
 
+// ── Frequency note helper ────────────────────────────────────────────────────
+
+function freqNote(n: number): string {
+  if (n === 0) return "never";
+  if (n === 7) return "every day";
+  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  return `${n}x · ${days.slice(0, n).join("–")}`;
+}
+
 // ── Progress bar ────────────────────────���─────────────────────────────��───────
 
 const STEP_COUNT = 4; // steps 0–3
@@ -192,8 +216,10 @@ export default function FoodPreferencesOnboarding() {
   const [carbSources,         setCarbSources]         = useState<string[]>(existing?.carbSources         ?? defaults.carbSources);
   const [fatSources,          setFatSources]          = useState<string[]>(existing?.fatSources          ?? defaults.fatSources);
   const [excludedIngredients, setExcludedIngredients] = useState<string[]>(existing?.excludedIngredients ?? []);
-  const [plannedMealTypes,    setPlannedMealTypes]    = useState<string[]>(existing?.plannedMealTypes    ?? defaults.plannedMealTypes);
   const [varietyLevel,        setVarietyLevel]        = useState<number>(  existing?.varietyLevel        ?? 2);
+  const [mealFrequency,       setMealFrequency]       = useState<MealFreq>(
+    existing?.mealFrequency ?? DEFAULT_FREQ
+  );
 
   const handleSave = async (prefs: Prefs) => {
     if (!userId) return;
@@ -208,8 +234,11 @@ export default function FoodPreferencesOnboarding() {
 
   const handleSelectForMe = () => handleSave(defaults);
 
-  const handleDone = () =>
-    handleSave({ proteinSources, carbSources, fatSources, excludedIngredients, plannedMealTypes, varietyLevel });
+  const handleDone = () => {
+    const plannedMealTypes = (["breakfast", "lunch", "dinner", "snack"] as const)
+      .filter(mt => mealFrequency[mt] > 0) as string[];
+    handleSave({ proteinSources, carbSources, fatSources, excludedIngredients, plannedMealTypes, varietyLevel, mealFrequency });
+  };
 
   const next = () => setStep((s) => s + 1);
   const back = () => {
@@ -222,7 +251,7 @@ export default function FoodPreferencesOnboarding() {
     if (step === 0) return proteinSources.length > 0;
     if (step === 1) return carbSources.length > 0;
     if (step === 2) return fatSources.length > 0;
-    return true;
+    return true; // step 3 (variety) is always valid
   };
 
   return (
@@ -296,7 +325,7 @@ export default function FoodPreferencesOnboarding() {
           {step === 0 && (
             <View style={s.stepWrap}>
               <ProgressBar step={0} />
-              <Text style={s.stepEyebrow}>STEP 1 OF 4</Text>
+              <Text style={s.stepEyebrow}>STEP 1 OF 5</Text>
               <Text style={s.stepTitle}>Protein Sources</Text>
               <Text style={s.stepBody}>Which proteins do you regularly eat? Select all that apply.</Text>
               <ChipGrid options={PROTEIN_OPTIONS} selected={proteinSources} onChange={setProteinSources} />
@@ -310,7 +339,7 @@ export default function FoodPreferencesOnboarding() {
           {step === 1 && (
             <View style={s.stepWrap}>
               <ProgressBar step={1} />
-              <Text style={s.stepEyebrow}>STEP 2 OF 4</Text>
+              <Text style={s.stepEyebrow}>STEP 2 OF 5</Text>
               <Text style={s.stepTitle}>Carb Sources</Text>
               <Text style={s.stepBody}>Where do you prefer your carbs from?</Text>
               <ChipGrid options={CARB_OPTIONS} selected={carbSources} onChange={setCarbSources} />
@@ -333,16 +362,13 @@ export default function FoodPreferencesOnboarding() {
             </View>
           )}
 
-          {/* ── STEP 3: Meal types + Variety ────────────��────────────────── */}
+          {/* ── STEP 3: Plan Style + Variety ────────────────────────────── */}
           {step === 3 && (
             <View style={s.stepWrap}>
               <ProgressBar step={3} />
               <Text style={s.stepEyebrow}>STEP 4 OF 4</Text>
               <Text style={s.stepTitle}>Plan Style</Text>
-              <Text style={s.stepBody}>Which meals should be auto-filled?</Text>
-              <ChipGrid options={MEAL_TYPE_OPTIONS} selected={plannedMealTypes} onChange={setPlannedMealTypes} />
-
-              <Text style={[s.stepBody, { marginTop: 28 }]}>Recipe variety across the week:</Text>
+              <Text style={s.stepBody}>How much variety do you want across the week?</Text>
               <View style={s.varietyRow}>
                 {VARIETY_OPTIONS.map((opt) => {
                   const active = varietyLevel === opt.value;
@@ -453,6 +479,23 @@ const s = StyleSheet.create({
   varietyLabel:  { fontFamily: OUT_L, fontSize: 10, letterSpacing: 2, color: P.mid, textTransform: "uppercase" },
   varietyLabelActive: { color: P.gold },
   varietyNote:   { fontFamily: OUT_L, fontSize: 12, color: P.dim, lineHeight: 18 },
+
+  // Meal frequency steppers
+  freqList:      { gap: 20, marginTop: 4 },
+  freqRow:       { gap: 8 },
+  freqTop:       { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" },
+  freqMealLabel: { fontFamily: OUT_L, fontSize: 9, letterSpacing: 3, color: P.mid, textTransform: "uppercase" },
+  freqDayNote:   { fontFamily: OUT_L, fontSize: 10, color: P.dim },
+  freqControls:  { flexDirection: "row" },
+  freqBtn:       { width: 52, height: 52, borderWidth: StyleSheet.hairlineWidth, borderColor: P.gold, alignItems: "center", justifyContent: "center" },
+  freqBtnDim:    { borderColor: P.border },
+  freqBtnTxt:    { fontFamily: CG, fontSize: 26, color: P.gold, lineHeight: 30 },
+  freqCountBox:  { flex: 1, alignItems: "center", justifyContent: "center", borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: P.gold, height: 52, gap: 0 },
+  freqNum:       { fontFamily: CG, fontSize: 26, color: P.gold, lineHeight: 30 },
+  freqUnit:      { fontFamily: OUT_L, fontSize: 7, letterSpacing: 2, color: P.dim, textTransform: "uppercase" },
+  freqPips:      { flexDirection: "row", gap: 3 },
+  freqPip:       { flex: 1, height: 3, backgroundColor: P.s3 },
+  freqPipActive: { backgroundColor: P.gold },
 
   // Footer
   footer:        { flexDirection: "row", gap: 10, paddingHorizontal: 24, paddingVertical: 16, borderTopWidth: StyleSheet.hairlineWidth, borderColor: P.border },

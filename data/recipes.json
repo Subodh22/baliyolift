@@ -7,25 +7,75 @@
     "mealType": "breakfast",
     "prepTimeMins": 2,
     "cookTimeMins": 8,
-    "tags": ["high-protein", "quick"],
+    "tags": [
+      "high-protein",
+      "quick"
+    ],
     "ingredients": [
-      {"name": "Low-carb bread", "amount": "2 slices"},
-      {"name": "Butter, softened", "amount": "to taste"},
-      {"name": "Eggs", "amount": "2"},
-      {"name": "Bacon", "amount": "2 slices"},
-      {"name": "Pepper", "amount": "to taste"},
-      {"name": "Mashed avocado", "amount": "optional"}
+      {
+        "name": "Low-carb bread",
+        "amount": "2 slices",
+        "calories": 160,
+        "proteinG": 10,
+        "carbsG": 14,
+        "fatG": 6
+      },
+      {
+        "name": "Butter, softened",
+        "amount": "to taste",
+        "calories": 72,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 8
+      },
+      {
+        "name": "Eggs",
+        "amount": "2",
+        "calories": 140,
+        "proteinG": 12,
+        "carbsG": 0.7,
+        "fatG": 10
+      },
+      {
+        "name": "Bacon",
+        "amount": "2 slices",
+        "calories": 86,
+        "proteinG": 7,
+        "carbsG": 0.3,
+        "fatG": 7
+      },
+      {
+        "name": "Pepper",
+        "amount": "to taste",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      },
+      {
+        "name": "Mashed avocado",
+        "amount": "optional",
+        "calories": 80,
+        "proteinG": 1,
+        "carbsG": 4,
+        "fatG": 5
+      }
     ],
     "instructions": [
       "Butter your bread.",
       "Wrap bacon in circles around each slice.",
       "Crack the eggs in your bacon circle.",
       "Pepper on top.",
-      "Air fry at 370°F for 8 minutes.",
+      "Air fry at 190\u00b0C for 8 minutes.",
       "Add mashed avocado.",
       "Enjoy! This recipe makes two servings."
     ],
-    "totalMacros": {"calories": 538, "proteinG": 33, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 538,
+      "proteinG": 33,
+      "carbsG": 20,
+      "fatG": 36.2
+    }
   },
   {
     "id": "shredded-breakfast-wraps",
@@ -35,15 +85,67 @@
     "mealType": "breakfast",
     "prepTimeMins": 5,
     "cookTimeMins": 15,
-    "tags": ["high-protein", "meal-prep"],
+    "tags": [
+      "high-protein",
+      "meal-prep"
+    ],
     "ingredients": [
-      {"name": "Small onion", "amount": "1, diced"},
-      {"name": "Green bell pepper", "amount": "1, sliced"},
-      {"name": "Salt, pepper, garlic powder, paprika", "amount": "to taste"},
-      {"name": "Chicken apple sausage", "amount": "12oz, diced"},
-      {"name": "Eggs", "amount": "6"},
-      {"name": "Reduced fat shredded cheese", "amount": "to taste"},
-      {"name": "Low-carb tortillas", "amount": "3"}
+      {
+        "name": "Small onion",
+        "amount": "1, diced",
+        "calories": 44,
+        "proteinG": 1.2,
+        "carbsG": 10.3,
+        "fatG": 0.1
+      },
+      {
+        "name": "Green bell pepper",
+        "amount": "1, sliced",
+        "calories": 24,
+        "proteinG": 0.9,
+        "carbsG": 5.5,
+        "fatG": 0.2
+      },
+      {
+        "name": "Salt, pepper, garlic powder, paprika",
+        "amount": "to taste",
+        "calories": 5,
+        "proteinG": 0.2,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Chicken apple sausage",
+        "amount": "340g, diced",
+        "calories": 476,
+        "proteinG": 42,
+        "carbsG": 14,
+        "fatG": 24
+      },
+      {
+        "name": "Eggs",
+        "amount": "6",
+        "calories": 140,
+        "proteinG": 12,
+        "carbsG": 0.7,
+        "fatG": 10
+      },
+      {
+        "name": "Reduced fat shredded cheese",
+        "amount": "to taste",
+        "calories": 80,
+        "proteinG": 8,
+        "carbsG": 1,
+        "fatG": 4
+      },
+      {
+        "name": "Low-carb tortillas",
+        "amount": "3",
+        "calories": 200,
+        "proteinG": 12,
+        "carbsG": 20,
+        "fatG": 6
+      }
     ],
     "instructions": [
       "To an oiled pan, add diced onion and green bell pepper and season with salt, pepper, garlic powder, and paprika.",
@@ -52,9 +154,14 @@
       "Mix everything and then add spoonfuls to a warm tortilla with cheese.",
       "Fold sides and roll into a wrap.",
       "For a crunchy wrap, toast it in the pan for a couple minutes.",
-      "Enjoy with Shredded Jalapeño Ranch. Makes about 3 wraps."
+      "Enjoy with Shredded Jalape\u00f1o Ranch. Makes about 3 wraps."
     ],
-    "totalMacros": {"calories": 534, "proteinG": 33, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 407,
+      "proteinG": 36.4,
+      "carbsG": 12.7,
+      "fatG": 21.9
+    }
   },
   {
     "id": "high-protein-egg-bites",
@@ -64,14 +171,59 @@
     "mealType": "breakfast",
     "prepTimeMins": 10,
     "cookTimeMins": 20,
-    "tags": ["high-protein", "meal-prep"],
+    "tags": [
+      "high-protein",
+      "meal-prep"
+    ],
     "ingredients": [
-      {"name": "Eggs", "amount": "12"},
-      {"name": "Cottage cheese", "amount": "2 cups"},
-      {"name": "Salt and pepper", "amount": "to taste"},
-      {"name": "Bacon, uncooked and chopped", "amount": "8oz"},
-      {"name": "Spinach", "amount": "handful"},
-      {"name": "Reduced-fat cheese", "amount": "to taste"}
+      {
+        "name": "Eggs",
+        "amount": "12",
+        "calories": 140,
+        "proteinG": 12,
+        "carbsG": 0.7,
+        "fatG": 10
+      },
+      {
+        "name": "Cottage cheese",
+        "amount": "2 cups",
+        "calories": 206,
+        "proteinG": 28,
+        "carbsG": 8,
+        "fatG": 5
+      },
+      {
+        "name": "Salt and pepper",
+        "amount": "to taste",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      },
+      {
+        "name": "Bacon, uncooked and chopped",
+        "amount": "227g",
+        "calories": 344,
+        "proteinG": 28,
+        "carbsG": 1.2,
+        "fatG": 28
+      },
+      {
+        "name": "Spinach",
+        "amount": "handful",
+        "calories": 7,
+        "proteinG": 0.9,
+        "carbsG": 1.1,
+        "fatG": 0.1
+      },
+      {
+        "name": "Reduced-fat cheese",
+        "amount": "to taste",
+        "calories": 80,
+        "proteinG": 8,
+        "carbsG": 1,
+        "fatG": 4
+      }
     ],
     "instructions": [
       "Crack a dozen eggs into a blender.",
@@ -79,10 +231,15 @@
       "Blend it together.",
       "Pour mixture into bowl.",
       "Mix in bacon, spinach, and cheese.",
-      "Pour into muffin tray and bake at 375°F for 20 minutes.",
+      "Pour into muffin tray and bake at 190\u00b0C for 20 minutes.",
       "Enjoy! This recipe makes 12 bites."
     ],
-    "totalMacros": {"calories": 150, "proteinG": 12, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 216,
+      "proteinG": 14.8,
+      "carbsG": 2.2,
+      "fatG": 16.2
+    }
   },
   {
     "id": "egg-chicken-quesadilla",
@@ -92,15 +249,67 @@
     "mealType": "lunch",
     "prepTimeMins": 5,
     "cookTimeMins": 10,
-    "tags": ["high-protein", "quick"],
+    "tags": [
+      "high-protein",
+      "quick"
+    ],
     "ingredients": [
-      {"name": "Large low-carb tortilla", "amount": "1"},
-      {"name": "Egg whites", "amount": "6oz"},
-      {"name": "Butter", "amount": "1oz"},
-      {"name": "Salt, pepper, paprika", "amount": "to taste"},
-      {"name": "Low-fat shredded cheese", "amount": "3oz"},
-      {"name": "Spinach", "amount": "handful"},
-      {"name": "Cooked chicken breast, sliced", "amount": "6oz"}
+      {
+        "name": "Large low-carb tortilla",
+        "amount": "1",
+        "calories": 80,
+        "proteinG": 5,
+        "carbsG": 9,
+        "fatG": 3
+      },
+      {
+        "name": "Egg whites",
+        "amount": "170g",
+        "calories": 51,
+        "proteinG": 11,
+        "carbsG": 0.7,
+        "fatG": 0.2
+      },
+      {
+        "name": "Butter",
+        "amount": "28g",
+        "calories": 72,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 8
+      },
+      {
+        "name": "Salt, pepper, paprika",
+        "amount": "to taste",
+        "calories": 5,
+        "proteinG": 0.2,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Low-fat shredded cheese",
+        "amount": "85g",
+        "calories": 160,
+        "proteinG": 16,
+        "carbsG": 2,
+        "fatG": 8
+      },
+      {
+        "name": "Spinach",
+        "amount": "handful",
+        "calories": 7,
+        "proteinG": 0.9,
+        "carbsG": 1.1,
+        "fatG": 0.1
+      },
+      {
+        "name": "Cooked chicken breast, sliced",
+        "amount": "170g",
+        "calories": 280,
+        "proteinG": 59,
+        "carbsG": 0,
+        "fatG": 6
+      }
     ],
     "instructions": [
       "Melt your pat of butter in a large pan on medium heat.",
@@ -111,7 +320,12 @@
       "Fold and press down with spatula.",
       "Remove from pan, slice into smaller pieces, and enjoy! Makes one large serving."
     ],
-    "totalMacros": {"calories": 569, "proteinG": 82, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 857,
+      "proteinG": 98.1,
+      "carbsG": 9.5,
+      "fatG": 45.4
+    }
   },
   {
     "id": "teriyaki-chicken-wrap",
@@ -121,25 +335,75 @@
     "mealType": "lunch",
     "prepTimeMins": 10,
     "cookTimeMins": 15,
-    "tags": ["high-protein", "meal-prep"],
+    "tags": [
+      "high-protein",
+      "meal-prep"
+    ],
     "ingredients": [
-      {"name": "Low-carb tortillas or spinach wraps", "amount": "4"},
-      {"name": "Chicken thighs", "amount": "16oz"},
-      {"name": "Teriyaki sauce", "amount": "4oz"},
-      {"name": "Salt and pepper", "amount": "to taste"},
-      {"name": "Purple cabbage", "amount": "1 head, chopped"},
-      {"name": "Shredded carrots", "amount": "to taste"}
+      {
+        "name": "Low-carb tortillas or spinach wraps",
+        "amount": "4",
+        "calories": 200,
+        "proteinG": 12,
+        "carbsG": 20,
+        "fatG": 6
+      },
+      {
+        "name": "Chicken thighs",
+        "amount": "454g",
+        "calories": 544,
+        "proteinG": 60,
+        "carbsG": 0,
+        "fatG": 32
+      },
+      {
+        "name": "Teriyaki sauce",
+        "amount": "113g",
+        "calories": 100,
+        "proteinG": 4,
+        "carbsG": 20,
+        "fatG": 0.5
+      },
+      {
+        "name": "Salt and pepper",
+        "amount": "to taste",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      },
+      {
+        "name": "Purple cabbage",
+        "amount": "1 head, chopped",
+        "calories": 55,
+        "proteinG": 2.5,
+        "carbsG": 13,
+        "fatG": 0.3
+      },
+      {
+        "name": "Shredded carrots",
+        "amount": "to taste",
+        "calories": 25,
+        "proteinG": 0.6,
+        "carbsG": 6,
+        "fatG": 0.1
+      }
     ],
     "instructions": [
       "In a bowl, mix chicken thighs with teriyaki sauce, salt and pepper.",
-      "Air fry at 390°F for 15 minutes.",
+      "Air fry at 200\u00b0C for 15 minutes.",
       "Slice cooked chicken.",
       "Set out with warm tortilla, shredded carrots, and cabbage.",
       "Put everything in your tortilla.",
       "Fold into wrap.",
       "Toast wrap in air fryer for 3 minutes. Makes about 4 wraps."
     ],
-    "totalMacros": {"calories": 293, "proteinG": 32, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 307,
+      "proteinG": 33.1,
+      "carbsG": 10.1,
+      "fatG": 14.3
+    }
   },
   {
     "id": "lemon-pepper-gyros",
@@ -149,26 +413,89 @@
     "mealType": "lunch",
     "prepTimeMins": 10,
     "cookTimeMins": 15,
-    "tags": ["high-protein"],
+    "tags": [
+      "high-protein"
+    ],
     "ingredients": [
-      {"name": "Chicken breast, uncooked", "amount": "16oz"},
-      {"name": "Lemon, zested and juiced", "amount": "1"},
-      {"name": "Salt, pepper, garlic powder", "amount": "to taste"},
-      {"name": "Cucumber, diced", "amount": "1"},
-      {"name": "Roma tomatoes, diced", "amount": "2"},
-      {"name": "Red onion, diced", "amount": "1/2"},
-      {"name": "Hummus", "amount": "to taste"},
-      {"name": "Pita bread", "amount": "3"}
+      {
+        "name": "Chicken breast, uncooked",
+        "amount": "454g",
+        "calories": 495,
+        "proteinG": 92,
+        "carbsG": 0,
+        "fatG": 11
+      },
+      {
+        "name": "Lemon, zested and juiced",
+        "amount": "1",
+        "calories": 17,
+        "proteinG": 0.6,
+        "carbsG": 5.4,
+        "fatG": 0.2
+      },
+      {
+        "name": "Salt, pepper, garlic powder",
+        "amount": "to taste",
+        "calories": 5,
+        "proteinG": 0.2,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Cucumber, diced",
+        "amount": "1",
+        "calories": 16,
+        "proteinG": 0.7,
+        "carbsG": 3.6,
+        "fatG": 0.1
+      },
+      {
+        "name": "Roma tomatoes, diced",
+        "amount": "2",
+        "calories": 35,
+        "proteinG": 1.5,
+        "carbsG": 7.5,
+        "fatG": 0.4
+      },
+      {
+        "name": "Red onion, diced",
+        "amount": "1/2",
+        "calories": 44,
+        "proteinG": 1.2,
+        "carbsG": 10.3,
+        "fatG": 0.1
+      },
+      {
+        "name": "Hummus",
+        "amount": "to taste",
+        "calories": 70,
+        "proteinG": 3,
+        "carbsG": 6,
+        "fatG": 4
+      },
+      {
+        "name": "Pita bread",
+        "amount": "3",
+        "calories": 165,
+        "proteinG": 5.5,
+        "carbsG": 33.5,
+        "fatG": 0.7
+      }
     ],
     "instructions": [
       "In bowl, mix chicken breast with lemon zest, lemon juice, salt and pepper.",
-      "Air fry at 390°F for 15 minutes.",
+      "Air fry at 200\u00b0C for 15 minutes.",
       "Once cooked, slice chicken.",
       "Spread hummus on a warm pita.",
       "Add your chicken, tomato, onion, and cucumber.",
       "Fold and enjoy! Makes about 3 gyros."
     ],
-    "totalMacros": {"calories": 570, "proteinG": 52, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 382,
+      "proteinG": 51.8,
+      "carbsG": 22.9,
+      "fatG": 7.7
+    }
   },
   {
     "id": "high-protein-grilled-cheese",
@@ -178,21 +505,57 @@
     "mealType": "lunch",
     "prepTimeMins": 5,
     "cookTimeMins": 5,
-    "tags": ["high-protein", "quick"],
+    "tags": [
+      "high-protein",
+      "quick"
+    ],
     "ingredients": [
-      {"name": "Low-carb bread", "amount": "2 slices"},
-      {"name": "Cooked rotisserie chicken", "amount": "6oz"},
-      {"name": "Butter", "amount": "to taste"},
-      {"name": "Gouda cheese", "amount": "2-3 slices"}
+      {
+        "name": "Low-carb bread",
+        "amount": "2 slices",
+        "calories": 160,
+        "proteinG": 10,
+        "carbsG": 14,
+        "fatG": 6
+      },
+      {
+        "name": "Cooked rotisserie chicken",
+        "amount": "170g",
+        "calories": 280,
+        "proteinG": 42,
+        "carbsG": 0,
+        "fatG": 12
+      },
+      {
+        "name": "Butter",
+        "amount": "to taste",
+        "calories": 72,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 8
+      },
+      {
+        "name": "Gouda cheese",
+        "amount": "2-3 slices",
+        "calories": 200,
+        "proteinG": 14,
+        "carbsG": 0.6,
+        "fatG": 16
+      }
     ],
     "instructions": [
       "Butter bread.",
       "Add cheese.",
       "Add shredded chicken.",
-      "Air fry at 375°F or cook in lightly oiled pan on each side until golden brown.",
+      "Air fry at 190\u00b0C or cook in lightly oiled pan on each side until golden brown.",
       "Slice and enjoy! Makes one serving."
     ],
-    "totalMacros": {"calories": 582, "proteinG": 51, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 704,
+      "proteinG": 68.1,
+      "carbsG": 9.7,
+      "fatG": 42.2
+    }
   },
   {
     "id": "carnivore-quesadilla",
@@ -202,13 +565,50 @@
     "mealType": "lunch",
     "prepTimeMins": 5,
     "cookTimeMins": 10,
-    "tags": ["high-protein"],
+    "tags": [
+      "high-protein"
+    ],
     "ingredients": [
-      {"name": "Carne asada", "amount": "10oz"},
-      {"name": "Salt, pepper, garlic powder, chili lime seasoning", "amount": "to taste"},
-      {"name": "Oil and butter", "amount": "to taste"},
-      {"name": "Low-carb tortillas", "amount": "2"},
-      {"name": "Shredded oaxaca cheese", "amount": "to taste"}
+      {
+        "name": "Carne asada",
+        "amount": "284g",
+        "calories": 512,
+        "proteinG": 57,
+        "carbsG": 0,
+        "fatG": 32
+      },
+      {
+        "name": "Salt, pepper, garlic powder, chili lime seasoning",
+        "amount": "to taste",
+        "calories": 5,
+        "proteinG": 0.2,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Oil and butter",
+        "amount": "to taste",
+        "calories": 120,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 14
+      },
+      {
+        "name": "Low-carb tortillas",
+        "amount": "2",
+        "calories": 200,
+        "proteinG": 12,
+        "carbsG": 20,
+        "fatG": 6
+      },
+      {
+        "name": "Shredded oaxaca cheese",
+        "amount": "to taste",
+        "calories": 160,
+        "proteinG": 10,
+        "carbsG": 2,
+        "fatG": 12
+      }
     ],
     "instructions": [
       "Season carne asada with salt, pepper, garlic powder, and chili lime seasoning.",
@@ -217,7 +617,12 @@
       "Place second tortilla on top and flip, cooking both sides evenly.",
       "Slice and enjoy! Makes one large serving."
     ],
-    "totalMacros": {"calories": 750, "proteinG": 57, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 970,
+      "proteinG": 96.0,
+      "carbsG": 13.3,
+      "fatG": 57.7
+    }
   },
   {
     "id": "buffalo-chicken-wraps",
@@ -227,27 +632,91 @@
     "mealType": "lunch",
     "prepTimeMins": 10,
     "cookTimeMins": 15,
-    "tags": ["high-protein", "meal-prep"],
+    "tags": [
+      "high-protein",
+      "meal-prep"
+    ],
     "ingredients": [
-      {"name": "Chicken breasts", "amount": "3 medium"},
-      {"name": "Buffalo sauce", "amount": "1/2 cup"},
-      {"name": "Minced garlic", "amount": "3 cloves"},
-      {"name": "Salt and pepper", "amount": "to taste"},
-      {"name": "Shredded Mexican cheese", "amount": "to taste"},
-      {"name": "Shredded lettuce", "amount": "to taste"},
-      {"name": "Roma tomato, diced", "amount": "1"},
-      {"name": "Low-carb tortillas", "amount": "3"}
+      {
+        "name": "Chicken breasts",
+        "amount": "3 medium",
+        "calories": 495,
+        "proteinG": 92,
+        "carbsG": 0,
+        "fatG": 11
+      },
+      {
+        "name": "Buffalo sauce",
+        "amount": "1/2 cup",
+        "calories": 25,
+        "proteinG": 0,
+        "carbsG": 2,
+        "fatG": 1.5
+      },
+      {
+        "name": "Minced garlic",
+        "amount": "3 cloves",
+        "calories": 12,
+        "proteinG": 0.6,
+        "carbsG": 3,
+        "fatG": 0
+      },
+      {
+        "name": "Salt and pepper",
+        "amount": "to taste",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      },
+      {
+        "name": "Shredded Mexican cheese",
+        "amount": "to taste",
+        "calories": 120,
+        "proteinG": 8,
+        "carbsG": 1,
+        "fatG": 9
+      },
+      {
+        "name": "Shredded lettuce",
+        "amount": "to taste",
+        "calories": 5,
+        "proteinG": 0.5,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Roma tomato, diced",
+        "amount": "1",
+        "calories": 18,
+        "proteinG": 0.8,
+        "carbsG": 3.8,
+        "fatG": 0.2
+      },
+      {
+        "name": "Low-carb tortillas",
+        "amount": "3",
+        "calories": 200,
+        "proteinG": 12,
+        "carbsG": 20,
+        "fatG": 6
+      }
     ],
     "instructions": [
       "Add buffalo sauce, minced garlic, salt and pepper to chicken breasts.",
       "Stir together and marinate a few minutes.",
-      "Air fry at 380°F for 15 minutes.",
+      "Air fry at 195\u00b0C for 15 minutes.",
       "Slice chicken into strips.",
       "Warm tortilla and add cheese, chicken, lettuce, and tomato.",
       "Roll wrap and toast in air fryer for 5 minutes.",
       "Makes about 3 wraps."
     ],
-    "totalMacros": {"calories": 275, "proteinG": 44, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 361,
+      "proteinG": 54.9,
+      "carbsG": 6.9,
+      "fatG": 11.4
+    }
   },
   {
     "id": "orange-honey-chicken-bowls",
@@ -257,27 +726,90 @@
     "mealType": "dinner",
     "prepTimeMins": 15,
     "cookTimeMins": 15,
-    "tags": ["high-protein"],
+    "tags": [
+      "high-protein"
+    ],
     "ingredients": [
-      {"name": "Orange juice", "amount": "1 orange"},
-      {"name": "Honey", "amount": "1 tbsp"},
-      {"name": "Garlic", "amount": "1 tbsp"},
-      {"name": "Chili paste", "amount": "1 tbsp"},
-      {"name": "Salt and pepper", "amount": "to taste"},
-      {"name": "Chicken thighs", "amount": "16oz"},
-      {"name": "Boiled quinoa or microwavable quinoa packet", "amount": "1 cup"},
-      {"name": "Avocado, diced", "amount": "1"}
+      {
+        "name": "Orange juice",
+        "amount": "1 orange",
+        "calories": 45,
+        "proteinG": 0.7,
+        "carbsG": 10.5,
+        "fatG": 0.2
+      },
+      {
+        "name": "Honey",
+        "amount": "1 tbsp",
+        "calories": 64,
+        "proteinG": 0.1,
+        "carbsG": 17.3,
+        "fatG": 0
+      },
+      {
+        "name": "Garlic",
+        "amount": "1 tbsp",
+        "calories": 12,
+        "proteinG": 0.6,
+        "carbsG": 3,
+        "fatG": 0
+      },
+      {
+        "name": "Chili paste",
+        "amount": "1 tbsp",
+        "calories": 30,
+        "proteinG": 1,
+        "carbsG": 6,
+        "fatG": 0.5
+      },
+      {
+        "name": "Salt and pepper",
+        "amount": "to taste",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      },
+      {
+        "name": "Chicken thighs",
+        "amount": "454g",
+        "calories": 544,
+        "proteinG": 60,
+        "carbsG": 0,
+        "fatG": 32
+      },
+      {
+        "name": "Boiled quinoa or microwavable quinoa packet",
+        "amount": "1 cup",
+        "calories": 222,
+        "proteinG": 8,
+        "carbsG": 39,
+        "fatG": 3.6
+      },
+      {
+        "name": "Avocado, diced",
+        "amount": "1",
+        "calories": 120,
+        "proteinG": 1.5,
+        "carbsG": 6,
+        "fatG": 11
+      }
     ],
     "instructions": [
       "Combine orange juice, honey, garlic, chili paste, salt and pepper.",
       "Fork chicken thighs and pour in marinade. Let sit 10 minutes.",
-      "Air fry at 380°F for 15 minutes.",
+      "Air fry at 195\u00b0C for 15 minutes.",
       "Dice up the chicken.",
       "Add to a bowl with quinoa.",
-      "Add avocado and Shredded Jalapeño Ranch.",
+      "Add avocado and Shredded Jalape\u00f1o Ranch.",
       "Makes about 1 large bowl."
     ],
-    "totalMacros": {"calories": 472, "proteinG": 61, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 1456,
+      "proteinG": 129.1,
+      "carbsG": 65.2,
+      "fatG": 75.5
+    }
   },
   {
     "id": "chili-sesame-beef-bowl",
@@ -287,17 +819,83 @@
     "mealType": "dinner",
     "prepTimeMins": 5,
     "cookTimeMins": 10,
-    "tags": ["high-protein", "quick"],
+    "tags": [
+      "high-protein",
+      "quick"
+    ],
     "ingredients": [
-      {"name": "Onion, diced", "amount": "1"},
-      {"name": "Ground beef", "amount": "8oz"},
-      {"name": "Salt, pepper, paprika, garlic powder", "amount": "to taste"},
-      {"name": "Chili paste", "amount": "1 tbsp"},
-      {"name": "Sesame seeds", "amount": "to taste"},
-      {"name": "Sweet chili sauce", "amount": "to taste"},
-      {"name": "Chopped pickles", "amount": "to taste"},
-      {"name": "Avocado, diced", "amount": "1/2"},
-      {"name": "White rice or microwavable packet", "amount": "1 cup"}
+      {
+        "name": "Onion, diced",
+        "amount": "1",
+        "calories": 44,
+        "proteinG": 1.2,
+        "carbsG": 10.3,
+        "fatG": 0.1
+      },
+      {
+        "name": "Ground beef",
+        "amount": "227g",
+        "calories": 484,
+        "proteinG": 46,
+        "carbsG": 0,
+        "fatG": 32
+      },
+      {
+        "name": "Salt, pepper, paprika, garlic powder",
+        "amount": "to taste",
+        "calories": 5,
+        "proteinG": 0.2,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Chili paste",
+        "amount": "1 tbsp",
+        "calories": 30,
+        "proteinG": 1,
+        "carbsG": 6,
+        "fatG": 0.5
+      },
+      {
+        "name": "Sesame seeds",
+        "amount": "to taste",
+        "calories": 52,
+        "proteinG": 1.6,
+        "carbsG": 2.1,
+        "fatG": 4.5
+      },
+      {
+        "name": "Sweet chili sauce",
+        "amount": "to taste",
+        "calories": 60,
+        "proteinG": 0.5,
+        "carbsG": 14,
+        "fatG": 0.2
+      },
+      {
+        "name": "Chopped pickles",
+        "amount": "to taste",
+        "calories": 8,
+        "proteinG": 0.3,
+        "carbsG": 1.5,
+        "fatG": 0.1
+      },
+      {
+        "name": "Avocado, diced",
+        "amount": "1/2",
+        "calories": 120,
+        "proteinG": 1.5,
+        "carbsG": 6,
+        "fatG": 11
+      },
+      {
+        "name": "White rice or microwavable packet",
+        "amount": "1 cup",
+        "calories": 206,
+        "proteinG": 4.3,
+        "carbsG": 45,
+        "fatG": 0.4
+      }
     ],
     "instructions": [
       "Cook diced onion in oiled pan until softened.",
@@ -306,7 +904,12 @@
       "Add beef to a bowl with white rice, avocado, and pickles.",
       "Enjoy! Makes one serving."
     ],
-    "totalMacros": {"calories": 584, "proteinG": 48, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 890,
+      "proteinG": 65.7,
+      "carbsG": 68.5,
+      "fatG": 41.4
+    }
   },
   {
     "id": "white-cheddar-turkey-burgers",
@@ -316,16 +919,74 @@
     "mealType": "dinner",
     "prepTimeMins": 10,
     "cookTimeMins": 10,
-    "tags": ["high-protein"],
+    "tags": [
+      "high-protein"
+    ],
     "ingredients": [
-      {"name": "Red onion, diced", "amount": "1"},
-      {"name": "Lean ground turkey", "amount": "16oz"},
-      {"name": "Salt, pepper, paprika", "amount": "to taste"},
-      {"name": "Minced garlic", "amount": "1 tbsp"},
-      {"name": "Chili paste", "amount": "1 tbsp"},
-      {"name": "Bread crumbs", "amount": "2 tbsp"},
-      {"name": "Shredded white cheddar cheese", "amount": "to taste"},
-      {"name": "Low-carb or brioche buns", "amount": "4"}
+      {
+        "name": "Red onion, diced",
+        "amount": "1",
+        "calories": 44,
+        "proteinG": 1.2,
+        "carbsG": 10.3,
+        "fatG": 0.1
+      },
+      {
+        "name": "Lean ground turkey",
+        "amount": "454g",
+        "calories": 476,
+        "proteinG": 68,
+        "carbsG": 0,
+        "fatG": 22
+      },
+      {
+        "name": "Salt, pepper, paprika",
+        "amount": "to taste",
+        "calories": 5,
+        "proteinG": 0.2,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Minced garlic",
+        "amount": "1 tbsp",
+        "calories": 12,
+        "proteinG": 0.6,
+        "carbsG": 3,
+        "fatG": 0
+      },
+      {
+        "name": "Chili paste",
+        "amount": "1 tbsp",
+        "calories": 30,
+        "proteinG": 1,
+        "carbsG": 6,
+        "fatG": 0.5
+      },
+      {
+        "name": "Bread crumbs",
+        "amount": "2 tbsp",
+        "calories": 56,
+        "proteinG": 2,
+        "carbsG": 10,
+        "fatG": 0.8
+      },
+      {
+        "name": "Shredded white cheddar cheese",
+        "amount": "to taste",
+        "calories": 120,
+        "proteinG": 7,
+        "carbsG": 0.4,
+        "fatG": 10
+      },
+      {
+        "name": "Low-carb or brioche buns",
+        "amount": "4",
+        "calories": 400,
+        "proteinG": 16,
+        "carbsG": 60,
+        "fatG": 8
+      }
     ],
     "instructions": [
       "Dice a red onion.",
@@ -336,7 +997,12 @@
       "Add mashed avocado to toasted bun.",
       "Place turkey patty over top. Makes about 4 burgers."
     ],
-    "totalMacros": {"calories": 296, "proteinG": 41, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 469,
+      "proteinG": 37.4,
+      "carbsG": 36.3,
+      "fatG": 19.7
+    }
   },
   {
     "id": "honey-garlic-salmon-bowls",
@@ -346,25 +1012,96 @@
     "mealType": "dinner",
     "prepTimeMins": 5,
     "cookTimeMins": 10,
-    "tags": ["high-protein", "omega-3"],
+    "tags": [
+      "high-protein",
+      "omega-3"
+    ],
     "ingredients": [
-      {"name": "Salmon, uncooked", "amount": "12oz"},
-      {"name": "Avocado oil", "amount": "to taste"},
-      {"name": "Salt, pepper, garlic powder, paprika", "amount": "to taste"},
-      {"name": "Honey", "amount": "2 tbsp"},
-      {"name": "Soy sauce", "amount": "2 tbsp"},
-      {"name": "White rice or microwavable packet", "amount": "1 cup"},
-      {"name": "Shredded carrots", "amount": "to taste"},
-      {"name": "Cucumber, peeled and diced", "amount": "1"},
-      {"name": "Avocado, diced", "amount": "1/2"}
+      {
+        "name": "Salmon, uncooked",
+        "amount": "340g",
+        "calories": 612,
+        "proteinG": 67,
+        "carbsG": 0,
+        "fatG": 38
+      },
+      {
+        "name": "Avocado oil",
+        "amount": "to taste",
+        "calories": 120,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 14
+      },
+      {
+        "name": "Salt, pepper, garlic powder, paprika",
+        "amount": "to taste",
+        "calories": 5,
+        "proteinG": 0.2,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Honey",
+        "amount": "2 tbsp",
+        "calories": 64,
+        "proteinG": 0.1,
+        "carbsG": 17.3,
+        "fatG": 0
+      },
+      {
+        "name": "Soy sauce",
+        "amount": "2 tbsp",
+        "calories": 17,
+        "proteinG": 1.9,
+        "carbsG": 2.5,
+        "fatG": 0
+      },
+      {
+        "name": "White rice or microwavable packet",
+        "amount": "1 cup",
+        "calories": 206,
+        "proteinG": 4.3,
+        "carbsG": 45,
+        "fatG": 0.4
+      },
+      {
+        "name": "Shredded carrots",
+        "amount": "to taste",
+        "calories": 25,
+        "proteinG": 0.6,
+        "carbsG": 6,
+        "fatG": 0.1
+      },
+      {
+        "name": "Cucumber, peeled and diced",
+        "amount": "1",
+        "calories": 16,
+        "proteinG": 0.7,
+        "carbsG": 3.6,
+        "fatG": 0.1
+      },
+      {
+        "name": "Avocado, diced",
+        "amount": "1/2",
+        "calories": 120,
+        "proteinG": 1.5,
+        "carbsG": 6,
+        "fatG": 11
+      }
     ],
     "instructions": [
       "Brush salmon with oil, salt, pepper, garlic powder, paprika, honey and soy sauce.",
-      "Air fry at 400°F for 10 minutes.",
+      "Air fry at 205\u00b0C for 10 minutes.",
       "Add to bowl with rice, carrots, cucumber, and avocado.",
       "Enjoy!"
     ],
-    "totalMacros": {"calories": 630, "proteinG": 53, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 1176,
+      "proteinG": 77.0,
+      "carbsG": 85.0,
+      "fatG": 56.2
+    }
   },
   {
     "id": "pineapple-pork-tacos",
@@ -374,15 +1111,66 @@
     "mealType": "dinner",
     "prepTimeMins": 10,
     "cookTimeMins": 15,
-    "tags": ["high-protein"],
+    "tags": [
+      "high-protein"
+    ],
     "ingredients": [
-      {"name": "Crushed pineapple", "amount": "1 can"},
-      {"name": "Red onion, chopped", "amount": "1"},
-      {"name": "Ground pork (or beef pork blend)", "amount": "1lb"},
-      {"name": "Salt, pepper, cayenne, garlic powder, paprika", "amount": "to taste"},
-      {"name": "Lemon, juiced and zested", "amount": "1"},
-      {"name": "Radishes, sliced", "amount": "4"},
-      {"name": "Low-fat sour cream", "amount": "3 tbsp"}
+      {
+        "name": "Crushed pineapple",
+        "amount": "1 can",
+        "calories": 78,
+        "proteinG": 0.9,
+        "carbsG": 20,
+        "fatG": 0.2
+      },
+      {
+        "name": "Red onion, chopped",
+        "amount": "1",
+        "calories": 44,
+        "proteinG": 1.2,
+        "carbsG": 10.3,
+        "fatG": 0.1
+      },
+      {
+        "name": "Ground pork (or beef pork blend)",
+        "amount": "454g",
+        "calories": 726,
+        "proteinG": 46,
+        "carbsG": 0,
+        "fatG": 60
+      },
+      {
+        "name": "Salt, pepper, cayenne, garlic powder, paprika",
+        "amount": "to taste",
+        "calories": 5,
+        "proteinG": 0.2,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Lemon, juiced and zested",
+        "amount": "1",
+        "calories": 17,
+        "proteinG": 0.6,
+        "carbsG": 5.4,
+        "fatG": 0.2
+      },
+      {
+        "name": "Radishes, sliced",
+        "amount": "4",
+        "calories": 7,
+        "proteinG": 0.3,
+        "carbsG": 1.5,
+        "fatG": 0.1
+      },
+      {
+        "name": "Low-fat sour cream",
+        "amount": "3 tbsp",
+        "calories": 45,
+        "proteinG": 1.5,
+        "carbsG": 6,
+        "fatG": 1.5
+      }
     ],
     "instructions": [
       "Add crushed pineapple to oiled pan on medium heat.",
@@ -393,7 +1181,12 @@
       "Add cooked pork and pickled onion mixture.",
       "Makes about 3 servings (6 tacos)."
     ],
-    "totalMacros": {"calories": 400, "proteinG": 30, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 505,
+      "proteinG": 26.5,
+      "carbsG": 10.4,
+      "fatG": 39.0
+    }
   },
   {
     "id": "minotaur-munchies",
@@ -403,13 +1196,51 @@
     "mealType": "dinner",
     "prepTimeMins": 5,
     "cookTimeMins": 10,
-    "tags": ["high-protein", "quick"],
+    "tags": [
+      "high-protein",
+      "quick"
+    ],
     "ingredients": [
-      {"name": "Ground beef", "amount": "16oz"},
-      {"name": "Salt, pepper, paprika, garlic powder", "amount": "to taste"},
-      {"name": "Eggs", "amount": "4"},
-      {"name": "Roma tomato, diced", "amount": "1"},
-      {"name": "Microwavable rice packet", "amount": "1"}
+      {
+        "name": "Ground beef",
+        "amount": "454g",
+        "calories": 484,
+        "proteinG": 46,
+        "carbsG": 0,
+        "fatG": 32
+      },
+      {
+        "name": "Salt, pepper, paprika, garlic powder",
+        "amount": "to taste",
+        "calories": 5,
+        "proteinG": 0.2,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Eggs",
+        "amount": "4",
+        "calories": 140,
+        "proteinG": 12,
+        "carbsG": 0.7,
+        "fatG": 10
+      },
+      {
+        "name": "Roma tomato, diced",
+        "amount": "1",
+        "calories": 18,
+        "proteinG": 0.8,
+        "carbsG": 3.8,
+        "fatG": 0.2
+      },
+      {
+        "name": "Microwavable rice packet",
+        "amount": "1",
+        "calories": 206,
+        "proteinG": 4.3,
+        "carbsG": 45,
+        "fatG": 0.4
+      }
     ],
     "instructions": [
       "Cook ground beef in oiled pan, seasoning with salt, pepper, paprika, garlic powder.",
@@ -418,34 +1249,117 @@
       "Add to bowl and top with hot sauce.",
       "Makes two servings."
     ],
-    "totalMacros": {"calories": 496, "proteinG": 41, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 775,
+      "proteinG": 76.1,
+      "carbsG": 26.8,
+      "fatG": 40.8
+    }
   },
   {
     "id": "shredded-jalapeno-ranch",
-    "name": "Shredded Jalapeño Ranch",
-    "description": "Creamy blended jalapeño ranch sauce made with Greek yogurt.",
+    "name": "Shredded Jalape\u00f1o Ranch",
+    "description": "Creamy blended jalape\u00f1o ranch sauce made with Greek yogurt.",
     "goal": "maintain",
     "mealType": "sauce",
     "prepTimeMins": 5,
     "cookTimeMins": 0,
-    "tags": ["sauce", "low-calorie"],
+    "tags": [
+      "sauce",
+      "low-calorie"
+    ],
     "ingredients": [
-      {"name": "Jalapeños, seeds removed", "amount": "3"},
-      {"name": "0% fat Greek yogurt", "amount": "1 and 3/4 cup"},
-      {"name": "Olive oil", "amount": "1/4 cup"},
-      {"name": "White vinegar", "amount": "1 tbsp"},
-      {"name": "Garlic cloves", "amount": "3"},
-      {"name": "Chopped parsley", "amount": "1/4 cup"},
-      {"name": "Fresh cilantro", "amount": "2 tbsp"},
-      {"name": "Dried dill", "amount": "2 tsp"},
-      {"name": "Onion powder", "amount": "2 tsp"},
-      {"name": "Salt and pepper", "amount": "to taste"}
+      {
+        "name": "Jalape\u00f1os, seeds removed",
+        "amount": "3",
+        "calories": 12,
+        "proteinG": 0.6,
+        "carbsG": 2.7,
+        "fatG": 0.1
+      },
+      {
+        "name": "0% fat Greek yogurt",
+        "amount": "1 and 3/4 cup",
+        "calories": 100,
+        "proteinG": 17,
+        "carbsG": 7,
+        "fatG": 0
+      },
+      {
+        "name": "Olive oil",
+        "amount": "1/4 cup",
+        "calories": 119,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 13.5
+      },
+      {
+        "name": "White vinegar",
+        "amount": "1 tbsp",
+        "calories": 3,
+        "proteinG": 0,
+        "carbsG": 0.1,
+        "fatG": 0
+      },
+      {
+        "name": "Garlic cloves",
+        "amount": "3",
+        "calories": 12,
+        "proteinG": 0.6,
+        "carbsG": 3,
+        "fatG": 0
+      },
+      {
+        "name": "Chopped parsley",
+        "amount": "1/4 cup",
+        "calories": 5,
+        "proteinG": 0.4,
+        "carbsG": 0.9,
+        "fatG": 0.1
+      },
+      {
+        "name": "Fresh cilantro",
+        "amount": "2 tbsp",
+        "calories": 2,
+        "proteinG": 0.2,
+        "carbsG": 0.3,
+        "fatG": 0.1
+      },
+      {
+        "name": "Dried dill",
+        "amount": "2 tsp",
+        "calories": 3,
+        "proteinG": 0.2,
+        "carbsG": 0.6,
+        "fatG": 0.1
+      },
+      {
+        "name": "Onion powder",
+        "amount": "2 tsp",
+        "calories": 5,
+        "proteinG": 0.2,
+        "carbsG": 1.1,
+        "fatG": 0.1
+      },
+      {
+        "name": "Salt and pepper",
+        "amount": "to taste",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      }
     ],
     "instructions": [
       "Blend all ingredients together.",
       "One serving is about 2 tbsp."
     ],
-    "totalMacros": {"calories": 55, "proteinG": 3, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 65,
+      "proteinG": 3.5,
+      "carbsG": 1.3,
+      "fatG": 5.1
+    }
   },
   {
     "id": "ole-reliable-sauce",
@@ -455,18 +1369,54 @@
     "mealType": "sauce",
     "prepTimeMins": 5,
     "cookTimeMins": 0,
-    "tags": ["sauce", "quick"],
+    "tags": [
+      "sauce",
+      "quick"
+    ],
     "ingredients": [
-      {"name": "Avocado oil", "amount": "1 tbsp"},
-      {"name": "Dijon mustard", "amount": "1 tbsp"},
-      {"name": "Sriracha", "amount": "1 tbsp"},
-      {"name": "Hot honey", "amount": "1 tbsp"}
+      {
+        "name": "Avocado oil",
+        "amount": "1 tbsp",
+        "calories": 120,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 14
+      },
+      {
+        "name": "Dijon mustard",
+        "amount": "1 tbsp",
+        "calories": 15,
+        "proteinG": 0.9,
+        "carbsG": 1,
+        "fatG": 0.9
+      },
+      {
+        "name": "Sriracha",
+        "amount": "1 tbsp",
+        "calories": 5,
+        "proteinG": 0.1,
+        "carbsG": 1,
+        "fatG": 0.1
+      },
+      {
+        "name": "Hot honey",
+        "amount": "1 tbsp",
+        "calories": 64,
+        "proteinG": 0,
+        "carbsG": 17,
+        "fatG": 0
+      }
     ],
     "instructions": [
       "Combine all ingredients in a bowl or shake in an airtight container.",
       "Makes one serving."
     ],
-    "totalMacros": {"calories": 190, "proteinG": 1, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 190,
+      "proteinG": 0.7,
+      "carbsG": 13.0,
+      "fatG": 15.6
+    }
   },
   {
     "id": "shredded-honey-mustard",
@@ -476,20 +1426,63 @@
     "mealType": "sauce",
     "prepTimeMins": 5,
     "cookTimeMins": 0,
-    "tags": ["sauce", "low-calorie"],
+    "tags": [
+      "sauce",
+      "low-calorie"
+    ],
     "ingredients": [
-      {"name": "0% fat Greek yogurt", "amount": "3/4 cup"},
-      {"name": "Dijon mustard", "amount": "1/4 cup"},
-      {"name": "Honey", "amount": "1/4 cup"},
-      {"name": "White vinegar", "amount": "1 tbsp"},
-      {"name": "Salt and pepper", "amount": "to taste"}
+      {
+        "name": "0% fat Greek yogurt",
+        "amount": "3/4 cup",
+        "calories": 100,
+        "proteinG": 17,
+        "carbsG": 7,
+        "fatG": 0
+      },
+      {
+        "name": "Dijon mustard",
+        "amount": "1/4 cup",
+        "calories": 15,
+        "proteinG": 0.9,
+        "carbsG": 1,
+        "fatG": 0.9
+      },
+      {
+        "name": "Honey",
+        "amount": "1/4 cup",
+        "calories": 64,
+        "proteinG": 0.1,
+        "carbsG": 17.3,
+        "fatG": 0
+      },
+      {
+        "name": "White vinegar",
+        "amount": "1 tbsp",
+        "calories": 3,
+        "proteinG": 0,
+        "carbsG": 0.1,
+        "fatG": 0
+      },
+      {
+        "name": "Salt and pepper",
+        "amount": "to taste",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      }
     ],
     "instructions": [
       "Mix all ingredients together.",
       "Store in airtight container.",
       "One serving is about 2 tbsp."
     ],
-    "totalMacros": {"calories": 35, "proteinG": 2, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 48,
+      "proteinG": 2.4,
+      "carbsG": 9.4,
+      "fatG": 0.4
+    }
   },
   {
     "id": "honey-chicken-wraps",
@@ -499,57 +1492,185 @@
     "mealType": "lunch",
     "prepTimeMins": 5,
     "cookTimeMins": 15,
-    "tags": ["high-protein", "meal-prep"],
+    "tags": [
+      "high-protein",
+      "meal-prep"
+    ],
     "ingredients": [
-      {"name": "Chicken thighs", "amount": "16oz"},
-      {"name": "Honey", "amount": "to taste"},
-      {"name": "Taco seasoning and black pepper", "amount": "to taste"},
-      {"name": "Low-carb tortillas", "amount": "4"},
-      {"name": "Low-fat shredded cheese", "amount": "to taste"},
-      {"name": "Sliced red onion", "amount": "to taste"},
-      {"name": "Spinach", "amount": "to taste"}
+      {
+        "name": "Chicken thighs",
+        "amount": "454g",
+        "calories": 544,
+        "proteinG": 60,
+        "carbsG": 0,
+        "fatG": 32
+      },
+      {
+        "name": "Honey",
+        "amount": "to taste",
+        "calories": 64,
+        "proteinG": 0.1,
+        "carbsG": 17.3,
+        "fatG": 0
+      },
+      {
+        "name": "Taco seasoning and black pepper",
+        "amount": "to taste",
+        "calories": 5,
+        "proteinG": 0.2,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Low-carb tortillas",
+        "amount": "4",
+        "calories": 200,
+        "proteinG": 12,
+        "carbsG": 20,
+        "fatG": 6
+      },
+      {
+        "name": "Low-fat shredded cheese",
+        "amount": "to taste",
+        "calories": 160,
+        "proteinG": 16,
+        "carbsG": 2,
+        "fatG": 8
+      },
+      {
+        "name": "Sliced red onion",
+        "amount": "to taste",
+        "calories": 22,
+        "proteinG": 0.6,
+        "carbsG": 5,
+        "fatG": 0.1
+      },
+      {
+        "name": "Spinach",
+        "amount": "to taste",
+        "calories": 7,
+        "proteinG": 0.9,
+        "carbsG": 1.1,
+        "fatG": 0.1
+      }
     ],
     "instructions": [
       "Mix chicken thighs with oil, taco seasoning, black pepper, and honey.",
-      "Air fry at 390°F for 15 minutes.",
+      "Air fry at 200\u00b0C for 15 minutes.",
       "Slice chicken and add to warm tortilla with cheese, red onion, spinach.",
       "Wrap it up.",
       "Toast in air fryer for 3-4 minutes until tortilla browns.",
       "Wrap extras in foil and refrigerate for up to a week.",
       "Makes about 4 servings."
     ],
-    "totalMacros": {"calories": 453, "proteinG": 42, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 339,
+      "proteinG": 35.9,
+      "carbsG": 10.3,
+      "fatG": 16.7
+    }
   },
   {
     "id": "protein-penne-spicy-meatballs",
     "name": "Protein Penne Spicy Meatballs",
-    "description": "Ground turkey meatballs air-fried and served with protein penne in rosé tomato sauce.",
+    "description": "Ground turkey meatballs air-fried and served with protein penne in ros\u00e9 tomato sauce.",
     "goal": "maintain",
     "mealType": "dinner",
     "prepTimeMins": 10,
     "cookTimeMins": 15,
-    "tags": ["high-protein", "meal-prep"],
+    "tags": [
+      "high-protein",
+      "meal-prep"
+    ],
     "ingredients": [
-      {"name": "Lean ground turkey", "amount": "16oz"},
-      {"name": "Minced garlic", "amount": "1 tbsp"},
-      {"name": "Chili paste", "amount": "1 tbsp"},
-      {"name": "Salt and pepper", "amount": "to taste"},
-      {"name": "Chopped parsley", "amount": "to taste"},
-      {"name": "Egg", "amount": "1"},
-      {"name": "Bread crumbs", "amount": "2 tbsp"},
-      {"name": "Penne protein pasta", "amount": "16oz"},
-      {"name": "Rosé tomato sauce", "amount": "1 jar"}
+      {
+        "name": "Lean ground turkey",
+        "amount": "454g",
+        "calories": 476,
+        "proteinG": 68,
+        "carbsG": 0,
+        "fatG": 22
+      },
+      {
+        "name": "Minced garlic",
+        "amount": "1 tbsp",
+        "calories": 12,
+        "proteinG": 0.6,
+        "carbsG": 3,
+        "fatG": 0
+      },
+      {
+        "name": "Chili paste",
+        "amount": "1 tbsp",
+        "calories": 30,
+        "proteinG": 1,
+        "carbsG": 6,
+        "fatG": 0.5
+      },
+      {
+        "name": "Salt and pepper",
+        "amount": "to taste",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      },
+      {
+        "name": "Chopped parsley",
+        "amount": "to taste",
+        "calories": 5,
+        "proteinG": 0.4,
+        "carbsG": 0.9,
+        "fatG": 0.1
+      },
+      {
+        "name": "Egg",
+        "amount": "1",
+        "calories": 70,
+        "proteinG": 6,
+        "carbsG": 0.4,
+        "fatG": 5
+      },
+      {
+        "name": "Bread crumbs",
+        "amount": "2 tbsp",
+        "calories": 56,
+        "proteinG": 2,
+        "carbsG": 10,
+        "fatG": 0.8
+      },
+      {
+        "name": "Penne protein pasta",
+        "amount": "454g",
+        "calories": 840,
+        "proteinG": 120,
+        "carbsG": 112,
+        "fatG": 8
+      },
+      {
+        "name": "Ros\u00e9 tomato sauce",
+        "amount": "1 jar",
+        "calories": 260,
+        "proteinG": 8,
+        "carbsG": 40,
+        "fatG": 8
+      }
     ],
     "instructions": [
       "Mash ground turkey with garlic, chili paste, salt, pepper, parsley, egg, and bread crumbs.",
       "Form about 9 balls.",
-      "Air fry at 400°F for 10 minutes.",
+      "Air fry at 205\u00b0C for 10 minutes.",
       "While meatballs cook, boil protein pasta until cooked through.",
       "Heat tomato sauce and add meatballs, stirring to absorb flavor.",
       "Add cooked pasta and stir everything together.",
       "Store in meal prep containers. Makes about 4 servings."
     ],
-    "totalMacros": {"calories": 488, "proteinG": 45, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 428,
+      "proteinG": 44.3,
+      "carbsG": 40.5,
+      "fatG": 12.5
+    }
   },
   {
     "id": "honey-garlic-chicken-fried-rice",
@@ -559,17 +1680,83 @@
     "mealType": "dinner",
     "prepTimeMins": 10,
     "cookTimeMins": 20,
-    "tags": ["high-protein", "meal-prep"],
+    "tags": [
+      "high-protein",
+      "meal-prep"
+    ],
     "ingredients": [
-      {"name": "Chicken breasts, cubed", "amount": "5 uncooked"},
-      {"name": "Salt and pepper", "amount": "to taste"},
-      {"name": "Honey", "amount": "2 tbsp"},
-      {"name": "Soy sauce", "amount": "2 tbsp plus extra for drizzling"},
-      {"name": "Minced garlic", "amount": "1 tbsp"},
-      {"name": "Sesame oil", "amount": "1 tbsp"},
-      {"name": "Frozen veggie mix", "amount": "to taste"},
-      {"name": "Egg whites", "amount": "12oz"},
-      {"name": "Boiled white rice or microwavable rice packet", "amount": "2 cups"}
+      {
+        "name": "Chicken breasts, cubed",
+        "amount": "5 uncooked",
+        "calories": 825,
+        "proteinG": 154,
+        "carbsG": 0,
+        "fatG": 18
+      },
+      {
+        "name": "Salt and pepper",
+        "amount": "to taste",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      },
+      {
+        "name": "Honey",
+        "amount": "2 tbsp",
+        "calories": 64,
+        "proteinG": 0.1,
+        "carbsG": 17.3,
+        "fatG": 0
+      },
+      {
+        "name": "Soy sauce",
+        "amount": "2 tbsp plus extra for drizzling",
+        "calories": 17,
+        "proteinG": 1.9,
+        "carbsG": 2.5,
+        "fatG": 0
+      },
+      {
+        "name": "Minced garlic",
+        "amount": "1 tbsp",
+        "calories": 12,
+        "proteinG": 0.6,
+        "carbsG": 3,
+        "fatG": 0
+      },
+      {
+        "name": "Sesame oil",
+        "amount": "1 tbsp",
+        "calories": 120,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 14
+      },
+      {
+        "name": "Frozen veggie mix",
+        "amount": "to taste",
+        "calories": 70,
+        "proteinG": 3,
+        "carbsG": 13,
+        "fatG": 0.5
+      },
+      {
+        "name": "Egg whites",
+        "amount": "340g",
+        "calories": 51,
+        "proteinG": 11,
+        "carbsG": 0.7,
+        "fatG": 0.2
+      },
+      {
+        "name": "Boiled white rice or microwavable rice packet",
+        "amount": "2 cups",
+        "calories": 412,
+        "proteinG": 8.6,
+        "carbsG": 90,
+        "fatG": 0.8
+      }
     ],
     "instructions": [
       "Cube chicken and mix with salt, pepper, honey, soy sauce, garlic, and sesame oil.",
@@ -579,7 +1766,12 @@
       "Add chicken and mix everything together.",
       "Divide into meal prep containers. Makes about 4 servings."
     ],
-    "totalMacros": {"calories": 270, "proteinG": 20, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 513,
+      "proteinG": 66.6,
+      "carbsG": 33.0,
+      "fatG": 10.6
+    }
   },
   {
     "id": "rosemary-garlic-sirloin-roast",
@@ -589,18 +1781,92 @@
     "mealType": "dinner",
     "prepTimeMins": 15,
     "cookTimeMins": 480,
-    "tags": ["high-protein", "meal-prep", "slow-cooker"],
+    "tags": [
+      "high-protein",
+      "meal-prep",
+      "slow-cooker"
+    ],
     "ingredients": [
-      {"name": "Baby potatoes", "amount": "1lb"},
-      {"name": "Baby carrots", "amount": "10oz"},
-      {"name": "Yellow onion, diced", "amount": "1"},
-      {"name": "Butter, cubed", "amount": "3 tbsp"},
-      {"name": "Sirloin roast", "amount": "2.5lb"},
-      {"name": "Beef broth", "amount": "1 cup"},
-      {"name": "Apple cider vinegar", "amount": "4 tbsp"},
-      {"name": "Soy sauce", "amount": "3 tbsp"},
-      {"name": "Worcestershire sauce", "amount": "2 tbsp"},
-      {"name": "Salt, pepper, garlic powder, onion powder, paprika, dried parsley, chopped rosemary", "amount": "to taste"}
+      {
+        "name": "Baby potatoes",
+        "amount": "454g",
+        "calories": 312,
+        "proteinG": 8,
+        "carbsG": 72,
+        "fatG": 0.4
+      },
+      {
+        "name": "Baby carrots",
+        "amount": "284g",
+        "calories": 97,
+        "proteinG": 2.2,
+        "carbsG": 22.7,
+        "fatG": 0.4
+      },
+      {
+        "name": "Yellow onion, diced",
+        "amount": "1",
+        "calories": 44,
+        "proteinG": 1.2,
+        "carbsG": 10.3,
+        "fatG": 0.1
+      },
+      {
+        "name": "Butter, cubed",
+        "amount": "3 tbsp",
+        "calories": 306,
+        "proteinG": 0.4,
+        "carbsG": 0,
+        "fatG": 34.5
+      },
+      {
+        "name": "Sirloin roast",
+        "amount": "1.13kg",
+        "calories": 1810,
+        "proteinG": 230,
+        "carbsG": 0,
+        "fatG": 96
+      },
+      {
+        "name": "Beef broth",
+        "amount": "1 cup",
+        "calories": 17,
+        "proteinG": 2.7,
+        "carbsG": 0.1,
+        "fatG": 0.5
+      },
+      {
+        "name": "Apple cider vinegar",
+        "amount": "4 tbsp",
+        "calories": 20,
+        "proteinG": 0,
+        "carbsG": 4.8,
+        "fatG": 0
+      },
+      {
+        "name": "Soy sauce",
+        "amount": "3 tbsp",
+        "calories": 17,
+        "proteinG": 1.9,
+        "carbsG": 2.5,
+        "fatG": 0
+      },
+      {
+        "name": "Worcestershire sauce",
+        "amount": "2 tbsp",
+        "calories": 30,
+        "proteinG": 0,
+        "carbsG": 7.3,
+        "fatG": 0
+      },
+      {
+        "name": "Salt, pepper, garlic powder, onion powder, paprika, dried parsley, chopped rosemary",
+        "amount": "to taste",
+        "calories": 10,
+        "proteinG": 0.4,
+        "carbsG": 2,
+        "fatG": 0
+      }
     ],
     "instructions": [
       "Grab a crock pot or slow cooker.",
@@ -611,7 +1877,12 @@
       "Once cooked, shred sirloin and return to pot, stirring everything together.",
       "Makes about 5 servings."
     ],
-    "totalMacros": {"calories": 461, "proteinG": 53, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 631,
+      "proteinG": 67.0,
+      "carbsG": 20.6,
+      "fatG": 30.4
+    }
   },
   {
     "id": "hot-honey-chicken-quinoa",
@@ -621,24 +1892,81 @@
     "mealType": "dinner",
     "prepTimeMins": 10,
     "cookTimeMins": 15,
-    "tags": ["high-protein", "meal-prep"],
+    "tags": [
+      "high-protein",
+      "meal-prep"
+    ],
     "ingredients": [
-      {"name": "Chicken breasts", "amount": "4 medium"},
-      {"name": "Oil, salt, pepper, paprika, blackened seasoning", "amount": "to taste"},
-      {"name": "Boiled quinoa or microwavable packet", "amount": "1 cup"},
-      {"name": "Avocado oil", "amount": "1 tbsp"},
-      {"name": "Dijon mustard", "amount": "1 tbsp"},
-      {"name": "Sriracha", "amount": "1 tbsp"},
-      {"name": "Hot honey", "amount": "1 tbsp"}
+      {
+        "name": "Chicken breasts",
+        "amount": "4 medium",
+        "calories": 495,
+        "proteinG": 92,
+        "carbsG": 0,
+        "fatG": 11
+      },
+      {
+        "name": "Oil, salt, pepper, paprika, blackened seasoning",
+        "amount": "to taste",
+        "calories": 60,
+        "proteinG": 0,
+        "carbsG": 1,
+        "fatG": 7
+      },
+      {
+        "name": "Boiled quinoa or microwavable packet",
+        "amount": "1 cup",
+        "calories": 222,
+        "proteinG": 8,
+        "carbsG": 39,
+        "fatG": 3.6
+      },
+      {
+        "name": "Avocado oil",
+        "amount": "1 tbsp",
+        "calories": 120,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 14
+      },
+      {
+        "name": "Dijon mustard",
+        "amount": "1 tbsp",
+        "calories": 15,
+        "proteinG": 0.9,
+        "carbsG": 1,
+        "fatG": 0.9
+      },
+      {
+        "name": "Sriracha",
+        "amount": "1 tbsp",
+        "calories": 5,
+        "proteinG": 0.1,
+        "carbsG": 1,
+        "fatG": 0.1
+      },
+      {
+        "name": "Hot honey",
+        "amount": "1 tbsp",
+        "calories": 64,
+        "proteinG": 0,
+        "carbsG": 17,
+        "fatG": 0
+      }
     ],
     "instructions": [
       "Season chicken with oil, salt, pepper, paprika, and blackened seasoning.",
-      "Air fry at 390°F for 15 minutes.",
+      "Air fry at 200\u00b0C for 15 minutes.",
       "Make Ole Reliable Sauce by stirring together avocado oil, dijon, sriracha, and hot honey.",
       "Slice cooked chicken and place in meal prep container next to quinoa.",
       "Pour sauce over top and enjoy!"
     ],
-    "totalMacros": {"calories": 483, "proteinG": 57, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 1319,
+      "proteinG": 179.3,
+      "carbsG": 52.4,
+      "fatG": 38.9
+    }
   },
   {
     "id": "chocolate-cherry-protein-smoothie",
@@ -648,21 +1976,72 @@
     "mealType": "smoothie",
     "prepTimeMins": 5,
     "cookTimeMins": 0,
-    "tags": ["high-protein", "quick", "no-cook"],
+    "tags": [
+      "high-protein",
+      "quick",
+      "no-cook"
+    ],
     "ingredients": [
-      {"name": "Greek yogurt", "amount": "3/4 cup"},
-      {"name": "Banana", "amount": "1"},
-      {"name": "Frozen cherries", "amount": "1/2 cup"},
-      {"name": "Peanut butter powder", "amount": "1 tbsp"},
-      {"name": "Cocoa powder", "amount": "1 tbsp"},
-      {"name": "Protein powder", "amount": "1 scoop"}
+      {
+        "name": "Greek yogurt",
+        "amount": "3/4 cup",
+        "calories": 100,
+        "proteinG": 17,
+        "carbsG": 7,
+        "fatG": 0
+      },
+      {
+        "name": "Banana",
+        "amount": "1",
+        "calories": 89,
+        "proteinG": 1.1,
+        "carbsG": 23,
+        "fatG": 0.3
+      },
+      {
+        "name": "Frozen cherries",
+        "amount": "1/2 cup",
+        "calories": 36,
+        "proteinG": 0.6,
+        "carbsG": 9,
+        "fatG": 0.2
+      },
+      {
+        "name": "Peanut butter powder",
+        "amount": "1 tbsp",
+        "calories": 45,
+        "proteinG": 5,
+        "carbsG": 4,
+        "fatG": 1.5
+      },
+      {
+        "name": "Cocoa powder",
+        "amount": "1 tbsp",
+        "calories": 12,
+        "proteinG": 1,
+        "carbsG": 3,
+        "fatG": 0.7
+      },
+      {
+        "name": "Protein powder",
+        "amount": "1 scoop",
+        "calories": 120,
+        "proteinG": 25,
+        "carbsG": 3,
+        "fatG": 1.5
+      }
     ],
     "instructions": [
       "Blend all ingredients together.",
       "Garnish with dark chocolate pieces and hemp seeds if desired.",
       "Makes one serving."
     ],
-    "totalMacros": {"calories": 421, "proteinG": 50, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 373,
+      "proteinG": 35.7,
+      "carbsG": 57.4,
+      "fatG": 4.9
+    }
   },
   {
     "id": "wild-berry-cutting-smoothie",
@@ -672,21 +2051,79 @@
     "mealType": "smoothie",
     "prepTimeMins": 5,
     "cookTimeMins": 0,
-    "tags": ["high-protein", "quick", "no-cook"],
+    "tags": [
+      "high-protein",
+      "quick",
+      "no-cook"
+    ],
     "ingredients": [
-      {"name": "Oats", "amount": "1/4 cup"},
-      {"name": "Unsweetened vanilla almond milk", "amount": "1 cup"},
-      {"name": "Banana", "amount": "1/2"},
-      {"name": "Frozen berry blend", "amount": "1 cup"},
-      {"name": "Dairy-free yogurt", "amount": "3/4 cup"},
-      {"name": "Peanut butter powder", "amount": "1 tbsp"},
-      {"name": "Protein powder", "amount": "2 scoops"}
+      {
+        "name": "Oats",
+        "amount": "1/4 cup",
+        "calories": 75,
+        "proteinG": 2.6,
+        "carbsG": 13.5,
+        "fatG": 1.5
+      },
+      {
+        "name": "Unsweetened vanilla almond milk",
+        "amount": "1 cup",
+        "calories": 30,
+        "proteinG": 1,
+        "carbsG": 1,
+        "fatG": 2.5
+      },
+      {
+        "name": "Banana",
+        "amount": "1/2",
+        "calories": 89,
+        "proteinG": 1.1,
+        "carbsG": 23,
+        "fatG": 0.3
+      },
+      {
+        "name": "Frozen berry blend",
+        "amount": "1 cup",
+        "calories": 60,
+        "proteinG": 1,
+        "carbsG": 14,
+        "fatG": 0.5
+      },
+      {
+        "name": "Dairy-free yogurt",
+        "amount": "3/4 cup",
+        "calories": 80,
+        "proteinG": 2,
+        "carbsG": 14,
+        "fatG": 2
+      },
+      {
+        "name": "Peanut butter powder",
+        "amount": "1 tbsp",
+        "calories": 45,
+        "proteinG": 5,
+        "carbsG": 4,
+        "fatG": 1.5
+      },
+      {
+        "name": "Protein powder",
+        "amount": "2 scoops",
+        "calories": 120,
+        "proteinG": 25,
+        "carbsG": 3,
+        "fatG": 1.5
+      }
     ],
     "instructions": [
       "Blend all ingredients together.",
       "Makes one serving."
     ],
-    "totalMacros": {"calories": 593, "proteinG": 40, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 525,
+      "proteinG": 33.2,
+      "carbsG": 75.7,
+      "fatG": 12.6
+    }
   },
   {
     "id": "feel-better-smoothie",
@@ -696,22 +2133,87 @@
     "mealType": "smoothie",
     "prepTimeMins": 5,
     "cookTimeMins": 0,
-    "tags": ["high-protein", "quick", "no-cook"],
+    "tags": [
+      "high-protein",
+      "quick",
+      "no-cook"
+    ],
     "ingredients": [
-      {"name": "Orange juice", "amount": "1 orange"},
-      {"name": "Green apple", "amount": "1"},
-      {"name": "Fresh ginger, peeled", "amount": "1 small piece"},
-      {"name": "Banana", "amount": "1/2"},
-      {"name": "Frozen pineapple", "amount": "1/2 cup"},
-      {"name": "Greek yogurt", "amount": "1 cup"},
-      {"name": "Spinach", "amount": "1 handful"},
-      {"name": "Cayenne pepper", "amount": "to taste"}
+      {
+        "name": "Orange juice",
+        "amount": "1 orange",
+        "calories": 45,
+        "proteinG": 0.7,
+        "carbsG": 10.5,
+        "fatG": 0.2
+      },
+      {
+        "name": "Green apple",
+        "amount": "1",
+        "calories": 52,
+        "proteinG": 0.3,
+        "carbsG": 14,
+        "fatG": 0.2
+      },
+      {
+        "name": "Fresh ginger, peeled",
+        "amount": "1 small piece",
+        "calories": 5,
+        "proteinG": 0.1,
+        "carbsG": 1.1,
+        "fatG": 0.1
+      },
+      {
+        "name": "Banana",
+        "amount": "1/2",
+        "calories": 89,
+        "proteinG": 1.1,
+        "carbsG": 23,
+        "fatG": 0.3
+      },
+      {
+        "name": "Frozen pineapple",
+        "amount": "1/2 cup",
+        "calories": 40,
+        "proteinG": 0.4,
+        "carbsG": 10.5,
+        "fatG": 0.1
+      },
+      {
+        "name": "Greek yogurt",
+        "amount": "1 cup",
+        "calories": 100,
+        "proteinG": 17,
+        "carbsG": 7,
+        "fatG": 0
+      },
+      {
+        "name": "Spinach",
+        "amount": "1 handful",
+        "calories": 7,
+        "proteinG": 0.9,
+        "carbsG": 1.1,
+        "fatG": 0.1
+      },
+      {
+        "name": "Cayenne pepper",
+        "amount": "to taste",
+        "calories": 2,
+        "proteinG": 0.1,
+        "carbsG": 0.4,
+        "fatG": 0.1
+      }
     ],
     "instructions": [
       "Blend all ingredients together.",
       "Enjoy! Makes one serving."
     ],
-    "totalMacros": {"calories": 400, "proteinG": 30, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 261,
+      "proteinG": 26.1,
+      "carbsG": 38.9,
+      "fatG": 1.4
+    }
   },
   {
     "id": "giga-smoothie",
@@ -721,40 +2223,121 @@
     "mealType": "smoothie",
     "prepTimeMins": 5,
     "cookTimeMins": 0,
-    "tags": ["high-protein", "quick", "no-cook"],
+    "tags": [
+      "high-protein",
+      "quick",
+      "no-cook"
+    ],
     "ingredients": [
-      {"name": "Frozen berry blend", "amount": "1 cup"},
-      {"name": "Frozen banana", "amount": "2/3 cup"},
-      {"name": "0% fat Greek yogurt", "amount": "1 and 1/2 cup"},
-      {"name": "Milk", "amount": "1/3 cup"},
-      {"name": "Vanilla protein powder", "amount": "2 scoops"}
+      {
+        "name": "Frozen berry blend",
+        "amount": "1 cup",
+        "calories": 60,
+        "proteinG": 1,
+        "carbsG": 14,
+        "fatG": 0.5
+      },
+      {
+        "name": "Frozen banana",
+        "amount": "2/3 cup",
+        "calories": 89,
+        "proteinG": 1.1,
+        "carbsG": 23,
+        "fatG": 0.3
+      },
+      {
+        "name": "0% fat Greek yogurt",
+        "amount": "1 and 1/2 cup",
+        "calories": 100,
+        "proteinG": 17,
+        "carbsG": 7,
+        "fatG": 0
+      },
+      {
+        "name": "Milk",
+        "amount": "1/3 cup",
+        "calories": 50,
+        "proteinG": 3.4,
+        "carbsG": 4.8,
+        "fatG": 2
+      },
+      {
+        "name": "Vanilla protein powder",
+        "amount": "2 scoops",
+        "calories": 120,
+        "proteinG": 25,
+        "carbsG": 3,
+        "fatG": 1.5
+      }
     ],
     "instructions": [
       "Blend all ingredients together.",
       "Makes one large serving."
     ],
-    "totalMacros": {"calories": 750, "proteinG": 100, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 479,
+      "proteinG": 54.9,
+      "carbsG": 55.0,
+      "fatG": 5.8
+    }
   },
   {
     "id": "vegan-chocolate-mousse",
     "name": "Vegan Chocolate Mousse",
-    "description": "Thick blended tofu, dates and cocoa mousse — vegan, high protein and indulgent.",
+    "description": "Thick blended tofu, dates and cocoa mousse \u2014 vegan, high protein and indulgent.",
     "goal": "maintain",
     "mealType": "dessert",
     "prepTimeMins": 5,
     "cookTimeMins": 0,
-    "tags": ["vegan", "high-protein", "no-cook"],
+    "tags": [
+      "vegan",
+      "high-protein",
+      "no-cook"
+    ],
     "ingredients": [
-      {"name": "Tofu", "amount": "14oz"},
-      {"name": "Dates", "amount": "10"},
-      {"name": "Cocoa powder", "amount": "1/2 cup"},
-      {"name": "Almond milk", "amount": "1 cup"}
+      {
+        "name": "Tofu",
+        "amount": "397g",
+        "calories": 270,
+        "proteinG": 30,
+        "carbsG": 8,
+        "fatG": 16
+      },
+      {
+        "name": "Dates",
+        "amount": "10",
+        "calories": 277,
+        "proteinG": 2.5,
+        "carbsG": 74,
+        "fatG": 0.4
+      },
+      {
+        "name": "Cocoa powder",
+        "amount": "1/2 cup",
+        "calories": 12,
+        "proteinG": 1,
+        "carbsG": 3,
+        "fatG": 0.7
+      },
+      {
+        "name": "Almond milk",
+        "amount": "1 cup",
+        "calories": 30,
+        "proteinG": 1,
+        "carbsG": 1,
+        "fatG": 2.5
+      }
     ],
     "instructions": [
       "Blend everything together.",
       "Makes one large serving."
     ],
-    "totalMacros": {"calories": 595, "proteinG": 45, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 959,
+      "proteinG": 47.3,
+      "carbsG": 172.6,
+      "fatG": 29.2
+    }
   },
   {
     "id": "strawberry-coco-progurt",
@@ -764,18 +2347,48 @@
     "mealType": "dessert",
     "prepTimeMins": 5,
     "cookTimeMins": 0,
-    "tags": ["high-protein", "no-cook", "quick"],
+    "tags": [
+      "high-protein",
+      "no-cook",
+      "quick"
+    ],
     "ingredients": [
-      {"name": "0% fat Greek yogurt", "amount": "1 and 1/2 cup"},
-      {"name": "Cocoa or chocolate protein powder", "amount": "2 scoops"},
-      {"name": "Sliced strawberries", "amount": "to taste (optional)"}
+      {
+        "name": "0% fat Greek yogurt",
+        "amount": "1 and 1/2 cup",
+        "calories": 100,
+        "proteinG": 17,
+        "carbsG": 7,
+        "fatG": 0
+      },
+      {
+        "name": "Cocoa or chocolate protein powder",
+        "amount": "2 scoops",
+        "calories": 240,
+        "proteinG": 50,
+        "carbsG": 6,
+        "fatG": 3
+      },
+      {
+        "name": "Sliced strawberries",
+        "amount": "to taste (optional)",
+        "calories": 25,
+        "proteinG": 0.5,
+        "carbsG": 6,
+        "fatG": 0.2
+      }
     ],
     "instructions": [
       "Mix Greek yogurt and protein powder vigorously until thoroughly combined.",
       "Top with fresh strawberries.",
       "Makes one large serving."
     ],
-    "totalMacros": {"calories": 400, "proteinG": 82, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 310,
+      "proteinG": 51.0,
+      "carbsG": 21.0,
+      "fatG": 2.8
+    }
   },
   {
     "id": "jacked-banana-bread",
@@ -785,17 +2398,83 @@
     "mealType": "dessert",
     "prepTimeMins": 15,
     "cookTimeMins": 45,
-    "tags": ["high-protein", "baked"],
+    "tags": [
+      "high-protein",
+      "baked"
+    ],
     "ingredients": [
-      {"name": "Old bananas, mashed", "amount": "3"},
-      {"name": "Milk", "amount": "1 cup"},
-      {"name": "Apple cider vinegar", "amount": "1 tbsp"},
-      {"name": "Vanilla extract", "amount": "2 tsp"},
-      {"name": "Almond flour", "amount": "1/2 cup"},
-      {"name": "Self-rising flour", "amount": "2 cups"},
-      {"name": "Plant-based or casein protein powder", "amount": "2 scoops"},
-      {"name": "Splenda brown sugar", "amount": "1/2 cup"},
-      {"name": "Reese's peanut butter chips", "amount": "optional"}
+      {
+        "name": "Old bananas, mashed",
+        "amount": "3",
+        "calories": 267,
+        "proteinG": 3.3,
+        "carbsG": 69,
+        "fatG": 0.9
+      },
+      {
+        "name": "Milk",
+        "amount": "1 cup",
+        "calories": 50,
+        "proteinG": 3.4,
+        "carbsG": 4.8,
+        "fatG": 2
+      },
+      {
+        "name": "Apple cider vinegar",
+        "amount": "1 tbsp",
+        "calories": 20,
+        "proteinG": 0,
+        "carbsG": 4.8,
+        "fatG": 0
+      },
+      {
+        "name": "Vanilla extract",
+        "amount": "2 tsp",
+        "calories": 12,
+        "proteinG": 0,
+        "carbsG": 0.5,
+        "fatG": 0
+      },
+      {
+        "name": "Almond flour",
+        "amount": "1/2 cup",
+        "calories": 160,
+        "proteinG": 6,
+        "carbsG": 6,
+        "fatG": 14
+      },
+      {
+        "name": "Self-rising flour",
+        "amount": "2 cups",
+        "calories": 366,
+        "proteinG": 11,
+        "carbsG": 76,
+        "fatG": 1
+      },
+      {
+        "name": "Plant-based or casein protein powder",
+        "amount": "2 scoops",
+        "calories": 240,
+        "proteinG": 50,
+        "carbsG": 6,
+        "fatG": 3
+      },
+      {
+        "name": "Splenda brown sugar",
+        "amount": "1/2 cup",
+        "calories": 48,
+        "proteinG": 0,
+        "carbsG": 12,
+        "fatG": 0
+      },
+      {
+        "name": "Reese's peanut butter chips",
+        "amount": "optional",
+        "calories": 80,
+        "proteinG": 2,
+        "carbsG": 9,
+        "fatG": 4
+      }
     ],
     "instructions": [
       "Mash 3 old bananas.",
@@ -803,26 +2482,70 @@
       "Add dry ingredients: flour, protein powder, and brown sugar. Mix together.",
       "Fold in Reese's peanut butter chips.",
       "Pour into bread pan lined with parchment paper.",
-      "Bake at 375°F for 45 minutes.",
+      "Bake at 190\u00b0C for 45 minutes.",
       "Makes about 7 servings."
     ],
-    "totalMacros": {"calories": 320, "proteinG": 18, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 250,
+      "proteinG": 8.9,
+      "carbsG": 42.3,
+      "fatG": 5.8
+    }
   },
   {
     "id": "ripped-reeses-bowl",
     "name": "Ripped Reese's Bowl",
-    "description": "Blended peanut butter chocolate protein smoothie bowl — like a Reese's in a bowl.",
+    "description": "Blended peanut butter chocolate protein smoothie bowl \u2014 like a Reese's in a bowl.",
     "goal": "bulk",
     "mealType": "dessert",
     "prepTimeMins": 5,
     "cookTimeMins": 0,
-    "tags": ["high-protein", "no-cook", "quick"],
+    "tags": [
+      "high-protein",
+      "no-cook",
+      "quick"
+    ],
     "ingredients": [
-      {"name": "Frozen banana", "amount": "1 cup"},
-      {"name": "0% fat Greek yogurt", "amount": "1 and 1/2 cup"},
-      {"name": "Peanut butter powder", "amount": "4 tbsp"},
-      {"name": "Chocolate protein powder", "amount": "2 scoops"},
-      {"name": "Milk (Fairlife for higher protein)", "amount": "1/2 cup"}
+      {
+        "name": "Frozen banana",
+        "amount": "1 cup",
+        "calories": 89,
+        "proteinG": 1.1,
+        "carbsG": 23,
+        "fatG": 0.3
+      },
+      {
+        "name": "0% fat Greek yogurt",
+        "amount": "1 and 1/2 cup",
+        "calories": 100,
+        "proteinG": 17,
+        "carbsG": 7,
+        "fatG": 0
+      },
+      {
+        "name": "Peanut butter powder",
+        "amount": "4 tbsp",
+        "calories": 45,
+        "proteinG": 5,
+        "carbsG": 4,
+        "fatG": 1.5
+      },
+      {
+        "name": "Chocolate protein powder",
+        "amount": "2 scoops",
+        "calories": 240,
+        "proteinG": 50,
+        "carbsG": 6,
+        "fatG": 3
+      },
+      {
+        "name": "Milk (Fairlife for higher protein)",
+        "amount": "1/2 cup",
+        "calories": 80,
+        "proteinG": 13,
+        "carbsG": 6,
+        "fatG": 2.5
+      }
     ],
     "instructions": [
       "Blend all ingredients together.",
@@ -830,7 +2553,12 @@
       "Garnish with a little dark chocolate.",
       "Makes one large serving."
     ],
-    "totalMacros": {"calories": 600, "proteinG": 70, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 705,
+      "proteinG": 85.9,
+      "carbsG": 72.5,
+      "fatG": 14.8
+    }
   },
   {
     "id": "balsamic-sprouts",
@@ -840,21 +2568,64 @@
     "mealType": "snack",
     "prepTimeMins": 5,
     "cookTimeMins": 15,
-    "tags": ["low-calorie", "vegan"],
+    "tags": [
+      "low-calorie",
+      "vegan"
+    ],
     "ingredients": [
-      {"name": "Brussels sprouts, halved and stems removed", "amount": "12oz"},
-      {"name": "Olive oil", "amount": "1 tbsp"},
-      {"name": "Balsamic vinegar", "amount": "1 tbsp"},
-      {"name": "Salt, pepper, paprika", "amount": "to taste"},
-      {"name": "Hot honey or low-cal brown sugar", "amount": "2 tbsp"}
+      {
+        "name": "Brussels sprouts, halved and stems removed",
+        "amount": "340g",
+        "calories": 120,
+        "proteinG": 8,
+        "carbsG": 24,
+        "fatG": 0.8
+      },
+      {
+        "name": "Olive oil",
+        "amount": "1 tbsp",
+        "calories": 119,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 13.5
+      },
+      {
+        "name": "Balsamic vinegar",
+        "amount": "1 tbsp",
+        "calories": 14,
+        "proteinG": 0.1,
+        "carbsG": 2.7,
+        "fatG": 0
+      },
+      {
+        "name": "Salt, pepper, paprika",
+        "amount": "to taste",
+        "calories": 5,
+        "proteinG": 0.2,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Hot honey or low-cal brown sugar",
+        "amount": "2 tbsp",
+        "calories": 64,
+        "proteinG": 0,
+        "carbsG": 17,
+        "fatG": 0
+      }
     ],
     "instructions": [
       "Slice sprouts in half and cut off stems.",
       "Mix in bowl with oil, balsamic vinegar, salt, pepper, paprika, and hot honey.",
-      "Set on oven-safe tray and air fry at 375°F for 15 minutes.",
+      "Set on oven-safe tray and air fry at 190\u00b0C for 15 minutes.",
       "Transfer to bowl and enjoy! Makes about two servings."
     ],
-    "totalMacros": {"calories": 150, "proteinG": 5, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 188,
+      "proteinG": 5.8,
+      "carbsG": 27.7,
+      "fatG": 8.0
+    }
   },
   {
     "id": "jacked-chicken-nuggets",
@@ -864,22 +2635,58 @@
     "mealType": "snack",
     "prepTimeMins": 10,
     "cookTimeMins": 10,
-    "tags": ["high-protein", "quick"],
+    "tags": [
+      "high-protein",
+      "quick"
+    ],
     "ingredients": [
-      {"name": "Ground chicken", "amount": "16oz"},
-      {"name": "Salt, pepper, onion powder, paprika", "amount": "to taste"},
-      {"name": "Nutritional yeast", "amount": "1 cup"},
-      {"name": "Bread crumbs", "amount": "1/2 cup"}
+      {
+        "name": "Ground chicken",
+        "amount": "454g",
+        "calories": 480,
+        "proteinG": 60,
+        "carbsG": 0,
+        "fatG": 26
+      },
+      {
+        "name": "Salt, pepper, onion powder, paprika",
+        "amount": "to taste",
+        "calories": 5,
+        "proteinG": 0.2,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Nutritional yeast",
+        "amount": "1 cup",
+        "calories": 240,
+        "proteinG": 32,
+        "carbsG": 28,
+        "fatG": 4
+      },
+      {
+        "name": "Bread crumbs",
+        "amount": "1/2 cup",
+        "calories": 56,
+        "proteinG": 2,
+        "carbsG": 10,
+        "fatG": 0.8
+      }
     ],
     "instructions": [
       "Mix ground chicken with salt, pepper, onion powder, and paprika.",
       "Combine nutritional yeast and bread crumbs to form breading.",
       "Using your hands, form nuggets and coat in breading.",
       "Set coated nuggets on oven-safe tray.",
-      "Air fry at 400°F for 10 minutes.",
+      "Air fry at 205\u00b0C for 10 minutes.",
       "Makes about 9 nuggets."
     ],
-    "totalMacros": {"calories": 280, "proteinG": 40, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 134,
+      "proteinG": 15.0,
+      "carbsG": 8.8,
+      "fatG": 4.9
+    }
   },
   {
     "id": "the-5-minute-pizza",
@@ -889,20 +2696,56 @@
     "mealType": "snack",
     "prepTimeMins": 1,
     "cookTimeMins": 4,
-    "tags": ["quick", "high-protein"],
+    "tags": [
+      "quick",
+      "high-protein"
+    ],
     "ingredients": [
-      {"name": "Pita bread", "amount": "1"},
-      {"name": "Tomato sauce", "amount": "2 tbsp"},
-      {"name": "Shredded mozzarella cheese", "amount": "1 and 1/4 oz"},
-      {"name": "Turkey pepperoni", "amount": "7 slices"}
+      {
+        "name": "Pita bread",
+        "amount": "1",
+        "calories": 165,
+        "proteinG": 5.5,
+        "carbsG": 33.5,
+        "fatG": 0.7
+      },
+      {
+        "name": "Tomato sauce",
+        "amount": "2 tbsp",
+        "calories": 18,
+        "proteinG": 0.9,
+        "carbsG": 4,
+        "fatG": 0.2
+      },
+      {
+        "name": "Shredded mozzarella cheese",
+        "amount": "35g",
+        "calories": 120,
+        "proteinG": 9,
+        "carbsG": 1,
+        "fatG": 9
+      },
+      {
+        "name": "Turkey pepperoni",
+        "amount": "7 slices",
+        "calories": 70,
+        "proteinG": 9,
+        "carbsG": 0,
+        "fatG": 4
+      }
     ],
     "instructions": [
       "Spoon pizza sauce onto pita bread.",
       "Add cheese and turkey pepperoni.",
-      "Air fry at 400°F for 4 minutes.",
+      "Air fry at 205\u00b0C for 4 minutes.",
       "Slice and enjoy! Makes one serving."
     ],
-    "totalMacros": {"calories": 310, "proteinG": 20, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 276,
+      "proteinG": 20.9,
+      "carbsG": 25.8,
+      "fatG": 9.7
+    }
   },
   {
     "id": "easy-protein-tortilla",
@@ -912,11 +2755,34 @@
     "mealType": "snack",
     "prepTimeMins": 10,
     "cookTimeMins": 10,
-    "tags": ["high-protein"],
+    "tags": [
+      "high-protein"
+    ],
     "ingredients": [
-      {"name": "0% fat Greek yogurt", "amount": "1 cup"},
-      {"name": "Flour", "amount": "1 cup"},
-      {"name": "Salt", "amount": "2 tsp"}
+      {
+        "name": "0% fat Greek yogurt",
+        "amount": "1 cup",
+        "calories": 100,
+        "proteinG": 17,
+        "carbsG": 7,
+        "fatG": 0
+      },
+      {
+        "name": "Flour",
+        "amount": "1 cup",
+        "calories": 455,
+        "proteinG": 13,
+        "carbsG": 95,
+        "fatG": 1.2
+      },
+      {
+        "name": "Salt",
+        "amount": "2 tsp",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      }
     ],
     "instructions": [
       "Mix Greek yogurt, flour, and salt with a spoon.",
@@ -926,6 +2792,1414 @@
       "Cook in oiled pan on medium heat until browned on either side.",
       "Makes about 6 tortillas."
     ],
-    "totalMacros": {"calories": 120, "proteinG": 8, "carbsG": 0, "fatG": 0}
+    "totalMacros": {
+      "calories": 96,
+      "proteinG": 6.0,
+      "carbsG": 16.6,
+      "fatG": 0.4
+    }
+  },
+  {
+    "id": "anabolic-french-toast",
+    "name": "Anabolic French Toast",
+    "description": "Chef Greg's iconic high-protein take on a classic North American breakfast. Fluffy egg-white-soaked toast served with blueberries and low-calorie syrup.",
+    "goal": "cut",
+    "mealType": "breakfast",
+    "prepTimeMins": 5,
+    "cookTimeMins": 10,
+    "tags": [
+      "vegetarian",
+      "high-protein",
+      "breakfast",
+      "greg-doucette"
+    ],
+    "ingredients": [
+      {
+        "name": "Egg whites",
+        "amount": "1 cup",
+        "calories": 120,
+        "proteinG": 26,
+        "carbsG": 2,
+        "fatG": 0
+      },
+      {
+        "name": "White bread (80 cal/slice)",
+        "amount": "4 slices",
+        "calories": 320,
+        "proteinG": 10,
+        "carbsG": 60,
+        "fatG": 4
+      },
+      {
+        "name": "Sweetener",
+        "amount": "1 packet",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      },
+      {
+        "name": "Cinnamon",
+        "amount": "1 tsp",
+        "calories": 6,
+        "proteinG": 0,
+        "carbsG": 2,
+        "fatG": 0
+      },
+      {
+        "name": "Vanilla extract",
+        "amount": "1 tbsp",
+        "calories": 12,
+        "proteinG": 0,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Cooking spray",
+        "amount": "as needed",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      }
+    ],
+    "instructions": [
+      "In a bowl, add egg whites, sweetener, cinnamon, and vanilla extract. Whisk until spices are evenly distributed.",
+      "Heat a griddle over low-medium heat. Spray with cooking spray.",
+      "Dip bread slices into egg white mixture and transfer to pan.",
+      "Spoon any leftover egg white mixture into the bread. Let it absorb slowly to get fluffy.",
+      "Cook for 3-4 minutes on each side.",
+      "Serve with blueberries and low-calorie syrup (not included in macros)."
+    ],
+    "totalMacros": {
+      "calories": 500,
+      "proteinG": 38,
+      "carbsG": 72,
+      "fatG": 8
+    }
+  },
+  {
+    "id": "french-toast-blueberry-pancakes",
+    "name": "French Toast Blueberry Pancakes",
+    "description": "A blended French toast batter turned into fluffy blueberry pancakes. High protein with a classic North American breakfast feel.",
+    "goal": "cut",
+    "mealType": "breakfast",
+    "prepTimeMins": 5,
+    "cookTimeMins": 8,
+    "tags": [
+      "vegetarian",
+      "high-protein",
+      "breakfast",
+      "greg-doucette"
+    ],
+    "ingredients": [
+      {
+        "name": "Egg whites",
+        "amount": "2 cups",
+        "calories": 240,
+        "proteinG": 52,
+        "carbsG": 4,
+        "fatG": 0
+      },
+      {
+        "name": "White bread (80 cal/slice)",
+        "amount": "4 slices",
+        "calories": 320,
+        "proteinG": 10,
+        "carbsG": 60,
+        "fatG": 4
+      },
+      {
+        "name": "Sweetener",
+        "amount": "4 packets",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      },
+      {
+        "name": "Cinnamon",
+        "amount": "2 tsp",
+        "calories": 12,
+        "proteinG": 0,
+        "carbsG": 4,
+        "fatG": 0
+      },
+      {
+        "name": "Vanilla extract",
+        "amount": "1 tbsp",
+        "calories": 12,
+        "proteinG": 0,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Guar or xanthan gum",
+        "amount": "1.5 tsp",
+        "calories": 5,
+        "proteinG": 0,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Blueberries",
+        "amount": "100g",
+        "calories": 57,
+        "proteinG": 1,
+        "carbsG": 14,
+        "fatG": 0
+      },
+      {
+        "name": "Low calorie syrup",
+        "amount": "0.5 cup",
+        "calories": 20,
+        "proteinG": 0,
+        "carbsG": 5,
+        "fatG": 0
+      },
+      {
+        "name": "Cooking spray",
+        "amount": "as needed",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      }
+    ],
+    "instructions": [
+      "In a blender, add bread slices, egg whites, guar/xanthan gum, sweetener, vanilla extract, and cinnamon.",
+      "Blend on high until mixture is uniform. Transfer to an airtight container.",
+      "Optional: let sit in refrigerator for 2-3 hours for better binding.",
+      "Heat griddle over low-medium heat. Spray with cooking spray. Add mixture and let sit 1-2 minutes until edges appear cooked.",
+      "Add blueberries to pancake in the pan.",
+      "Once edges brown and pancake looks 2/3 cooked through, flip and cook another 1-2 minutes.",
+      "Serve with low-calorie syrup or leftover blueberries."
+    ],
+    "totalMacros": {
+      "calories": 620,
+      "proteinG": 65,
+      "carbsG": 78,
+      "fatG": 5
+    }
+  },
+  {
+    "id": "apple-protein-pancakes",
+    "name": "Apple Protein Pancakes",
+    "description": "A delicious combo of pancakes, apple pie flavour, and gains. High-protein, gluten-free friendly batter packed with rolled oats, cottage cheese, and apples.",
+    "goal": "cut",
+    "mealType": "breakfast",
+    "prepTimeMins": 5,
+    "cookTimeMins": 10,
+    "tags": [
+      "vegetarian",
+      "gluten-free",
+      "high-protein",
+      "breakfast",
+      "greg-doucette"
+    ],
+    "ingredients": [
+      {
+        "name": "Egg whites",
+        "amount": "2 cups",
+        "calories": 240,
+        "proteinG": 52,
+        "carbsG": 4,
+        "fatG": 0
+      },
+      {
+        "name": "Rolled oats",
+        "amount": "65g",
+        "calories": 247,
+        "proteinG": 9,
+        "carbsG": 42,
+        "fatG": 5
+      },
+      {
+        "name": "0% fat cottage cheese",
+        "amount": "0.5 cup (113g)",
+        "calories": 80,
+        "proteinG": 14,
+        "carbsG": 4,
+        "fatG": 0
+      },
+      {
+        "name": "Apples",
+        "amount": "450g",
+        "calories": 234,
+        "proteinG": 1,
+        "carbsG": 62,
+        "fatG": 1
+      },
+      {
+        "name": "Cinnamon",
+        "amount": "0.5 tbsp",
+        "calories": 9,
+        "proteinG": 0,
+        "carbsG": 3,
+        "fatG": 0
+      },
+      {
+        "name": "Sweetener",
+        "amount": "5 packets",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      },
+      {
+        "name": "Guar gum",
+        "amount": "2 tsp",
+        "calories": 5,
+        "proteinG": 0,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Baking powder",
+        "amount": "1 tsp",
+        "calories": 2,
+        "proteinG": 0,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Cooking spray",
+        "amount": "as needed",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      }
+    ],
+    "instructions": [
+      "Blend all ingredients for 30 seconds until a uniform consistency is achieved.",
+      "Optional: transfer to airtight container and let sit in refrigerator for 4 hours for thicker batter.",
+      "Heat griddle over low-medium heat. Spray with cooking spray. Add mixture and let sit 1-2 minutes until edges appear cooked through.",
+      "Flip and finish cooking.",
+      "Serve with toppings of choice (not included in macros)."
+    ],
+    "totalMacros": {
+      "calories": 830,
+      "proteinG": 75,
+      "carbsG": 120,
+      "fatG": 10
+    }
+  },
+  {
+    "id": "banana-protein-pancakes",
+    "name": "Banana Protein Pancakes",
+    "description": "Banana foster meets pancakes meets gains. High-protein gluten-free pancakes made with overripe banana, cottage cheese, and egg whites.",
+    "goal": "cut",
+    "mealType": "breakfast",
+    "prepTimeMins": 10,
+    "cookTimeMins": 10,
+    "tags": [
+      "vegetarian",
+      "gluten-free",
+      "high-protein",
+      "breakfast",
+      "greg-doucette"
+    ],
+    "ingredients": [
+      {
+        "name": "Egg whites",
+        "amount": "2 cups",
+        "calories": 240,
+        "proteinG": 52,
+        "carbsG": 4,
+        "fatG": 0
+      },
+      {
+        "name": "Rolled oats",
+        "amount": "65g",
+        "calories": 247,
+        "proteinG": 9,
+        "carbsG": 42,
+        "fatG": 5
+      },
+      {
+        "name": "0% fat cottage cheese",
+        "amount": "0.5 cup (113g)",
+        "calories": 80,
+        "proteinG": 14,
+        "carbsG": 4,
+        "fatG": 0
+      },
+      {
+        "name": "Overripe banana",
+        "amount": "330g",
+        "calories": 293,
+        "proteinG": 4,
+        "carbsG": 75,
+        "fatG": 1
+      },
+      {
+        "name": "Cinnamon",
+        "amount": "0.5 tbsp",
+        "calories": 9,
+        "proteinG": 0,
+        "carbsG": 3,
+        "fatG": 0
+      },
+      {
+        "name": "Sweetener",
+        "amount": "5 packets",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      },
+      {
+        "name": "Guar/xanthan gum",
+        "amount": "2 tsp",
+        "calories": 5,
+        "proteinG": 0,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Baking powder",
+        "amount": "1 tsp",
+        "calories": 2,
+        "proteinG": 0,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Cooking spray",
+        "amount": "as needed",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      }
+    ],
+    "instructions": [
+      "Blend all ingredients for 30 seconds until a uniform consistency is achieved.",
+      "Optional: transfer to airtight container and let sit in refrigerator for 4 hours for thicker batter.",
+      "Heat griddle over low-medium heat. Spray with cooking spray. Add mixture and let sit 1-2 minutes until edges appear cooked through.",
+      "Flip and finish cooking.",
+      "Serve with toppings of choice (not included in macros)."
+    ],
+    "totalMacros": {
+      "calories": 890,
+      "proteinG": 75,
+      "carbsG": 130,
+      "fatG": 10
+    }
+  },
+  {
+    "id": "anabolic-hamburger",
+    "name": "Anabolic Hamburger",
+    "description": "A high-protein, lower-calorie take on a classic hamburger using extra lean ground beef, low-calorie gravy, and white bread.",
+    "goal": "cut",
+    "mealType": "lunch",
+    "prepTimeMins": 5,
+    "cookTimeMins": 10,
+    "tags": [
+      "high-protein",
+      "lunch",
+      "greg-doucette"
+    ],
+    "ingredients": [
+      {
+        "name": "White bread (80 cal/slice)",
+        "amount": "2 slices",
+        "calories": 160,
+        "proteinG": 5,
+        "carbsG": 30,
+        "fatG": 2
+      },
+      {
+        "name": "Extra lean ground beef (96% lean)",
+        "amount": "150g",
+        "calories": 225,
+        "proteinG": 39,
+        "carbsG": 0,
+        "fatG": 8
+      },
+      {
+        "name": "Low-calorie gravy",
+        "amount": "1 can (50 cal)",
+        "calories": 50,
+        "proteinG": 1,
+        "carbsG": 8,
+        "fatG": 1
+      },
+      {
+        "name": "Veggies",
+        "amount": "1 serving (100 cal)",
+        "calories": 100,
+        "proteinG": 4,
+        "carbsG": 20,
+        "fatG": 0
+      },
+      {
+        "name": "Salt and pepper",
+        "amount": "to taste",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      },
+      {
+        "name": "Cooking spray",
+        "amount": "as needed",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      }
+    ],
+    "instructions": [
+      "Form a patty with ground beef, salt and pepper and any other seasonings to taste.",
+      "Heat a griddle over low-medium heat. Spray with cooking spray. Cook beef patty on both sides to medium doneness.",
+      "Heat gravy in a microwaveable bowl.",
+      "Stack veggies and patty on bread. Add gravy on top of the patty.",
+      "Serve with mustard or low-calorie ketchup (not included in macros)."
+    ],
+    "totalMacros": {
+      "calories": 630,
+      "proteinG": 58,
+      "carbsG": 53,
+      "fatG": 19
+    }
+  },
+  {
+    "id": "anabolic-chicken-burger",
+    "name": "Anabolic Chicken Burger",
+    "description": "A lean, high-protein chicken burger on white bread with veggies and low-calorie gravy. Simple, filling, and great for a cut.",
+    "goal": "cut",
+    "mealType": "lunch",
+    "prepTimeMins": 5,
+    "cookTimeMins": 10,
+    "tags": [
+      "high-protein",
+      "lunch",
+      "greg-doucette"
+    ],
+    "ingredients": [
+      {
+        "name": "White bread (80 cal/slice)",
+        "amount": "2 slices",
+        "calories": 160,
+        "proteinG": 5,
+        "carbsG": 30,
+        "fatG": 2
+      },
+      {
+        "name": "Chicken breast",
+        "amount": "200g",
+        "calories": 330,
+        "proteinG": 62,
+        "carbsG": 0,
+        "fatG": 7
+      },
+      {
+        "name": "Low-calorie gravy",
+        "amount": "1 can (50 cal)",
+        "calories": 50,
+        "proteinG": 1,
+        "carbsG": 8,
+        "fatG": 1
+      },
+      {
+        "name": "Veggies",
+        "amount": "1 serving (100 cal)",
+        "calories": 100,
+        "proteinG": 4,
+        "carbsG": 20,
+        "fatG": 0
+      },
+      {
+        "name": "Salt and pepper",
+        "amount": "to taste",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      },
+      {
+        "name": "Cooking spray",
+        "amount": "as needed",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      }
+    ],
+    "instructions": [
+      "Optionally marinate chicken overnight with seasonings to taste.",
+      "Heat a griddle over low-medium heat. Spray with cooking spray. Cook chicken breast on both sides until cooked through.",
+      "Heat gravy in a microwaveable bowl.",
+      "Stack veggies and chicken on bread. Add gravy on top.",
+      "Serve with mustard or low-calorie ketchup (not included in macros)."
+    ],
+    "totalMacros": {
+      "calories": 660,
+      "proteinG": 76,
+      "carbsG": 52,
+      "fatG": 14
+    }
+  },
+  {
+    "id": "anabolic-grilled-cheese",
+    "name": "Anabolic Grilled Cheese Sandwich",
+    "description": "A high-protein grilled cheese using ICON Meals protein bread, fat-free cheese, and low-fat butter. Classic comfort food for your gains.",
+    "goal": "cut",
+    "mealType": "snack",
+    "prepTimeMins": 2,
+    "cookTimeMins": 3,
+    "tags": [
+      "vegetarian",
+      "quick",
+      "greg-doucette"
+    ],
+    "ingredients": [
+      {
+        "name": "ICON Meals protein bread",
+        "amount": "2 slices",
+        "calories": 200,
+        "proteinG": 24,
+        "carbsG": 18,
+        "fatG": 6
+      },
+      {
+        "name": "Kraft fat-free cheese slices",
+        "amount": "2 slices",
+        "calories": 90,
+        "proteinG": 14,
+        "carbsG": 5,
+        "fatG": 0
+      },
+      {
+        "name": "Becel 50% less fat butter",
+        "amount": "9g",
+        "calories": 45,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 5
+      }
+    ],
+    "instructions": [
+      "Heat a griddle over low heat and add low-calorie butter to pan.",
+      "Add 2 slices of bread to the pan and add cheese on top.",
+      "Eat as a closed sandwich or as two open face sides, whichever you prefer."
+    ],
+    "totalMacros": {
+      "calories": 410,
+      "proteinG": 38,
+      "carbsG": 34,
+      "fatG": 14
+    }
+  },
+  {
+    "id": "pb2-jam-sandwich",
+    "name": "PB2 and Jam Sandwich",
+    "description": "A high-protein twist on a classic peanut butter and jelly sandwich using PB2 powder and protein bread to slash calories while keeping the taste.",
+    "goal": "cut",
+    "mealType": "snack",
+    "prepTimeMins": 3,
+    "cookTimeMins": 0,
+    "tags": [
+      "vegetarian",
+      "quick",
+      "greg-doucette"
+    ],
+    "ingredients": [
+      {
+        "name": "ICON Meals protein bread",
+        "amount": "2 slices",
+        "calories": 200,
+        "proteinG": 24,
+        "carbsG": 18,
+        "fatG": 6
+      },
+      {
+        "name": "Low-calorie jam",
+        "amount": "2 tbsp (40 cal)",
+        "calories": 40,
+        "proteinG": 0,
+        "carbsG": 10,
+        "fatG": 0
+      },
+      {
+        "name": "PB2 powdered peanut butter",
+        "amount": "18g",
+        "calories": 65,
+        "proteinG": 7,
+        "carbsG": 7,
+        "fatG": 2
+      },
+      {
+        "name": "Water",
+        "amount": "1 tbsp",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      }
+    ],
+    "instructions": [
+      "Toast bread slices in the toaster until lightly brown and crisp.",
+      "Mix PB2 powder in a bowl with 1 tbsp water and stir until even consistency.",
+      "Spread PB2 mixture on bread slices then add jam.",
+      "Eat as a closed sandwich or open face. Enjoy!"
+    ],
+    "totalMacros": {
+      "calories": 445,
+      "proteinG": 38,
+      "carbsG": 48,
+      "fatG": 12
+    }
+  },
+  {
+    "id": "nupasta-chicken-stirfry",
+    "name": "NuPasta Chicken Stir Fry",
+    "description": "A low-calorie, high-protein stir fry using zero-calorie NuPasta, chicken breast, and veggies. Fast, filling, and great for a cut.",
+    "goal": "cut",
+    "mealType": "dinner",
+    "prepTimeMins": 5,
+    "cookTimeMins": 15,
+    "tags": [
+      "gluten-free",
+      "high-protein",
+      "dinner",
+      "greg-doucette"
+    ],
+    "ingredients": [
+      {
+        "name": "NuPasta",
+        "amount": "1 package (35 cal)",
+        "calories": 35,
+        "proteinG": 0,
+        "carbsG": 9,
+        "fatG": 0
+      },
+      {
+        "name": "Pasta sauce",
+        "amount": "0.5 cup (60 cal)",
+        "calories": 60,
+        "proteinG": 2,
+        "carbsG": 12,
+        "fatG": 1
+      },
+      {
+        "name": "Chicken breast",
+        "amount": "90g",
+        "calories": 148,
+        "proteinG": 28,
+        "carbsG": 0,
+        "fatG": 3
+      },
+      {
+        "name": "Veggies",
+        "amount": "0.5 serving (50 cal)",
+        "calories": 50,
+        "proteinG": 2,
+        "carbsG": 10,
+        "fatG": 0
+      },
+      {
+        "name": "Spices/condiments",
+        "amount": "to taste",
+        "calories": 10,
+        "proteinG": 0,
+        "carbsG": 2,
+        "fatG": 0
+      },
+      {
+        "name": "Cooking spray",
+        "amount": "as needed",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      }
+    ],
+    "instructions": [
+      "Cook NuPasta according to package instructions and set aside.",
+      "Heat a pan over medium heat. Spray with cooking spray. Add veggies and chicken and saut\u00e9 until cooked through. Add spices to taste.",
+      "Add cooked NuPasta and pasta sauce to the pan and saut\u00e9 together for a few minutes.",
+      "Serve and eat altogether in a bowl."
+    ],
+    "totalMacros": {
+      "calories": 320,
+      "proteinG": 33,
+      "carbsG": 33,
+      "fatG": 6
+    }
+  },
+  {
+    "id": "protein-p28-pizza",
+    "name": "Protein P28 Pizza",
+    "description": "A high-protein mini pizza on P28 flatbread with ground bison, fat-free cheese, and low-fat pizza sauce. Satisfying and macro-friendly.",
+    "goal": "cut",
+    "mealType": "dinner",
+    "prepTimeMins": 5,
+    "cookTimeMins": 10,
+    "tags": [
+      "high-protein",
+      "dinner",
+      "greg-doucette"
+    ],
+    "ingredients": [
+      {
+        "name": "P28 flatbread",
+        "amount": "1 piece",
+        "calories": 130,
+        "proteinG": 14,
+        "carbsG": 16,
+        "fatG": 3
+      },
+      {
+        "name": "Fat-free cheese slices",
+        "amount": "2 slices",
+        "calories": 90,
+        "proteinG": 14,
+        "carbsG": 5,
+        "fatG": 0
+      },
+      {
+        "name": "Ground bison",
+        "amount": "100g",
+        "calories": 143,
+        "proteinG": 20,
+        "carbsG": 0,
+        "fatG": 7
+      },
+      {
+        "name": "Low fat pizza sauce",
+        "amount": "6 tbsp (50 cal)",
+        "calories": 50,
+        "proteinG": 2,
+        "carbsG": 10,
+        "fatG": 1
+      },
+      {
+        "name": "Toppings (peppers, onions, mushrooms, spinach)",
+        "amount": "up to 50 cal",
+        "calories": 50,
+        "proteinG": 2,
+        "carbsG": 10,
+        "fatG": 0
+      },
+      {
+        "name": "Spices",
+        "amount": "to taste",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      },
+      {
+        "name": "Cooking spray",
+        "amount": "as needed",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      }
+    ],
+    "instructions": [
+      "Heat a frying pan over medium heat. Add cooking spray and saut\u00e9 onions, mushrooms, and peppers until cooked through. Add ground bison and saut\u00e9 until fully cooked.",
+      "Toast P28 flatbread in oven at 300\u00b0F on a baking sheet for 3 minutes. Remove and let sit.",
+      "Add all toppings to the flatbread with cheese slices on top.",
+      "Place back in oven for another 3 minutes. Serve hot."
+    ],
+    "totalMacros": {
+      "calories": 625,
+      "proteinG": 69,
+      "carbsG": 49,
+      "fatG": 17
+    }
+  },
+  {
+    "id": "cauliflower-mashed-potatoes",
+    "name": "Cauliflower Mashed Potatoes",
+    "description": "A lower-calorie, high-volume mashed potato alternative blending potatoes and cauliflower with fat-free sour cream. Great side dish for a cut.",
+    "goal": "cut",
+    "mealType": "dinner",
+    "prepTimeMins": 5,
+    "cookTimeMins": 15,
+    "tags": [
+      "vegetarian",
+      "gluten-free",
+      "side-dish",
+      "greg-doucette"
+    ],
+    "ingredients": [
+      {
+        "name": "Potatoes",
+        "amount": "2 lbs (907g)",
+        "calories": 703,
+        "proteinG": 18,
+        "carbsG": 159,
+        "fatG": 1
+      },
+      {
+        "name": "Cauliflower florets",
+        "amount": "2 lbs (907g)",
+        "calories": 227,
+        "proteinG": 18,
+        "carbsG": 45,
+        "fatG": 3
+      },
+      {
+        "name": "Fat-free sour cream",
+        "amount": "1 cup",
+        "calories": 160,
+        "proteinG": 8,
+        "carbsG": 32,
+        "fatG": 0
+      },
+      {
+        "name": "Guar or xanthan gum",
+        "amount": "3 tsp",
+        "calories": 10,
+        "proteinG": 0,
+        "carbsG": 2,
+        "fatG": 0
+      },
+      {
+        "name": "Baking powder",
+        "amount": "2 tsp",
+        "calories": 5,
+        "proteinG": 0,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Spices",
+        "amount": "to taste",
+        "calories": 10,
+        "proteinG": 0,
+        "carbsG": 2,
+        "fatG": 0
+      }
+    ],
+    "instructions": [
+      "Boil 4 quarts of salted water. Add potatoes and cook until fully cooked through. Drain and add to blender.",
+      "Separately, boil cauliflower until cooked. Drain and add to blender.",
+      "Add baking powder, spices, half the sour cream, and guar gum to blender. Pulse blend until smooth.",
+      "Serve with remaining fat-free sour cream and preferred spices."
+    ],
+    "totalMacros": {
+      "calories": 1200,
+      "proteinG": 40,
+      "carbsG": 240,
+      "fatG": 8
+    }
+  },
+  {
+    "id": "protein-chips-guacamole",
+    "name": "Protein Chips and Guacamole",
+    "description": "A guilt-free Mexican-inspired snack with homemade guacamole and crispy protein flatbread chips. Vegan, high-fibre, and delicious.",
+    "goal": "cut",
+    "mealType": "snack",
+    "prepTimeMins": 5,
+    "cookTimeMins": 3,
+    "tags": [
+      "vegan",
+      "vegetarian",
+      "snack",
+      "greg-doucette"
+    ],
+    "ingredients": [
+      {
+        "name": "Flatout ProteinUP Flatbread",
+        "amount": "1 piece (110 cal)",
+        "calories": 110,
+        "proteinG": 12,
+        "carbsG": 14,
+        "fatG": 3
+      },
+      {
+        "name": "Avocado",
+        "amount": "50g",
+        "calories": 80,
+        "proteinG": 1,
+        "carbsG": 4,
+        "fatG": 7
+      },
+      {
+        "name": "Tomato",
+        "amount": "25g",
+        "calories": 5,
+        "proteinG": 0,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Onion",
+        "amount": "25g",
+        "calories": 10,
+        "proteinG": 0,
+        "carbsG": 2,
+        "fatG": 0
+      },
+      {
+        "name": "Jalapenos",
+        "amount": "25g",
+        "calories": 7,
+        "proteinG": 0,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Fresh lime juice",
+        "amount": "1 tbsp",
+        "calories": 4,
+        "proteinG": 0,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Salt and pepper",
+        "amount": "to taste",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      }
+    ],
+    "instructions": [
+      "Slice avocado into cubes. Dice tomatoes, onions, and jalapenos. Place all in one bowl and mash with a spoon or pestle.",
+      "Add lime juice, salt and pepper to taste.",
+      "Place Flatout ProteinUP wrap on a baking sheet. Slice wrap into 1.5-inch squares.",
+      "Toast in oven for 3 minutes until crispy like tortilla chips.",
+      "Serve guacamole alongside chips."
+    ],
+    "totalMacros": {
+      "calories": 210,
+      "proteinG": 12,
+      "carbsG": 28,
+      "fatG": 11
+    }
+  },
+  {
+    "id": "cottage-cheese-chocolate-pudding",
+    "name": "Cottage Cheese Chocolate Protein Pudding",
+    "description": "A creamy, high-protein chocolate pudding made with cottage cheese, almond milk, whey protein, and Jell-O pudding mix. Perfect anabolic dessert.",
+    "goal": "cut",
+    "mealType": "dessert",
+    "prepTimeMins": 6,
+    "cookTimeMins": 0,
+    "tags": [
+      "vegetarian",
+      "gluten-free",
+      "dessert",
+      "high-protein",
+      "greg-doucette"
+    ],
+    "ingredients": [
+      {
+        "name": "0% fat cottage cheese",
+        "amount": "2 cups (450g)",
+        "calories": 320,
+        "proteinG": 56,
+        "carbsG": 18,
+        "fatG": 0
+      },
+      {
+        "name": "Unsweetened almond milk",
+        "amount": "4.5 cups",
+        "calories": 135,
+        "proteinG": 5,
+        "carbsG": 9,
+        "fatG": 9
+      },
+      {
+        "name": "Chocolate whey protein powder",
+        "amount": "2 scoops (60g)",
+        "calories": 240,
+        "proteinG": 48,
+        "carbsG": 6,
+        "fatG": 4
+      },
+      {
+        "name": "Fat-free Jell-O chocolate pudding mix",
+        "amount": "1 package (120 cal)",
+        "calories": 120,
+        "proteinG": 0,
+        "carbsG": 30,
+        "fatG": 0
+      },
+      {
+        "name": "Guar/xanthan gum",
+        "amount": "1.5-2 tbsp",
+        "calories": 15,
+        "proteinG": 0,
+        "carbsG": 4,
+        "fatG": 0
+      },
+      {
+        "name": "Sweetener",
+        "amount": "10 packets",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      }
+    ],
+    "instructions": [
+      "Add all ingredients to a blender.",
+      "Blend for 3 minutes on medium-high speed until a smooth consistency is achieved.",
+      "Transfer to an airtight refrigerator-safe container.",
+      "Serve immediately or refrigerate until ready to eat. Makes 9 servings."
+    ],
+    "totalMacros": {
+      "calories": 891,
+      "proteinG": 72,
+      "carbsG": 126,
+      "fatG": 36
+    }
+  },
+  {
+    "id": "blueberry-protein-shake",
+    "name": "Blueberry Protein Shake",
+    "description": "A quick and easy high-protein blueberry shake. One of Chef Greg's go-to post-workout options \u2014 thick, creamy, and low calorie.",
+    "goal": "cut",
+    "mealType": "post-workout",
+    "prepTimeMins": 1,
+    "cookTimeMins": 0,
+    "tags": [
+      "vegetarian",
+      "gluten-free",
+      "post-workout",
+      "shake",
+      "greg-doucette"
+    ],
+    "ingredients": [
+      {
+        "name": "Chocolate peanut butter whey protein",
+        "amount": "1 scoop",
+        "calories": 120,
+        "proteinG": 25,
+        "carbsG": 3,
+        "fatG": 2
+      },
+      {
+        "name": "Frozen blueberries",
+        "amount": "35g",
+        "calories": 20,
+        "proteinG": 0,
+        "carbsG": 5,
+        "fatG": 0
+      },
+      {
+        "name": "Guar/xanthan gum",
+        "amount": "0.5 tsp",
+        "calories": 2,
+        "proteinG": 0,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Unsweetened almond milk",
+        "amount": "0.33 cup",
+        "calories": 10,
+        "proteinG": 0,
+        "carbsG": 1,
+        "fatG": 1
+      },
+      {
+        "name": "Ice",
+        "amount": "as needed",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      }
+    ],
+    "instructions": [
+      "Add all ingredients to a blender.",
+      "Blend for 1 minute on medium-high speed until smooth.",
+      "Scrape sides and pulse again if needed. Add more ice or water to reach desired consistency.",
+      "Pour into a mug and consume immediately."
+    ],
+    "totalMacros": {
+      "calories": 185,
+      "proteinG": 26,
+      "carbsG": 14,
+      "fatG": 3
+    }
+  },
+  {
+    "id": "strawberry-protein-shake",
+    "name": "Strawberry Protein Shake",
+    "description": "A refreshing, creamy strawberry protein shake. Simple ingredients, high protein, and great as a post-workout shake or snack.",
+    "goal": "cut",
+    "mealType": "post-workout",
+    "prepTimeMins": 1,
+    "cookTimeMins": 0,
+    "tags": [
+      "vegetarian",
+      "gluten-free",
+      "post-workout",
+      "shake",
+      "greg-doucette"
+    ],
+    "ingredients": [
+      {
+        "name": "Whey protein or whey isolate",
+        "amount": "1 scoop",
+        "calories": 120,
+        "proteinG": 25,
+        "carbsG": 3,
+        "fatG": 2
+      },
+      {
+        "name": "Frozen strawberries",
+        "amount": "140g",
+        "calories": 45,
+        "proteinG": 1,
+        "carbsG": 11,
+        "fatG": 0
+      },
+      {
+        "name": "Guar/xanthan gum",
+        "amount": "1 tsp",
+        "calories": 3,
+        "proteinG": 0,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Unsweetened almond milk",
+        "amount": "0.5 cup",
+        "calories": 15,
+        "proteinG": 0,
+        "carbsG": 1,
+        "fatG": 1
+      },
+      {
+        "name": "Sweetener",
+        "amount": "1 packet",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      },
+      {
+        "name": "Ice",
+        "amount": "as needed",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      }
+    ],
+    "instructions": [
+      "Add all ingredients to a blender.",
+      "Blend for 1 minute on medium-high speed until smooth.",
+      "Scrape sides and pulse again if needed.",
+      "Pour into a mug and consume immediately."
+    ],
+    "totalMacros": {
+      "calories": 220,
+      "proteinG": 27,
+      "carbsG": 18,
+      "fatG": 7
+    }
+  },
+  {
+    "id": "vanilla-berry-proteinsicles",
+    "name": "Vanilla Berry Proteinsicles",
+    "description": "Frozen vanilla and mixed berry protein popsicles. High-protein, low-calorie, and a perfect anabolic dessert or snack from the freezer.",
+    "goal": "cut",
+    "mealType": "dessert",
+    "prepTimeMins": 20,
+    "cookTimeMins": 0,
+    "tags": [
+      "vegetarian",
+      "gluten-free",
+      "dessert",
+      "greg-doucette"
+    ],
+    "ingredients": [
+      {
+        "name": "Water",
+        "amount": "1 cup",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      },
+      {
+        "name": "Vanilla protein powder",
+        "amount": "5 scoops",
+        "calories": 600,
+        "proteinG": 125,
+        "carbsG": 15,
+        "fatG": 10
+      },
+      {
+        "name": "Frozen mixed berries",
+        "amount": "280g",
+        "calories": 112,
+        "proteinG": 2,
+        "carbsG": 28,
+        "fatG": 0
+      },
+      {
+        "name": "Guar/xanthan gum",
+        "amount": "1 tsp",
+        "calories": 3,
+        "proteinG": 0,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "0% fat Greek yogurt (no sugar added)",
+        "amount": "1 cup (245g)",
+        "calories": 130,
+        "proteinG": 22,
+        "carbsG": 9,
+        "fatG": 0
+      },
+      {
+        "name": "Sweetener",
+        "amount": "10 packets",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      }
+    ],
+    "instructions": [
+      "Add all ingredients to a blender.",
+      "Pulse blend on medium-high speed until smooth. Push ingredients down with a spoon as needed.",
+      "Transfer evenly across 4 popsicle trays.",
+      "Freeze for at least 2 hours before serving."
+    ],
+    "totalMacros": {
+      "calories": 1020,
+      "proteinG": 152,
+      "carbsG": 84,
+      "fatG": 24
+    }
+  },
+  {
+    "id": "pb2-chocolate-chip-protein-cookies",
+    "name": "PB2 Chocolate Chip Protein Cookies",
+    "description": "High-protein, low-fat chocolate chip peanut butter cookies. Made with PB2, oats, and whey protein \u2014 a batch of guilt-free cookies to keep in the fridge.",
+    "goal": "cut",
+    "mealType": "snack",
+    "prepTimeMins": 15,
+    "cookTimeMins": 12,
+    "tags": [
+      "vegetarian",
+      "snack",
+      "dessert",
+      "batch-cook",
+      "greg-doucette"
+    ],
+    "ingredients": [
+      {
+        "name": "Chocolate peanut butter whey protein",
+        "amount": "2 scoops (77g)",
+        "calories": 308,
+        "proteinG": 60,
+        "carbsG": 8,
+        "fatG": 6
+      },
+      {
+        "name": "Vitafiber/FiberYum sugar-free sweetener",
+        "amount": "60g",
+        "calories": 60,
+        "proteinG": 0,
+        "carbsG": 40,
+        "fatG": 0
+      },
+      {
+        "name": "Rolled oats",
+        "amount": "60g",
+        "calories": 228,
+        "proteinG": 8,
+        "carbsG": 39,
+        "fatG": 4
+      },
+      {
+        "name": "PB2 powdered peanut butter",
+        "amount": "24g",
+        "calories": 87,
+        "proteinG": 9,
+        "carbsG": 9,
+        "fatG": 3
+      },
+      {
+        "name": "Cocoa powder",
+        "amount": "24g",
+        "calories": 58,
+        "proteinG": 5,
+        "carbsG": 15,
+        "fatG": 2
+      },
+      {
+        "name": "Unsweetened almond milk",
+        "amount": "0.33 cup",
+        "calories": 10,
+        "proteinG": 0,
+        "carbsG": 1,
+        "fatG": 1
+      },
+      {
+        "name": "Sweetener",
+        "amount": "10 packets",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      },
+      {
+        "name": "Baking powder",
+        "amount": "0.25 tsp",
+        "calories": 1,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      },
+      {
+        "name": "Egg whites",
+        "amount": "0.25 cup",
+        "calories": 30,
+        "proteinG": 7,
+        "carbsG": 0,
+        "fatG": 0
+      },
+      {
+        "name": "Chocolate chips",
+        "amount": "16g",
+        "calories": 90,
+        "proteinG": 1,
+        "carbsG": 12,
+        "fatG": 5
+      },
+      {
+        "name": "Cooking spray",
+        "amount": "as needed",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      }
+    ],
+    "instructions": [
+      "Pre-heat oven to 375\u00b0F.",
+      "Grind rolled oats in a blender until powdery.",
+      "Combine and mix all dry ingredients in a large bowl with a whisk.",
+      "Combine almond milk and VitaFiber in a bowl. Heat in microwave on high for 45 seconds.",
+      "Add egg whites to the almond milk/VitaFiber bowl and mix.",
+      "Add all wet ingredients to the dry ingredients bowl. Stir until a uniform pasty consistency.",
+      "Spray a baking sheet with cooking spray. Create 4-8 cookies with batter.",
+      "Bake for 12 minutes. Remove and let stand until desired temperature. Eat warm or cold."
+    ],
+    "totalMacros": {
+      "calories": 872,
+      "proteinG": 75,
+      "carbsG": 134,
+      "fatG": 20
+    }
   }
 ]

@@ -300,6 +300,18 @@ export default defineSchema({
     excludedIngredients: v.array(v.string()),  // lowercased substrings to avoid
     plannedMealTypes:    v.array(v.string()),  // subset of ["breakfast","lunch","dinner","snack"]
     varietyLevel:        v.number(),           // 1=repeat  2=balanced  3=variety
+    mealFrequency:       v.optional(v.object({ // times per week for each meal (0–7)
+      breakfast: v.number(),
+      lunch:     v.number(),
+      dinner:    v.number(),
+      snack:     v.number(),
+    })),
+    mealVariety:         v.optional(v.object({ // unique recipes to rotate per meal type (1–7)
+      breakfast: v.number(),
+      lunch:     v.number(),
+      dinner:    v.number(),
+      snack:     v.number(),
+    })),
     updatedAt:           v.number(),
   }).index("by_user", ["userId"]),
 

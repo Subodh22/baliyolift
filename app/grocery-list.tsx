@@ -9,10 +9,7 @@ import { api } from "@/convex/_generated/api";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { P } from "@/constants/colors";
 import { CG, CG_ITALIC, OUT_L, OUT } from "@/constants/typography";
-import { RECIPES, MEAL_TYPE_LABELS, type Recipe } from "@/data/mealPlans";
-
-// ── Recipe map ───────────────���────────────────────────────────────────────────
-const RECIPE_MAP = new Map<string, Recipe>(RECIPES.map((r) => [r.id, r]));
+import type { Recipe, MealType } from "@/data/mealPlans";
 
 // ── Types ───────────────────────────────────────���─────────────────────────────
 
@@ -86,14 +83,15 @@ function formatAmount(amt: ParsedAmt & { total?: number }): string {
 type AggEntry = { total: number; normName: string; displayName: string } &
   ({ type: "g" } | { type: "ml" } | { type: "count"; unit: string } | { type: "raw"; display: string });
 
-function buildGroceryList(slots: {
-  recipeId: string; portion: number | null | undefined; dayIndex: number; mealType: string;
-}[]): GroceryItem[] {
+function buildGroceryList(
+  slots: { recipeId: string; portion: number | null | undefined; dayIndex: number; mealType: string }[],
+  recipeMap: Map<string, Recipe>,
+): GroceryItem[] {
   // Key: normName + ':' + type + ':' + unit  →  aggregated entry
   const agg = new Map<string, AggEntry>();
 
   for (const slot of slots) {
-    const recipe = RECIPE_MAP.get(slot.recipeId);
+    const recipe = recipeMap.get(slot.recipeId);
     if (!recipe) continue;
     const portion = slot.portion ?? 1;
 
@@ -173,12 +171,36 @@ export default function GroceryListScreen() {
   const { weekStart } = useLocalSearchParams<{ weekStart: string }>();
   const { userId }    = useCurrentUser();
 
-  const rawSlots = useQuery(
+  const rawSlots      = useQuery(
     api.mealPlanSlots.getWeekSlots,
     userId && weekStart ? { userId, weekStart } : "skip"
   ) ?? [];
+  const convexRecipes = useQuery(api.mealPlans.listRecipes) ?? [];
 
-  const baseList = useMemo(() => buildGroceryList(rawSlots), [rawSlots]);
+  const recipeMap = useMemo<Map<string, Recipe>>(() =>
+    new Map(convexRecipes.map(r => [r.recipeId, {
+      id:           r.recipeId,
+      name:         r.name,
+      description:  r.description,
+      goal:         r.goal,
+      mealType:     r.mealType as MealType,
+      prepTimeMins: r.prepTimeMins,
+      cookTimeMins: r.cookTimeMins,
+      tags:         r.tags,
+      ingredients:  r.ingredients.map(i => ({
+        name:     i.name,
+        amount:   i.amount,
+        calories: i.calories ?? 0,
+        proteinG: i.proteinG ?? 0,
+        carbsG:   i.carbsG   ?? 0,
+        fatG:     i.fatG     ?? 0,
+      })),
+      instructions: r.instructions,
+      totalMacros:  r.totalMacros,
+    }]))
+  , [convexRecipes]);
+
+  const baseList = useMemo(() => buildGroceryList(rawSlots, recipeMap), [rawSlots, recipeMap]);
   const [checked, setChecked] = useState<Set<string>>(new Set());
 
   const toggleCheck = (name: string) => {
