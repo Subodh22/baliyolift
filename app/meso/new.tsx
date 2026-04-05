@@ -162,6 +162,21 @@ const TEMPLATES = [
       { day: 6, name: "Full Legs", exercises: ["Barbell Back Squat", "Romanian Deadlift", "Leg Extension", "Leg Curl", "Standing Calf Raise"] },
     ],
   },
+  {
+    id: "jeff_nippard_fundamentals_hypertrophy_program",
+    name: "Jeff Nippard Fundamentals Hypertrophy Program",
+    subtitle: "4 days · Mon · Tue · Thu · Fri",
+    tag: "Intermediate",
+    tagColor: "#AF52DE",
+    description: "Science-based full body hypertrophy program. Each session hits both upper and lower body muscles. Uses RPE (Rate of Perceived Exertion) for auto-regulation. Designed to be run as an 8-week mesocycle with a deload in week 8.",
+    weeks: 8,
+    sessions: [
+      { day: 1, name: "Bench Press Focus", muscleGroups: ["chest","quads","triceps","shoulders","back","biceps","hamstrings","abs"], exercises: ["Flat Barbell Press","Leg Press","Chest-Supported Row","Cable Lateral Raise","Incline Dumbbell Curl","Lying Leg Curl","Cable Overhead Tricep Extension","Ab Wheel Rollout"] },
+      { day: 2, name: "Row Focus", muscleGroups: ["back","hamstrings","biceps","quads","shoulders","chest","triceps"], exercises: ["Barbell Row","Lat Pulldown","Hack Squat Machine","Romanian Deadlift","Overhead Press Dumbbell","Pec Deck Machine","Preacher Curl Machine","Cable Pushdown"] },
+      { day: 4, name: "Overhead Press Focus", muscleGroups: ["shoulders","hamstrings","triceps","back","quads","chest","abs"], exercises: ["Overhead Press Barbell","Romanian Deadlift","Incline Dumbbell Press","Cable Row","Leg Extension","Lying Leg Curl","Cable Lateral Raise","Cable Face Pull"] },
+      { day: 5, name: "Squat Focus", muscleGroups: ["quads","glutes","hamstrings","chest","back","shoulders","biceps","triceps","abs"], exercises: ["Barbell Back Squat","Flat Dumbbell Press","Lat Pulldown","Hip Thrust","Dumbbell Lateral Raise","Hammer Curl","Cable Pushdown","Hanging Leg Raise"] }
+    ],
+  },
 ];
 
 // ─── Template Confirm Sheet ───────────────────────────────────────────────────
@@ -979,16 +994,40 @@ export default function MesoNew() {
     setTemplateLoading(true);
     try {
       const id = previewTemplate.id;
-      if (id === "laxman")          await createLaxman({ userId });
-      else if (id === "ppl")        await createPPL({ userId });
-      else if (id === "upper_lower") await createUpperLower({ userId });
-      else if (id === "cbum")        await createCBum({ userId });
-      else if (id === "jeff_nippard") await createJeffNippard({ userId });
+      if (id === "laxman")               await createLaxman({ userId });
+      else if (id === "ppl")             await createPPL({ userId });
+      else if (id === "upper_lower")     await createUpperLower({ userId });
+      else if (id === "cbum")            await createCBum({ userId });
+      else if (id === "jeff_nippard")    await createJeffNippard({ userId });
       else if (id === "lean_beef_patty") await createLeanBeefPatty({ userId });
+      else {
+        // Generic imported template — use createCustom with session data
+        const allMuscleGroups = [...new Set(
+          previewTemplate.sessions.flatMap((s: any) => s.muscleGroups ?? [])
+        )] as MuscleGroup[];
+        const volumeTargets = allMuscleGroups.map((mg) => {
+          const d = VOLUME_DEFAULTS[mg]?.[experienceLevel] ?? { mev: 10, mav: 16, mrv: 20 };
+          return { muscleGroup: mg, mev: d.mev, mav: d.mav, mrv: d.mrv };
+        });
+        await createMeso({
+          userId,
+          name: previewTemplate.name,
+          weeks: previewTemplate.weeks,
+          volumeTargets,
+          sessions: previewTemplate.sessions.map((s: any, i: number) => ({
+            dayOfWeek: s.day,
+            name: s.name,
+            muscleGroups: s.muscleGroups ?? [],
+            order: i,
+            exerciseNames: s.exercises,
+          })),
+        });
+      }
       notificationSuccess();
       setPreviewTemplate(null);
       router.back();
-    } catch {
+    } catch (e) {
+      console.error("Template creation failed:", e);
       setTemplateLoading(false);
     }
   };

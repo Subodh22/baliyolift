@@ -13,6 +13,7 @@ import type * as exercises from "../exercises.js";
 import type * as foodPreferences from "../foodPreferences.js";
 import type * as http from "../http.js";
 import type * as importFoods from "../importFoods.js";
+import type * as importMesocycles from "../importMesocycles.js";
 import type * as importRecipes from "../importRecipes.js";
 import type * as mealPlanSlots from "../mealPlanSlots.js";
 import type * as mealPlans from "../mealPlans.js";
@@ -41,6 +42,7 @@ declare const fullApi: ApiFromModules<{
   foodPreferences: typeof foodPreferences;
   http: typeof http;
   importFoods: typeof importFoods;
+  importMesocycles: typeof importMesocycles;
   importRecipes: typeof importRecipes;
   mealPlanSlots: typeof mealPlanSlots;
   mealPlans: typeof mealPlans;
