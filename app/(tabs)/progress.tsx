@@ -241,17 +241,37 @@ function BfZoneBar({ sex, current, target }: { sex: "male" | "female"; current: 
 }
 
 // ── Weight Roadmap ────────────────────────────────────────────────────────────
-function WeightRoadmap({ profile, currentWeight }: {
+function WeightRoadmap({ profile, currentWeight, caloriesByDate, foodTargetCalories, weightHistory }: {
   profile: { sex: "male" | "female"; currentBf: number; targetBf: number; weeklyGoal: number };
   currentWeight: number;
+  caloriesByDate: Record<string, number>;
+  foodTargetCalories: number | null;
+  weightHistory: { date: string; weightKg: number }[];
 }) {
+  const { width } = useWindowDimensions();
+  const YAXIS_W = 36;
+  const chartW  = width - 48 - 40 - YAXIS_W; // scroll padding + card padding + y-axis
+  const chartH  = 150;
+
   const lbm          = currentWeight * (1 - profile.currentBf / 100);
   const targetWeight = lbm / (1 - profile.targetBf / 100);
   const totalChange  = targetWeight - currentWeight;
   const isCut        = totalChange < -0.5;
   const isBulk       = totalChange > 0.5;
-  const weeklyRate   = isCut ? -0.5 : isBulk ? 0.3 : 0;
-  const weeksTotal   = weeklyRate !== 0 ? Math.abs(totalChange) / Math.abs(weeklyRate) : 0;
+  const goalRate     = isCut ? -0.5 : isBulk ? 0.3 : 0;
+
+  // Only look at logged days in the last 30 days — no assumptions for missing days
+  const cutoffDate = (() => {
+    const d = new Date(); d.setDate(d.getDate() - 30);
+    return d.toISOString().slice(0, 10);
+  })();
+  const loggedValues = Object.entries(caloriesByDate)
+    .filter(([date]) => date >= cutoffDate)
+    .map(([, cal]) => cal);
+  const daysLogged = loggedValues.length;
+  const avgActualCalories = daysLogged > 0
+    ? loggedValues.reduce((s, c) => s + c, 0) / daysLogged
+    : null;
 
   if (!isCut && !isBulk) {
     return (
@@ -263,27 +283,214 @@ function WeightRoadmap({ profile, currentWeight }: {
     );
   }
 
-  // 5 milestones: start → 25% → 50% → 75% → goal
-  const milestones = [0, 0.25, 0.5, 0.75, 1].map(pct => {
-    const w  = currentWeight + totalChange * pct;
-    const bf = 100 * (1 - lbm / w);
-    const weeks = Math.round(weeksTotal * pct);
-    return { pct, weight: parseFloat(w.toFixed(1)), bf: parseFloat(bf.toFixed(1)), weeks };
-  });
+  // No calorie data logged → refuse to project
+  if (avgActualCalories === null) {
+    return (
+      <View style={{ marginTop: 16, gap: 10 }}>
+        <Text style={{ fontFamily: OUT_L, fontSize: 13, color: P.mid, lineHeight: 20 }}>
+          Log your meals in Fuel to see a personalised weight projection.
+        </Text>
+        <Text style={{ fontFamily: OUT_L, fontSize: 11, color: P.dim, lineHeight: 18 }}>
+          Your timeline will update as soon as you start tracking calories.
+        </Text>
+      </View>
+    );
+  }
 
-  const monthsTotal = (weeksTotal / 4.3).toFixed(1);
-  const rateLabel   = isCut ? "−0.5 kg/week" : "+0.3 kg/week";
+  // Effective weekly rate: adjust goal rate by actual vs. target calorie intake
+  let weeklyRate = goalRate;
+  if (foodTargetCalories !== null) {
+    const dailyDiff = avgActualCalories - foodTargetCalories;
+    weeklyRate = goalRate + (dailyDiff * 7) / 7700;
+  }
+  weeklyRate = Math.max(-2.5, Math.min(2, weeklyRate));
+
+  const wrongDirection = (isCut && weeklyRate >= 0) || (isBulk && weeklyRate <= 0);
+  const weeksTotal = !wrongDirection && weeklyRate !== 0
+    ? Math.abs(totalChange) / Math.abs(weeklyRate)
+    : Infinity;
+
+  const monthsTotal = Number.isFinite(weeksTotal) ? (weeksTotal / 4.3).toFixed(1) : null;
+  const sign        = weeklyRate < 0 ? "−" : "+";
+  const rateLabel   = `${sign}${Math.abs(weeklyRate).toFixed(2)} kg/week`;
   const changeLabel = isCut
     ? `−${Math.abs(totalChange).toFixed(1)} kg total`
     : `+${totalChange.toFixed(1)} kg total`;
 
+  const calDiffColor = foodTargetCalories === null
+    ? P.dim
+    : Math.abs(avgActualCalories - foodTargetCalories) < 100
+      ? P.dim
+      : avgActualCalories < foodTargetCalories ? "#6DBF8A" : "#E07070";
+
+  const [view, setView] = useState<"weekly" | "monthly">("weekly");
+
+  // ── Chart geometry ────────────────────────────────────────────────────────
+  const calH    = 50; // calorie bar panel height
+  const todayMs  = new Date().setHours(0, 0, 0, 0);
+  const pastDays = view === "weekly" ? 56 : 120;
+  const startMs  = todayMs - pastDays * 86400000;
+  const futureDays = Number.isFinite(weeksTotal) ? Math.ceil(weeksTotal * 7) : 90;
+  const endMs      = todayMs + futureDays * 86400000;
+  const spanMs     = endMs - startMs;
+
+  const toX = (ms: number) => ((ms - startMs) / spanMs) * chartW;
+  const todayX = toX(todayMs);
+
+  // Historical weight points
+  const histPts = weightHistory
+    .filter(e => new Date(e.date + "T00:00:00").getTime() >= startMs)
+    .map(e => {
+      const ms = new Date(e.date + "T00:00:00").getTime();
+      return { x: toX(ms), w: e.weightKg, ms };
+    });
+
+  // Projection: weekly steps from today → goal
+  const projSteps = Number.isFinite(weeksTotal) ? Math.ceil(weeksTotal) : 0;
+  const projPts: { x: number; w: number }[] = [{ x: todayX, w: currentWeight }];
+  for (let wk = 1; wk <= projSteps; wk++) {
+    const ms = todayMs + wk * 7 * 86400000;
+    if (ms > endMs) break;
+    projPts.push({ x: toX(ms), w: currentWeight + weeklyRate * wk });
+  }
+  if (Number.isFinite(weeksTotal) && projSteps > 0) {
+    projPts.push({ x: toX(endMs), w: targetWeight });
+  }
+
+  // Weight Y-axis bounds
+  const allWeights = [
+    ...histPts.map(p => p.w),
+    ...projPts.map(p => p.w),
+    currentWeight, targetWeight,
+  ];
+  const yPad  = 1.5;
+  const yMax  = Math.max(...allWeights) + yPad;
+  const yMin  = Math.min(...allWeights) - yPad;
+  const yRange = yMax - yMin || 1;
+  const toY   = (w: number) => ((yMax - w) / yRange) * chartH;
+
+  // ── Calorie bars ──────────────────────────────────────────────────────────
+  // Only days within the visible past range that have logged calories
+  const calEntries = Object.entries(caloriesByDate)
+    .map(([date, cal]) => ({ ms: new Date(date + "T00:00:00").getTime(), cal }))
+    .filter(e => e.ms >= startMs && e.ms <= todayMs);
+
+  const calMax = Math.max(
+    foodTargetCalories ?? 0,
+    ...calEntries.map(e => e.cal),
+  ) * 1.15 || 2500;
+
+  // Day pixel width (use span ratio, clamp to [2, 7])
+  const dayPx = Math.min(7, Math.max(2, (chartW / ((spanMs) / 86400000)) * 0.75));
+
+  const calBars = calEntries.map(e => ({
+    x:     toX(e.ms),
+    h:     (e.cal / calMax) * calH,
+    color: foodTargetCalories === null
+      ? P.gold
+      : e.cal <= foodTargetCalories
+        ? "#6DBF8A"  // under/on target → green
+        : "#E07070", // over target → red
+  }));
+
+  const targetCalY = foodTargetCalories !== null
+    ? calH - (foodTargetCalories / calMax) * calH
+    : null;
+
+  // ── Segment renderers ────────────────────────────────────────────────────
+  const solidLine = (pts: { x: number; w: number }[], color: string, thick: number) =>
+    pts.slice(1).map((p, i) => {
+      const prev = pts[i];
+      const x1 = prev.x, y1 = toY(prev.w);
+      const x2 = p.x,    y2 = toY(p.w);
+      const dx = x2 - x1, dy = y2 - y1;
+      const len = Math.sqrt(dx * dx + dy * dy);
+      const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+      return (
+        <View key={i} style={{
+          position: "absolute", left: x1, top: y1,
+          width: len, height: thick,
+          backgroundColor: color,
+          transformOrigin: "left center" as any,
+          transform: [{ rotate: `${angle}deg` }],
+        }} />
+      );
+    });
+
+  const dashedLine = (pts: { x: number; w: number }[], color: string, thick: number, dashLen = 7, gapLen = 5) => {
+    const nodes: React.ReactNode[] = [];
+    let key = 0;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const x1 = pts[i].x, y1 = toY(pts[i].w);
+      const x2 = pts[i+1].x, y2 = toY(pts[i+1].w);
+      const dx = x2 - x1, dy = y2 - y1;
+      const segLen = Math.sqrt(dx * dx + dy * dy);
+      const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+      const cosA = segLen ? dx / segLen : 0;
+      const sinA = segLen ? dy / segLen : 0;
+      let d = 0, drawing = true;
+      while (d < segLen) {
+        const chunkLen = Math.min(drawing ? dashLen : gapLen, segLen - d);
+        if (drawing) {
+          nodes.push(
+            <View key={key++} style={{
+              position: "absolute",
+              left: x1 + cosA * d, top: y1 + sinA * d,
+              width: chunkLen, height: thick,
+              backgroundColor: color,
+              transformOrigin: "left center" as any,
+              transform: [{ rotate: `${angle}deg` }],
+            }} />
+          );
+        }
+        d += chunkLen;
+        drawing = !drawing;
+      }
+    }
+    return nodes;
+  };
+
+  // ── X-axis ticks ──────────────────────────────────────────────────────────
+  const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const xTicks: { x: number; label: string; isToday?: boolean; isFuture?: boolean }[] = [];
+
+  if (view === "weekly") {
+    // Tick every 2 weeks through the full span
+    const TWO_WEEKS = 14 * 86400000;
+    // find the nearest 2-week boundary before startMs relative to today
+    const weeksFromStart = Math.ceil((todayMs - startMs) / TWO_WEEKS);
+    for (let i = -weeksFromStart; i <= Math.ceil(futureDays / 14) + 1; i++) {
+      const ms = todayMs + i * TWO_WEEKS;
+      if (ms < startMs - 86400000 || ms > endMs + 86400000) continue;
+      const x = toX(ms);
+      if (x < 0 || x > chartW) continue;
+      const weeksAgo = Math.round((todayMs - ms) / (7 * 86400000));
+      const label = weeksAgo === 0 ? "now" : weeksAgo > 0 ? `−${weeksAgo}w` : `+${-weeksAgo}w`;
+      xTicks.push({ x, label, isToday: weeksAgo === 0, isFuture: weeksAgo < 0 });
+    }
+  } else {
+    // Monthly: tick at each month boundary
+    const d = new Date(startMs);
+    d.setDate(1); d.setMonth(d.getMonth() + 1);
+    while (d.getTime() <= endMs) {
+      const x = toX(d.getTime());
+      if (x >= 0 && x <= chartW)
+        xTicks.push({ x, label: MON[d.getMonth()], isFuture: d.getTime() > todayMs });
+      d.setMonth(d.getMonth() + 1);
+    }
+    // Add "now" marker
+    xTicks.push({ x: todayX, label: "now", isToday: true });
+  }
+
   return (
     <View style={{ marginTop: 16 }}>
-      {/* Summary line */}
-      <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 20 }}>
+      {/* Summary row */}
+      <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 14 }}>
         <View>
           <Text style={{ fontFamily: OUT_L, fontSize: 10, letterSpacing: 2, color: P.mid }}>RATE</Text>
-          <Text style={{ fontFamily: CG, fontSize: 18, color: P.ink, marginTop: 4 }}>{rateLabel}</Text>
+          <Text style={{ fontFamily: CG, fontSize: 18, color: wrongDirection ? "#E07070" : P.ink, marginTop: 4 }}>
+            {rateLabel}
+          </Text>
         </View>
         <View style={{ alignItems: "center" }}>
           <Text style={{ fontFamily: OUT_L, fontSize: 10, letterSpacing: 2, color: P.mid }}>CHANGE</Text>
@@ -291,56 +498,250 @@ function WeightRoadmap({ profile, currentWeight }: {
         </View>
         <View style={{ alignItems: "flex-end" }}>
           <Text style={{ fontFamily: OUT_L, fontSize: 10, letterSpacing: 2, color: P.mid }}>TIMELINE</Text>
-          <Text style={{ fontFamily: CG, fontSize: 18, color: P.ink, marginTop: 4 }}>~{monthsTotal} mo</Text>
+          <Text style={{ fontFamily: CG, fontSize: 18, color: P.ink, marginTop: 4 }}>
+            {monthsTotal ? `~${monthsTotal} mo` : "—"}
+          </Text>
         </View>
       </View>
 
-      {/* Vertical milestone timeline */}
-      {milestones.map((m, i) => {
-        const isFirst = i === 0;
-        const isLast  = i === milestones.length - 1;
-        const bfCat   = bfCategory(profile.sex, m.bf);
-        return (
-          <View key={i} style={{ flexDirection: "row", alignItems: "flex-start" }}>
-            {/* Line + dot */}
-            <View style={{ width: 20, alignItems: "center" }}>
-              <View style={{
-                width: isFirst || isLast ? 10 : 7,
-                height: isFirst || isLast ? 10 : 7,
-                borderRadius: 5,
-                backgroundColor: isLast ? P.gold : isFirst ? P.ink : P.s2,
-                borderWidth: isFirst ? 1.5 : 0,
-                borderColor: P.mid,
-                marginTop: 3,
-              }} />
-              {!isLast && <View style={{ width: 1, flex: 1, backgroundColor: P.border, minHeight: 24 }} />}
-            </View>
+      {/* Calorie context strip */}
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 12, paddingHorizontal: 2 }}>
+        <Text style={{ fontFamily: OUT_L, fontSize: 10, color: P.dim }}>
+          avg {Math.round(avgActualCalories)} kcal/day
+        </Text>
+        <Text style={{ fontFamily: OUT_L, fontSize: 10, color: P.border }}>·</Text>
+        <Text style={{ fontFamily: OUT_L, fontSize: 10, color: P.dim }}>
+          {daysLogged} day{daysLogged !== 1 ? "s" : ""} logged
+        </Text>
+        {foodTargetCalories !== null && (
+          <>
+            <Text style={{ fontFamily: OUT_L, fontSize: 10, color: P.border }}>·</Text>
+            <Text style={{ fontFamily: OUT_L, fontSize: 10, color: calDiffColor }}>
+              target {Math.round(foodTargetCalories)} kcal
+            </Text>
+          </>
+        )}
+      </View>
 
-            {/* Content */}
-            <View style={{ flex: 1, paddingBottom: isLast ? 0 : 16, paddingLeft: 12 }}>
-              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "baseline" }}>
-                <Text style={{ fontFamily: CG, fontSize: isFirst || isLast ? 22 : 18, color: isLast ? P.gold : P.ink, letterSpacing: -0.5 }}>
-                  {m.weight} kg
-                </Text>
-                <Text style={{ fontFamily: OUT_L, fontSize: 10, color: P.mid }}>
-                  {isFirst ? "now" : `wk ${m.weeks}`}
-                </Text>
-              </View>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 2 }}>
-                <Text style={{ fontFamily: OUT_L, fontSize: 11, color: bfCat.color }}>{m.bf}% BF</Text>
-                <Text style={{ fontFamily: OUT_L, fontSize: 10, color: P.dim }}>·</Text>
-                <Text style={{ fontFamily: OUT_L, fontSize: 10, color: P.dim }}>{bfCat.label}</Text>
-                {isLast && (
-                  <>
-                    <Text style={{ fontFamily: OUT_L, fontSize: 10, color: P.dim }}>·</Text>
-                    <Text style={{ fontFamily: OUT_L, fontSize: 10, color: P.gold, letterSpacing: 1 }}>GOAL</Text>
-                  </>
-                )}
-              </View>
-            </View>
+      {/* Warning if eating in wrong direction */}
+      {wrongDirection && (
+        <View style={{ borderLeftWidth: 2, borderLeftColor: "#E07070", paddingHorizontal: 12, paddingVertical: 8, marginBottom: 14 }}>
+          <Text style={{ fontFamily: OUT_L, fontSize: 11, color: "#E07070", lineHeight: 18 }}>
+            {isCut
+              ? "You're eating above your calorie target. Adjust your intake to start progressing."
+              : "You're eating below your calorie target. Increase intake to support your bulk."}
+          </Text>
+        </View>
+      )}
+
+      {/* Toggle + Legend row */}
+      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14, marginLeft: YAXIS_W }}>
+        {/* View toggle */}
+        <View style={{ flexDirection: "row", borderWidth: StyleSheet.hairlineWidth, borderColor: P.border, marginRight: 16 }}>
+          {(["weekly", "monthly"] as const).map(v => (
+            <TouchableOpacity
+              key={v}
+              onPress={() => setView(v)}
+              style={{
+                paddingHorizontal: 10, paddingVertical: 5,
+                backgroundColor: view === v ? P.gold : "transparent",
+              }}
+            >
+              <Text style={{
+                fontFamily: OUT_L, fontSize: 9, letterSpacing: 1.5,
+                color: view === v ? P.bg : P.dim,
+                textTransform: "uppercase",
+              }}>
+                {v === "weekly" ? "Weekly" : "Monthly"}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Legend */}
+        <View style={{ flexDirection: "row", gap: 14 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+            <View style={{ width: 14, height: 2, backgroundColor: P.ink }} />
+            <Text style={{ fontFamily: OUT_L, fontSize: 9, letterSpacing: 1, color: P.mid }}>ACTUAL</Text>
           </View>
-        );
-      })}
+          {!wrongDirection && (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+              <View style={{ flexDirection: "row", gap: 2 }}>
+                {[0,1,2].map(k => <View key={k} style={{ width: 4, height: 2, backgroundColor: P.gold }} />)}
+              </View>
+              <Text style={{ fontFamily: OUT_L, fontSize: 9, letterSpacing: 1, color: P.gold }}>PROJECTED</Text>
+            </View>
+          )}
+        </View>
+      </View>
+
+      {/* ── Chart ── */}
+      <View style={{ flexDirection: "row" }}>
+        {/* Y-axis labels — positioned at their actual Y coordinates */}
+        <View style={{ width: YAXIS_W, height: chartH, position: "relative" }}>
+          <Text style={{ position: "absolute", right: 6, top: toY(yMax) - 5, fontFamily: OUT_L, fontSize: 9, color: P.dim }}>
+            {Math.ceil(yMax).toFixed(0)}
+          </Text>
+          <Text style={{ position: "absolute", right: 6, top: toY(currentWeight) - 5, fontFamily: OUT_L, fontSize: 9, color: P.ink }}>
+            {currentWeight.toFixed(1)}
+          </Text>
+          {!wrongDirection && (
+            <Text style={{ position: "absolute", right: 6, top: toY(targetWeight) - 5, fontFamily: OUT_L, fontSize: 9, color: P.gold }}>
+              {targetWeight.toFixed(1)}
+            </Text>
+          )}
+        </View>
+
+        {/* Chart area */}
+        <View style={{ width: chartW, height: chartH, position: "relative", overflow: "hidden" }}>
+          {/* Horizontal grid lines */}
+          {[0, 0.25, 0.5, 0.75, 1].map(f => (
+            <View key={f} style={{
+              position: "absolute", left: 0, right: 0,
+              top: f * chartH, height: StyleSheet.hairlineWidth,
+              backgroundColor: P.border, opacity: 0.5,
+            }} />
+          ))}
+
+          {/* X tick vertical lines */}
+          {xTicks.map((t, i) => (
+            <View key={i} style={{
+              position: "absolute",
+              left: t.x, top: 0,
+              width: StyleSheet.hairlineWidth, height: chartH,
+              backgroundColor: t.isToday ? P.mid : P.border,
+              opacity: t.isToday ? 0.6 : 0.3,
+            }} />
+          ))}
+
+          {/* Goal weight guide line */}
+          {!wrongDirection && (
+            <View style={{
+              position: "absolute", left: 0, right: 0,
+              top: toY(targetWeight), height: StyleSheet.hairlineWidth,
+              backgroundColor: P.gold, opacity: 0.3,
+            }} />
+          )}
+
+          {/* ── ACTUAL weight line (solid, bright) ── */}
+          {solidLine(histPts, P.ink, 2)}
+          {histPts.map((p, i) => (
+            <View key={i} style={{
+              position: "absolute",
+              left: p.x - 2.5, top: toY(p.w) - 2.5,
+              width: 5, height: 5, borderRadius: 2.5,
+              backgroundColor: P.ink,
+            }} />
+          ))}
+
+          {/* ── PROJECTED line (dashed, gold) ── */}
+          {!wrongDirection && dashedLine(projPts, P.gold, 2)}
+
+          {/* "Today" anchor dot */}
+          <View style={{
+            position: "absolute",
+            left: todayX - 5, top: toY(currentWeight) - 5,
+            width: 10, height: 10, borderRadius: 5,
+            backgroundColor: P.bg,
+            borderWidth: 2, borderColor: P.ink,
+          }} />
+
+          {/* Goal dot */}
+          {!wrongDirection && Number.isFinite(weeksTotal) && (
+            <View style={{
+              position: "absolute",
+              left: toX(endMs) - 5, top: toY(targetWeight) - 5,
+              width: 10, height: 10, borderRadius: 5,
+              backgroundColor: P.gold,
+            }} />
+          )}
+        </View>
+      </View>
+
+      {/* ── Calorie bar panel ── */}
+      <View style={{ flexDirection: "row", marginTop: 3 }}>
+        {/* Y label */}
+        <View style={{ width: YAXIS_W, height: calH, justifyContent: "space-between", alignItems: "flex-end", paddingRight: 6 }}>
+          {foodTargetCalories !== null && (
+            <Text style={{ fontFamily: OUT_L, fontSize: 8, color: P.dim }}>
+              {Math.round(foodTargetCalories / 100) / 10}k
+            </Text>
+          )}
+          <Text style={{ fontFamily: OUT_L, fontSize: 8, color: P.dim }}>kcal</Text>
+        </View>
+
+        {/* Bar area — same chartW as weight chart */}
+        <View style={{ width: chartW, height: calH, position: "relative", overflow: "hidden" }}>
+          {/* Top border */}
+          <View style={{ position: "absolute", top: 0, left: 0, right: 0, height: StyleSheet.hairlineWidth, backgroundColor: P.border, opacity: 0.4 }} />
+
+          {/* Target calorie line */}
+          {targetCalY !== null && (
+            <View style={{
+              position: "absolute", left: 0, right: 0,
+              top: targetCalY, height: StyleSheet.hairlineWidth,
+              backgroundColor: P.gold, opacity: 0.5,
+            }} />
+          )}
+
+          {/* X tick lines (same positions as weight chart) */}
+          {xTicks.map((t, i) => (
+            <View key={i} style={{
+              position: "absolute", left: t.x, top: 0,
+              width: StyleSheet.hairlineWidth, height: calH,
+              backgroundColor: t.isToday ? P.mid : P.border,
+              opacity: t.isToday ? 0.5 : 0.2,
+            }} />
+          ))}
+
+          {/* Calorie bars */}
+          {calBars.map((b, i) => (
+            <View key={i} style={{
+              position: "absolute",
+              left: b.x - dayPx / 2,
+              bottom: 0,
+              width: dayPx,
+              height: b.h,
+              backgroundColor: b.color,
+              opacity: 0.85,
+            }} />
+          ))}
+
+          {/* "Today" divider */}
+          <View style={{
+            position: "absolute", left: todayX, top: 0,
+            width: StyleSheet.hairlineWidth, height: calH,
+            backgroundColor: P.mid, opacity: 0.6,
+          }} />
+        </View>
+      </View>
+
+      {/* X-axis tick labels */}
+      <View style={{ marginLeft: YAXIS_W, marginTop: 5, position: "relative", height: 14 }}>
+        {xTicks.map((t, i) => (
+          <Text key={i} style={{
+            position: "absolute",
+            left: t.x - 10,
+            width: 24,
+            textAlign: "center",
+            fontFamily: OUT_L,
+            fontSize: 9,
+            color: t.isToday ? P.mid : t.isFuture ? P.gold + "99" : P.dim,
+          }}>
+            {t.label}
+          </Text>
+        ))}
+      </View>
+
+      {/* Goal label */}
+      {!wrongDirection && Number.isFinite(weeksTotal) && (
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 10, marginLeft: YAXIS_W }}>
+          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: P.gold }} />
+          <Text style={{ fontFamily: OUT_L, fontSize: 10, color: P.gold, letterSpacing: 1 }}>
+            {targetWeight.toFixed(1)} kg · {bfCategory(profile.sex, profile.targetBf).label} · {profile.targetBf}% BF
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -731,6 +1132,7 @@ export default function StatsScreen() {
   const weightHistory = useQuery(api.weightTracking.getWeightHistory, userId ? { userId, days: 90 } : "skip");
   const activeMeso      = useQuery(api.mesocycles.getActiveWithDetails, userId ? { userId } : "skip");
   const dailyCalories   = useQuery(api.nutrition.getDailyTotals, userId ? { userId, fromDate: (() => { const d = new Date(); d.setDate(d.getDate() - 90); return d.toISOString().slice(0,10); })(), toDate: today } : "skip");
+  const foodTarget      = useQuery(api.nutrition.getFoodTarget, userId ? { userId } : "skip");
   const dateSummary = useQuery(api.workouts.getWorkoutDates, userId ? { userId } : "skip");
   const allPhotos   = useQuery(api.progressPhotos.listPhotos, userId ? { userId } : "skip");
 
@@ -1037,6 +1439,9 @@ export default function StatsScreen() {
                     <WeightRoadmap
                       profile={profile}
                       currentWeight={weightStats?.latest ?? profile.weightKg}
+                      caloriesByDate={caloriesByDate}
+                      foodTargetCalories={foodTarget?.calories ?? null}
+                      weightHistory={weightHistory ?? []}
                     />
                   </Animated.View>
                 )}

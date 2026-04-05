@@ -26,7 +26,10 @@ type GroceryItem = {
 // ── Ingredient aggregation ─────────��──────────────────────────────────────────
 
 function normalizeIngName(name: string): string {
-  return name.toLowerCase().replace(/\s*\(.*?\)/g, "").trim();
+  return name.toLowerCase()
+    .replace(/\s*\(.*?\)/g, "")  // remove parenthetical notes
+    .replace(/,.*$/, "")          // strip comma + prep descriptors (sliced, cooked, diced, etc.)
+    .trim();
 }
 
 type ParsedAmt =
@@ -112,7 +115,7 @@ function buildGroceryList(
 
     for (const ing of recipe.ingredients) {
       const normName    = normalizeIngName(ing.name);
-      const displayName = ing.name.replace(/\s*\(.*?\)/g, "").trim();
+      const displayName = ing.name.replace(/\s*\(.*?\)/g, "").replace(/,.*$/, "").trim();
       const parsed      = parseAmount(ing.amount, portion);
 
       let key: string;

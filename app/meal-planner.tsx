@@ -237,6 +237,7 @@ function autofillDay(
   prefs: FoodPrefs = null,
   weekRecipes: Recipe[] = [],
   usageCount: Map<string, number> = new Map(),
+  preferredIds: Set<string> = new Set(),
 ): Partial<Record<MealType, AutofillEntry>> {
   const result: Partial<Record<MealType, AutofillEntry>> = {};
   const usedThisDay = new Set(usedThisWeek);
@@ -255,9 +256,14 @@ function autofillDay(
     return macroS - pref * 1.5 - overlap * 0.5;
   };
 
+  const isPreferred = (r: Recipe) => r.id.startsWith("user:") || preferredIds.has(r.id);
+  const notOverused = (r: Recipe) => (usageCount.get(r.id) ?? 0) < maxRep;
+
   const getCandidates = (mealType: MealType) => {
-    const notOverused = (r: Recipe) => (usageCount.get(r.id) ?? 0) < maxRep;
-    let c = allRecipes.filter((r) => r.mealType === mealType && r.goal === goal && !usedThisDay.has(r.id) && notOverused(r));
+    // Try MY MEALS first (user-created + starred), then fall back to full pool
+    let c = allRecipes.filter((r) => isPreferred(r) && r.mealType === mealType && r.goal === goal && !usedThisDay.has(r.id) && notOverused(r));
+    if (!c.length) c = allRecipes.filter((r) => isPreferred(r) && r.mealType === mealType && !usedThisDay.has(r.id) && notOverused(r));
+    if (!c.length) c = allRecipes.filter((r) => r.mealType === mealType && r.goal === goal && !usedThisDay.has(r.id) && notOverused(r));
     if (!c.length) c = allRecipes.filter((r) => r.mealType === mealType && !usedThisDay.has(r.id) && notOverused(r));
     if (!c.length) c = allRecipes.filter((r) => r.mealType === mealType);
     return c;
@@ -1130,6 +1136,10 @@ export default function MealPlannerScreen() {
   const userRecipesData    = useQuery(api.userRecipes.getUserRecipes, userId ? { userId } : "skip");
   const userRecipesRaw     = userRecipesData ?? [];
   const savedIds           = useQuery(api.mealPlans.getSaved, userId ? { userId } : "skip") ?? [];
+  const myMealIds          = useMemo(() => new Set<string>([
+    ...userRecipesRaw.map(r => `user:${r._id}`),
+    ...savedIds,
+  ]), [userRecipesRaw, savedIds]);
   const addItem        = useMutation(api.mealPlanSlots.addItem);
   const updatePortion  = useMutation(api.mealPlanSlots.updatePortion);
   const swapItem       = useMutation(api.mealPlanSlots.swapItem);
@@ -1273,7 +1283,7 @@ export default function MealPlannerScreen() {
           .filter(mt => (freq[mt] ?? 7) > 0) as string[];
         dayPrefs = { ...dayPrefs, plannedMealTypes: activeMeals };
       }
-      const filled = autofillDay(tgt, goal, activeDaySlots, allRecipes, recipeMap, new Set(), dayPrefs);
+      const filled = autofillDay(tgt, goal, activeDaySlots, allRecipes, recipeMap, new Set(), dayPrefs, [], new Map(), myMealIds);
       for (const [mealType, entry] of Object.entries(filled) as [MealType, AutofillEntry][]) {
         if (!entry) continue;
         await addItem({ userId, weekStart, dayIndex: activeDay, mealType, recipeId: entry.recipeId, portion: entry.portion });
@@ -1310,21 +1320,24 @@ export default function MealPlannerScreen() {
             pool.push(chosen);
             usedIds.add(chosen.id);
           } else {
-            // Auto-pick: best-scoring recipe not already in pool
-            const best = allRecipes
-              .filter(r => r.mealType === mt && !usedIds.has(r.id))
-              .map(r => {
-                const macroS =
-                  Math.abs(r.totalMacros.calories - slotCal)  / (slotCal  || 1) +
-                  Math.abs(r.totalMacros.proteinG - slotProt) / (slotProt || 1) * 0.6 +
-                  Math.abs(r.totalMacros.carbsG   - slotCarb) / (slotCarb || 1) * 0.3 +
-                  Math.abs(r.totalMacros.fatG     - slotFat)  / (slotFat  || 1) * 0.2;
-                const pref = prefScore(r, prefs ?? null);
-                if (!isFinite(pref)) return null;
-                return { r, score: macroS - pref * 1.5 + (r.goal === goal ? -0.3 : 0) };
-              })
-              .filter((x): x is { r: Recipe; score: number } => x !== null)
-              .sort((a, b) => a.score - b.score)[0]?.r;
+            // Auto-pick: prefer MY MEALS (user-created + starred), fall back to full pool
+            const scoreRecipe = (r: Recipe) => {
+              const macroS =
+                Math.abs(r.totalMacros.calories - slotCal)  / (slotCal  || 1) +
+                Math.abs(r.totalMacros.proteinG - slotProt) / (slotProt || 1) * 0.6 +
+                Math.abs(r.totalMacros.carbsG   - slotCarb) / (slotCarb || 1) * 0.3 +
+                Math.abs(r.totalMacros.fatG     - slotFat)  / (slotFat  || 1) * 0.2;
+              const pref = prefScore(r, prefs ?? null);
+              if (!isFinite(pref)) return null;
+              return { r, score: macroS - pref * 1.5 + (r.goal === goal ? -0.3 : 0) };
+            };
+            const isPreferredWeek = (r: Recipe) => r.id.startsWith("user:") || myMealIds.has(r.id);
+            const basePool = allRecipes.filter(r => r.mealType === mt && !usedIds.has(r.id));
+            const preferredPool = basePool.filter(isPreferredWeek);
+            const pickFrom = (pool: Recipe[]) =>
+              pool.map(scoreRecipe).filter((x): x is { r: Recipe; score: number } => x !== null)
+                .sort((a, b) => a.score - b.score)[0]?.r;
+            const best = pickFrom(preferredPool) ?? pickFrom(basePool);
 
             if (best) { pool.push(best); usedIds.add(best.id); }
           }

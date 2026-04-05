@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
 
 const MEAL_TYPE = v.union(
   v.literal("breakfast"),
@@ -143,5 +144,95 @@ export const copyDay = mutation({
         order:    item.order,
       });
     }
+  },
+});
+
+// Return planned meals for a given date, resolved to name + scaled macros
+export const getDaySuggestions = query({
+  args: { userId: v.id("users"), date: v.string() },
+  handler: async (ctx, { userId, date }) => {
+    // Convert date → weekStart (Monday) + dayIndex
+    const d = new Date(date + "T12:00:00");
+    const dow = d.getDay(); // 0=Sun
+    const daysFromMon = (dow + 6) % 7;
+    const monday = new Date(d);
+    monday.setDate(d.getDate() - daysFromMon);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const weekStart = `${monday.getFullYear()}-${pad(monday.getMonth() + 1)}-${pad(monday.getDate())}`;
+    const dayIndex = daysFromMon;
+
+    const slots = await ctx.db
+      .query("mealPlanSlots")
+      .withIndex("by_user_week_day", q =>
+        q.eq("userId", userId).eq("weekStart", weekStart).eq("dayIndex", dayIndex)
+      )
+      .collect();
+
+    if (!slots.length) return [];
+
+    const results = await Promise.all(slots.map(async (slot) => {
+      let name = "";
+      let description = "";
+      let goal: string = "maintain";
+      let prepTimeMins = 0;
+      let cookTimeMins = 0;
+      let ingredients: { name: string; amount: string; calories: number; proteinG: number; carbsG: number; fatG: number }[] = [];
+      let instructions: string[] = [];
+      let baseMacros = { calories: 0, proteinG: 0, carbsG: 0, fatG: 0 };
+
+      if (slot.recipeId.startsWith("user:")) {
+        const docId = slot.recipeId.slice(5) as Id<"userRecipes">;
+        const rec = await ctx.db.get(docId);
+        if (rec) {
+          name = rec.name;
+          description = rec.description;
+          goal = rec.goal;
+          prepTimeMins = rec.prepTimeMins;
+          cookTimeMins = rec.cookTimeMins;
+          ingredients = rec.ingredients;
+          instructions = rec.instructions;
+          baseMacros = rec.totalMacros;
+        }
+      } else {
+        const rec = await ctx.db
+          .query("recipes")
+          .filter(q => q.eq(q.field("recipeId"), slot.recipeId))
+          .first();
+        if (rec) {
+          name = rec.name;
+          description = rec.description;
+          goal = rec.goal;
+          prepTimeMins = rec.prepTimeMins;
+          cookTimeMins = rec.cookTimeMins;
+          ingredients = rec.ingredients;
+          instructions = rec.instructions;
+          baseMacros = rec.totalMacros;
+        }
+      }
+
+      if (!name) return null;
+
+      return {
+        slotId: slot._id,
+        mealType: slot.mealType,
+        portion: slot.portion,
+        name,
+        description,
+        goal,
+        prepTimeMins,
+        cookTimeMins,
+        ingredients,
+        instructions,
+        totalMacros: baseMacros,
+        scaledMacros: {
+          calories: Math.round(baseMacros.calories * slot.portion),
+          proteinG: Math.round(baseMacros.proteinG * slot.portion * 10) / 10,
+          carbsG:   Math.round(baseMacros.carbsG   * slot.portion * 10) / 10,
+          fatG:     Math.round(baseMacros.fatG      * slot.portion * 10) / 10,
+        },
+      };
+    }));
+
+    return results.filter((r): r is NonNullable<typeof r> => r !== null);
   },
 });
