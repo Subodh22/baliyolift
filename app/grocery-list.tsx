@@ -1,8 +1,9 @@
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
+  TextInput, KeyboardAvoidingView, Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -70,8 +71,22 @@ function assignCategory(normName: string): Category {
 }
 
 function formatAmount(amt: ParsedAmt & { total?: number }): string {
-  if (amt.type === "g")     return `${Math.round(amt.total ?? (amt as any).value)}g`;
-  if (amt.type === "ml")    return `${Math.round(amt.total ?? (amt as any).value)}ml`;
+  if (amt.type === "g") {
+    const g = Math.round(amt.total ?? (amt as any).value);
+    if (g >= 1000) {
+      const kg = g / 1000;
+      return `${kg % 1 === 0 ? kg : kg.toFixed(1)} kg`;
+    }
+    return `${g}g`;
+  }
+  if (amt.type === "ml") {
+    const ml = Math.round(amt.total ?? (amt as any).value);
+    if (ml >= 1000) {
+      const l = ml / 1000;
+      return `${l % 1 === 0 ? l : l.toFixed(1)} L`;
+    }
+    return `${ml}ml`;
+  }
   if (amt.type === "count") {
     const n = amt.total ?? (amt as any).value;
     const rounded = Math.round(n * 2) / 2;
@@ -164,7 +179,11 @@ function formatWeekLabel(weekStart: string): string {
   return `${d.getDate()} ${M[d.getMonth()]} – ${end.getDate()} ${M[end.getMonth()]}`;
 }
 
-// ── Main screen ──────────���──────────────────────────���─────────────────────────
+// ── Manual item type ─────────────────────────────────────────────────────────
+
+type ManualItem = { id: string; displayName: string; category: Category };
+
+// ── Main screen ───────────────────────────────────────────────────────────────
 
 export default function GroceryListScreen() {
   const router = useRouter();
@@ -201,7 +220,12 @@ export default function GroceryListScreen() {
   , [convexRecipes]);
 
   const baseList = useMemo(() => buildGroceryList(rawSlots, recipeMap), [rawSlots, recipeMap]);
-  const [checked, setChecked] = useState<Set<string>>(new Set());
+
+  const [checked,      setChecked]      = useState<Set<string>>(new Set());
+  const [manualItems,  setManualItems]  = useState<ManualItem[]>([]);
+  const [addingItem,   setAddingItem]   = useState(false);
+  const [newItemText,  setNewItemText]  = useState("");
+  const inputRef = useRef<TextInput>(null);
 
   const toggleCheck = (name: string) => {
     setChecked((prev) => {
@@ -211,16 +235,40 @@ export default function GroceryListScreen() {
     });
   };
 
+  const handleAddItem = () => {
+    const name = newItemText.trim();
+    if (!name) { setAddingItem(false); return; }
+    const norm = name.toLowerCase();
+    const category = assignCategory(norm);
+    setManualItems(prev => [...prev, { id: `manual-${Date.now()}`, displayName: name, category }]);
+    setNewItemText("");
+    setAddingItem(false);
+  };
+
+  const removeManual = (id: string) => {
+    setManualItems(prev => prev.filter(i => i.id !== id));
+    setChecked(prev => { const next = new Set(prev); next.delete(id); return next; });
+  };
+
   const grouped = useMemo(() => {
     const map = new Map<Category, GroceryItem[]>();
     for (const cat of CAT_ORDER) map.set(cat, []);
     for (const item of baseList) {
       map.get(item.category)!.push({ ...item, checked: checked.has(item.displayName) });
     }
+    // merge manual items into their categories
+    for (const m of manualItems) {
+      map.get(m.category)!.push({
+        displayName: m.displayName,
+        amounts: [],
+        category: m.category,
+        checked: checked.has(m.id),
+      });
+    }
     return map;
-  }, [baseList, checked]);
+  }, [baseList, manualItems, checked]);
 
-  const totalItems   = baseList.length;
+  const totalItems   = baseList.length + manualItems.length;
   const checkedCount = checked.size;
 
   return (
@@ -235,6 +283,12 @@ export default function GroceryListScreen() {
           <Text style={s.eyebrow}>NUTRITION</Text>
           <Text style={s.heroItalic}>Grocery List.</Text>
         </View>
+        <TouchableOpacity
+          style={s.addBtn}
+          onPress={() => { setAddingItem(true); setTimeout(() => inputRef.current?.focus(), 80); }}
+        >
+          <Text style={s.addBtnText}>+ ADD</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Week + progress */}
@@ -251,6 +305,33 @@ export default function GroceryListScreen() {
       <View style={s.progressTrack}>
         <View style={[s.progressFill, { width: totalItems > 0 ? `${(checkedCount / totalItems) * 100}%` as any : "0%" }]} />
       </View>
+
+      <Text style={s.weekNote}>Quantities are totals for the whole week</Text>
+
+      {/* Inline add item input */}
+      {addingItem && (
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
+          <View style={s.addRow}>
+            <TextInput
+              ref={inputRef}
+              style={s.addInput}
+              placeholder="e.g. Olive oil, Onions…"
+              placeholderTextColor={P.dim}
+              value={newItemText}
+              onChangeText={setNewItemText}
+              onSubmitEditing={handleAddItem}
+              returnKeyType="done"
+              autoCapitalize="words"
+            />
+            <TouchableOpacity style={s.addConfirmBtn} onPress={handleAddItem}>
+              <Text style={s.addConfirmText}>ADD</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => { setAddingItem(false); setNewItemText(""); }} hitSlop={8}>
+              <Text style={{ fontFamily: OUT_L, fontSize: 18, color: P.mid }}>×</Text>
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      )}
 
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
 
@@ -273,29 +354,43 @@ export default function GroceryListScreen() {
                   <Text style={s.sectionCount}>{items.length}</Text>
                 </View>
 
-                {items.map((item) => (
-                  <TouchableOpacity
-                    key={item.displayName}
-                    style={[s.itemRow, item.checked && s.itemRowChecked]}
-                    onPress={() => toggleCheck(item.displayName)}
-                    activeOpacity={0.75}
-                  >
-                    {/* Checkbox */}
-                    <View style={[s.checkbox, item.checked && s.checkboxChecked]}>
-                      {item.checked && <Text style={s.checkmark}>✓</Text>}
-                    </View>
+                {items.map((item) => {
+                  const manual = manualItems.find(m => m.displayName === item.displayName);
+                  const checkKey = manual ? manual.id : item.displayName;
+                  return (
+                    <TouchableOpacity
+                      key={item.displayName}
+                      style={[s.itemRow, item.checked && s.itemRowChecked]}
+                      onPress={() => toggleCheck(checkKey)}
+                      activeOpacity={0.75}
+                    >
+                      {/* Checkbox */}
+                      <View style={[s.checkbox, item.checked && s.checkboxChecked]}>
+                        {item.checked && <Text style={s.checkmark}>✓</Text>}
+                      </View>
 
-                    {/* Name + amounts */}
-                    <View style={s.itemBody}>
-                      <Text style={[s.itemName, item.checked && s.itemNameChecked]}>
-                        {item.displayName}
-                      </Text>
-                      <Text style={[s.itemAmount, item.checked && s.itemAmountChecked]}>
-                        {item.amounts.join(" + ")}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                ))}
+                      {/* Name + amounts */}
+                      <View style={s.itemBody}>
+                        <Text style={[s.itemName, item.checked && s.itemNameChecked]}>
+                          {item.displayName}
+                          {manual && <Text style={s.manualTag}> · added</Text>}
+                        </Text>
+                        {item.amounts.length > 0 && (
+                          <Text style={[s.itemAmount, item.checked && s.itemAmountChecked]}>
+                            {item.amounts.join(" + ")}
+                          </Text>
+                        )}
+                      </View>
+
+                      {/* Remove button for manual items */}
+                      {manual && (
+                        <TouchableOpacity onPress={() => removeManual(manual.id)} hitSlop={10}>
+                          <Text style={s.removeText}>×</Text>
+                        </TouchableOpacity>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             );
           })
@@ -310,7 +405,7 @@ export default function GroceryListScreen() {
 // ── Styles ──────────��──────────────────────────────────���──────────────────────
 
 const s = StyleSheet.create({
-  header:       { flexDirection: "row", alignItems: "flex-end", paddingHorizontal: 24, paddingTop: 16, paddingBottom: 8, gap: 12 },
+  header:       { flexDirection: "row", alignItems: "flex-end", paddingHorizontal: 24, paddingTop: 16, paddingBottom: 8, gap: 12, flexWrap: "nowrap" },
   backText:     { fontFamily: OUT_L, fontSize: 22, color: P.mid, lineHeight: 28, marginBottom: 4 },
   eyebrow:      { fontFamily: OUT_L, fontSize: 10, letterSpacing: 4, color: P.gold, textTransform: "uppercase" },
   heroItalic:   { fontFamily: CG_ITALIC, fontSize: 42, letterSpacing: -0.5, lineHeight: 48, color: P.ink },
@@ -320,6 +415,16 @@ const s = StyleSheet.create({
   progressPill: { backgroundColor: P.s2, borderWidth: StyleSheet.hairlineWidth, borderColor: P.border, paddingHorizontal: 10, paddingVertical: 4 },
   progressText: { fontFamily: CG, fontSize: 16, color: P.gold },
   progressLabel:{ fontFamily: OUT_L, fontSize: 9, color: P.mid },
+
+  addBtn:       { borderWidth: StyleSheet.hairlineWidth, borderColor: P.gold, paddingHorizontal: 12, paddingVertical: 7, alignSelf: "flex-end", marginBottom: 6 },
+  addBtnText:   { fontFamily: OUT_L, fontSize: 9, letterSpacing: 2, color: P.gold, textTransform: "uppercase" },
+
+  weekNote:     { fontFamily: OUT_L, fontSize: 10, color: P.dim, textAlign: "center", paddingBottom: 6, letterSpacing: 0.5 },
+
+  addRow:       { flexDirection: "row", alignItems: "center", gap: 10, marginHorizontal: 20, marginBottom: 10, paddingHorizontal: 14, borderWidth: StyleSheet.hairlineWidth, borderColor: P.gold + "60", backgroundColor: P.s1 },
+  addInput:     { flex: 1, fontFamily: OUT_L, fontSize: 14, color: P.ink, paddingVertical: 12 },
+  addConfirmBtn:{ borderWidth: StyleSheet.hairlineWidth, borderColor: P.gold, paddingHorizontal: 12, paddingVertical: 6 },
+  addConfirmText: { fontFamily: OUT_L, fontSize: 9, letterSpacing: 2, color: P.gold, textTransform: "uppercase" },
 
   progressTrack:{ height: 2, backgroundColor: P.s3, marginHorizontal: 24, marginBottom: 8 },
   progressFill: { height: "100%", backgroundColor: P.gold },
@@ -346,4 +451,6 @@ const s = StyleSheet.create({
   itemNameChecked:{ textDecorationLine: "line-through", color: P.mid },
   itemAmount:     { fontFamily: CG, fontSize: 16, color: P.gold, lineHeight: 20 },
   itemAmountChecked:{ color: P.dim },
+  manualTag:      { fontFamily: OUT_L, fontSize: 10, color: P.dim },
+  removeText:     { fontFamily: OUT_L, fontSize: 20, color: P.dim, lineHeight: 22 },
 });

@@ -102,6 +102,10 @@ function AppStack() {
         name="grocery-list"
         options={{ animation: "slide_from_right" }}
       />
+      <Stack.Screen
+        name="create-meal"
+        options={{ presentation: "modal", animation: "slide_from_bottom" }}
+      />
     </Stack>
   );
 }

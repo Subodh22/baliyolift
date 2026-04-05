@@ -315,6 +315,43 @@ export default defineSchema({
     updatedAt:           v.number(),
   }).index("by_user", ["userId"]),
 
+  // --- User-Created Meals (private per user) ---
+  userRecipes: defineTable({
+    userId:       v.id("users"),
+    name:         v.string(),
+    description:  v.string(),
+    goal:         v.union(v.literal("cut"), v.literal("bulk"), v.literal("maintain")),
+    mealType:     v.union(
+      v.literal("breakfast"),
+      v.literal("lunch"),
+      v.literal("dinner"),
+      v.literal("snack"),
+      v.literal("post-workout"),
+      v.literal("sauce"),
+      v.literal("smoothie"),
+      v.literal("dessert"),
+    ),
+    prepTimeMins: v.number(),
+    cookTimeMins: v.number(),
+    tags:         v.array(v.string()),
+    ingredients:  v.array(v.object({
+      name:     v.string(),
+      amount:   v.string(),
+      calories: v.number(),
+      proteinG: v.number(),
+      carbsG:   v.number(),
+      fatG:     v.number(),
+    })),
+    instructions: v.array(v.string()),
+    totalMacros:  v.object({
+      calories: v.number(),
+      proteinG: v.number(),
+      carbsG:   v.number(),
+      fatG:     v.number(),
+    }),
+    createdAt:    v.number(),
+  }).index("by_user", ["userId"]),
+
   // --- Global Recipe Library (shared across all users) ---
   recipes: defineTable({
     recipeId:     v.string(),   // slug e.g. "cut-egg-white-omelette"

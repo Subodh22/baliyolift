@@ -1,0 +1,838 @@
+[
+  {
+    "id": "egg-white-oats-breakfast-cut",
+    "name": "Egg White Oats Breakfast",
+    "description": "5 egg whites scrambled with cinnamon oats \u2014 high protein, low fat base breakfast for cutting.",
+    "goal": "cut",
+    "mealType": "breakfast",
+    "prepTimeMins": 5,
+    "cookTimeMins": 10,
+    "tags": [
+      "high-protein",
+      "quick",
+      "cutting"
+    ],
+    "ingredients": [
+      {
+        "name": "Egg whites",
+        "amount": "5 large (170g)",
+        "calories": 87,
+        "proteinG": 18,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Rolled oats, dry",
+        "amount": "80g",
+        "calories": 303,
+        "proteinG": 10,
+        "carbsG": 54,
+        "fatG": 5
+      },
+      {
+        "name": "Cinnamon",
+        "amount": "1 tsp",
+        "calories": 6,
+        "proteinG": 0,
+        "carbsG": 2,
+        "fatG": 0
+      },
+      {
+        "name": "Stevia",
+        "amount": "to taste",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      },
+      {
+        "name": "Salt",
+        "amount": "to taste",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      }
+    ],
+    "instructions": [
+      "Cook oats with water, stir in cinnamon and stevia.",
+      "Scramble egg whites in a non-stick pan with a pinch of salt.",
+      "Serve oats and egg whites together."
+    ],
+    "totalMacros": {
+      "calories": 396,
+      "proteinG": 28,
+      "carbsG": 57,
+      "fatG": 5
+    }
+  },
+  {
+    "id": "chicken-sweet-potato-preworkout-cut",
+    "name": "Chicken Breast & Sweet Potato Pre-Workout",
+    "description": "Paprika-spiced chicken breast with boiled sweet potato \u2014 timed before training for sustained energy and muscle preservation.",
+    "goal": "cut",
+    "mealType": "snack",
+    "prepTimeMins": 5,
+    "cookTimeMins": 20,
+    "tags": [
+      "high-protein",
+      "pre-workout",
+      "chicken-breast",
+      "cutting"
+    ],
+    "ingredients": [
+      {
+        "name": "Chicken breast, cooked",
+        "amount": "200g",
+        "calories": 330,
+        "proteinG": 62,
+        "carbsG": 0,
+        "fatG": 7
+      },
+      {
+        "name": "Sweet potato, boiled",
+        "amount": "150g",
+        "calories": 129,
+        "proteinG": 2.4,
+        "carbsG": 30,
+        "fatG": 0
+      },
+      {
+        "name": "Paprika",
+        "amount": "1 tsp",
+        "calories": 3,
+        "proteinG": 0,
+        "carbsG": 0.5,
+        "fatG": 0
+      },
+      {
+        "name": "Salt and pepper",
+        "amount": "to taste",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      }
+    ],
+    "instructions": [
+      "Season chicken breast with paprika, salt and pepper.",
+      "Pan-cook chicken on medium heat for 5 minutes each side until cooked through.",
+      "Boil sweet potato until fork tender, season with salt.",
+      "Eat 1\u20131.5 hours before training."
+    ],
+    "totalMacros": {
+      "calories": 462,
+      "proteinG": 64.4,
+      "carbsG": 30.5,
+      "fatG": 7
+    }
+  },
+  {
+    "id": "chicken-rice-dinner-cut",
+    "name": "Grilled Chicken Rice Dinner",
+    "description": "Plain-grilled chicken breast with white rice, cucumber slices and a drizzle of olive oil \u2014 clean, lean dinner for cutting.",
+    "goal": "cut",
+    "mealType": "dinner",
+    "prepTimeMins": 5,
+    "cookTimeMins": 20,
+    "tags": [
+      "high-protein",
+      "meal-prep",
+      "chicken-breast",
+      "cutting"
+    ],
+    "ingredients": [
+      {
+        "name": "Chicken breast, cooked",
+        "amount": "200g",
+        "calories": 330,
+        "proteinG": 62,
+        "carbsG": 0,
+        "fatG": 7
+      },
+      {
+        "name": "White rice, cooked",
+        "amount": "90g",
+        "calories": 117,
+        "proteinG": 2.4,
+        "carbsG": 26,
+        "fatG": 0
+      },
+      {
+        "name": "Cucumber, sliced",
+        "amount": "100g",
+        "calories": 16,
+        "proteinG": 0.7,
+        "carbsG": 3.6,
+        "fatG": 0
+      },
+      {
+        "name": "Olive oil",
+        "amount": "1 tsp",
+        "calories": 40,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 4.5
+      },
+      {
+        "name": "Salt and pepper",
+        "amount": "to taste",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      }
+    ],
+    "instructions": [
+      "Grill or pan-cook chicken breast with salt and pepper \u2014 no oil needed.",
+      "Serve sliced chicken over cooked white rice.",
+      "Add cucumber slices on the side.",
+      "Drizzle 1 tsp olive oil over everything and serve."
+    ],
+    "totalMacros": {
+      "calories": 503,
+      "proteinG": 65.1,
+      "carbsG": 29.6,
+      "fatG": 11.5
+    }
+  },
+  {
+    "id": "garlic-herb-chicken-rice-bowl-cut",
+    "name": "Garlic Herb Chicken Rice Bowl",
+    "description": "Pan-seared garlic herb chicken breast with steamed white rice and broccoli \u2014 clean and high protein for cutting.",
+    "goal": "cut",
+    "mealType": "lunch",
+    "prepTimeMins": 10,
+    "cookTimeMins": 20,
+    "tags": [
+      "high-protein",
+      "meal-prep",
+      "chicken-breast",
+      "cutting"
+    ],
+    "ingredients": [
+      {
+        "name": "Chicken breast, cooked",
+        "amount": "250g",
+        "calories": 413,
+        "proteinG": 77,
+        "carbsG": 0,
+        "fatG": 9
+      },
+      {
+        "name": "White rice, cooked",
+        "amount": "150g",
+        "calories": 195,
+        "proteinG": 4,
+        "carbsG": 43,
+        "fatG": 0
+      },
+      {
+        "name": "Broccoli, steamed",
+        "amount": "150g",
+        "calories": 51,
+        "proteinG": 4,
+        "carbsG": 10,
+        "fatG": 0
+      },
+      {
+        "name": "Garlic, minced",
+        "amount": "3 cloves",
+        "calories": 12,
+        "proteinG": 0.5,
+        "carbsG": 3,
+        "fatG": 0
+      },
+      {
+        "name": "Lemon juice",
+        "amount": "1 tbsp",
+        "calories": 4,
+        "proteinG": 0,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Dried oregano",
+        "amount": "1 tsp",
+        "calories": 3,
+        "proteinG": 0,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Salt and pepper",
+        "amount": "to taste",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      }
+    ],
+    "instructions": [
+      "Marinate chicken breast in garlic, lemon juice, oregano, salt and pepper for 5 minutes.",
+      "Pan-sear chicken on medium-high heat for 5 minutes each side until cooked through.",
+      "Steam broccoli for 5 minutes.",
+      "Slice chicken and serve over rice with broccoli on the side."
+    ],
+    "totalMacros": {
+      "calories": 678,
+      "proteinG": 85.5,
+      "carbsG": 58,
+      "fatG": 9
+    }
+  },
+  {
+    "id": "lemon-pepper-chicken-potato-cut",
+    "name": "Lemon Pepper Chicken & Potato",
+    "description": "Oven-baked lemon pepper chicken breast with boiled white potato and rosemary \u2014 simple, lean and filling.",
+    "goal": "cut",
+    "mealType": "lunch",
+    "prepTimeMins": 5,
+    "cookTimeMins": 25,
+    "tags": [
+      "high-protein",
+      "meal-prep",
+      "chicken-breast",
+      "cutting"
+    ],
+    "ingredients": [
+      {
+        "name": "Chicken breast, uncooked",
+        "amount": "250g",
+        "calories": 275,
+        "proteinG": 51,
+        "carbsG": 0,
+        "fatG": 6
+      },
+      {
+        "name": "White potato, boiled",
+        "amount": "200g",
+        "calories": 154,
+        "proteinG": 4,
+        "carbsG": 35,
+        "fatG": 0
+      },
+      {
+        "name": "Lemon, zested and juiced",
+        "amount": "1",
+        "calories": 17,
+        "proteinG": 0.6,
+        "carbsG": 5,
+        "fatG": 0
+      },
+      {
+        "name": "Cracked black pepper",
+        "amount": "1 tsp",
+        "calories": 3,
+        "proteinG": 0,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Dried rosemary",
+        "amount": "1 tsp",
+        "calories": 3,
+        "proteinG": 0,
+        "carbsG": 0.5,
+        "fatG": 0
+      },
+      {
+        "name": "Salt",
+        "amount": "to taste",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      }
+    ],
+    "instructions": [
+      "Rub chicken breast with lemon zest, lemon juice, cracked pepper and salt.",
+      "Oven-bake at 200\u00b0C for 20\u201325 minutes until cooked through.",
+      "Boil potato until fork tender, season with rosemary and salt.",
+      "Slice chicken and serve alongside potato."
+    ],
+    "totalMacros": {
+      "calories": 452,
+      "proteinG": 55.6,
+      "carbsG": 41.5,
+      "fatG": 6
+    }
+  },
+  {
+    "id": "asian-style-chicken-rice-cut",
+    "name": "Asian-Style Soy Ginger Chicken Rice Bowl",
+    "description": "Soy ginger chicken breast stir-fried with bok choy and jasmine rice \u2014 low fat, high protein Asian-inspired cut meal.",
+    "goal": "cut",
+    "mealType": "lunch",
+    "prepTimeMins": 10,
+    "cookTimeMins": 15,
+    "tags": [
+      "high-protein",
+      "meal-prep",
+      "chicken-breast",
+      "cutting"
+    ],
+    "ingredients": [
+      {
+        "name": "Chicken breast, sliced",
+        "amount": "250g",
+        "calories": 275,
+        "proteinG": 51,
+        "carbsG": 0,
+        "fatG": 6
+      },
+      {
+        "name": "Jasmine rice, cooked",
+        "amount": "150g",
+        "calories": 195,
+        "proteinG": 4,
+        "carbsG": 43,
+        "fatG": 0
+      },
+      {
+        "name": "Bok choy",
+        "amount": "100g",
+        "calories": 13,
+        "proteinG": 1.5,
+        "carbsG": 2,
+        "fatG": 0
+      },
+      {
+        "name": "Low-sodium soy sauce",
+        "amount": "2 tbsp",
+        "calories": 17,
+        "proteinG": 1.9,
+        "carbsG": 2.5,
+        "fatG": 0
+      },
+      {
+        "name": "Ginger, grated",
+        "amount": "1 tsp",
+        "calories": 2,
+        "proteinG": 0,
+        "carbsG": 0.5,
+        "fatG": 0
+      },
+      {
+        "name": "Garlic, minced",
+        "amount": "2 cloves",
+        "calories": 8,
+        "proteinG": 0.3,
+        "carbsG": 2,
+        "fatG": 0
+      },
+      {
+        "name": "Salt and pepper",
+        "amount": "to taste",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      }
+    ],
+    "instructions": [
+      "Marinate sliced chicken in soy sauce, ginger and garlic for 5 minutes.",
+      "Stir-fry chicken in a non-stick pan on medium-high heat for 7\u20138 minutes until cooked.",
+      "Add bok choy and cook a further 2 minutes until wilted.",
+      "Serve over jasmine rice."
+    ],
+    "totalMacros": {
+      "calories": 510,
+      "proteinG": 58.7,
+      "carbsG": 50,
+      "fatG": 6
+    }
+  },
+  {
+    "id": "mexican-chicken-rice-bowl-cut",
+    "name": "Mexican Cumin Chicken Rice Bowl",
+    "description": "Cumin chili chicken breast with tomato rice, corn and black beans \u2014 bold flavour with lean macros.",
+    "goal": "cut",
+    "mealType": "lunch",
+    "prepTimeMins": 10,
+    "cookTimeMins": 20,
+    "tags": [
+      "high-protein",
+      "meal-prep",
+      "chicken-breast",
+      "cutting"
+    ],
+    "ingredients": [
+      {
+        "name": "Chicken breast, diced",
+        "amount": "250g",
+        "calories": 275,
+        "proteinG": 51,
+        "carbsG": 0,
+        "fatG": 6
+      },
+      {
+        "name": "White rice, cooked",
+        "amount": "150g",
+        "calories": 195,
+        "proteinG": 4,
+        "carbsG": 43,
+        "fatG": 0
+      },
+      {
+        "name": "Corn kernels",
+        "amount": "30g",
+        "calories": 24,
+        "proteinG": 0.9,
+        "carbsG": 5,
+        "fatG": 0.3
+      },
+      {
+        "name": "Black beans, rinsed",
+        "amount": "30g",
+        "calories": 33,
+        "proteinG": 2,
+        "carbsG": 6,
+        "fatG": 0
+      },
+      {
+        "name": "Cumin",
+        "amount": "1 tsp",
+        "calories": 4,
+        "proteinG": 0,
+        "carbsG": 0.5,
+        "fatG": 0
+      },
+      {
+        "name": "Chili powder",
+        "amount": "1 tsp",
+        "calories": 4,
+        "proteinG": 0,
+        "carbsG": 0.5,
+        "fatG": 0
+      },
+      {
+        "name": "Garlic powder",
+        "amount": "1 tsp",
+        "calories": 4,
+        "proteinG": 0,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Lime, juiced",
+        "amount": "1",
+        "calories": 11,
+        "proteinG": 0,
+        "carbsG": 3.7,
+        "fatG": 0
+      },
+      {
+        "name": "Salt",
+        "amount": "to taste",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      }
+    ],
+    "instructions": [
+      "Season diced chicken with cumin, chili powder, garlic powder and salt.",
+      "Cook chicken in a non-stick pan on medium-high heat for 8\u201310 minutes.",
+      "Cook rice with a splash of tomato paste for colour and flavour.",
+      "Stir corn and black beans into warm rice.",
+      "Squeeze lime over everything, top rice with chicken and serve."
+    ],
+    "totalMacros": {
+      "calories": 550,
+      "proteinG": 57.9,
+      "carbsG": 59.7,
+      "fatG": 6.3
+    }
+  },
+  {
+    "id": "mediterranean-chicken-bowl-cut",
+    "name": "Mediterranean Za'atar Chicken Bowl",
+    "description": "Za'atar-spiced chicken breast baked with rice, grilled zucchini and cherry tomatoes \u2014 clean Mediterranean cut meal.",
+    "goal": "cut",
+    "mealType": "lunch",
+    "prepTimeMins": 10,
+    "cookTimeMins": 25,
+    "tags": [
+      "high-protein",
+      "meal-prep",
+      "chicken-breast",
+      "cutting"
+    ],
+    "ingredients": [
+      {
+        "name": "Chicken breast, uncooked",
+        "amount": "250g",
+        "calories": 275,
+        "proteinG": 51,
+        "carbsG": 0,
+        "fatG": 6
+      },
+      {
+        "name": "White rice, cooked",
+        "amount": "150g",
+        "calories": 195,
+        "proteinG": 4,
+        "carbsG": 43,
+        "fatG": 0
+      },
+      {
+        "name": "Zucchini, sliced",
+        "amount": "150g",
+        "calories": 25,
+        "proteinG": 2,
+        "carbsG": 5,
+        "fatG": 0
+      },
+      {
+        "name": "Cherry tomatoes",
+        "amount": "100g",
+        "calories": 18,
+        "proteinG": 0.9,
+        "carbsG": 3.9,
+        "fatG": 0
+      },
+      {
+        "name": "Za'atar spice",
+        "amount": "1 tsp",
+        "calories": 5,
+        "proteinG": 0,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Lemon juice",
+        "amount": "1 tbsp",
+        "calories": 4,
+        "proteinG": 0,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Olive oil",
+        "amount": "0.5 tsp",
+        "calories": 20,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 2.3
+      },
+      {
+        "name": "Salt and pepper",
+        "amount": "to taste",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      }
+    ],
+    "instructions": [
+      "Rub chicken with za'atar, lemon juice, salt and pepper.",
+      "Oven-bake chicken at 200\u00b0C for 20\u201325 minutes.",
+      "Grill or pan-cook zucchini and cherry tomatoes with a tiny drizzle of olive oil until softened.",
+      "Serve sliced chicken over rice with vegetables on the side."
+    ],
+    "totalMacros": {
+      "calories": 542,
+      "proteinG": 57.9,
+      "carbsG": 53.9,
+      "fatG": 8.3
+    }
+  },
+  {
+    "id": "bbq-chicken-sweet-potato-cut",
+    "name": "BBQ Chicken & Sweet Potato",
+    "description": "Sugar-free BBQ glazed chicken breast oven-baked with whole sweet potato and steamed broccoli.",
+    "goal": "cut",
+    "mealType": "lunch",
+    "prepTimeMins": 5,
+    "cookTimeMins": 45,
+    "tags": [
+      "high-protein",
+      "meal-prep",
+      "chicken-breast",
+      "cutting"
+    ],
+    "ingredients": [
+      {
+        "name": "Chicken breast, uncooked",
+        "amount": "250g",
+        "calories": 275,
+        "proteinG": 51,
+        "carbsG": 0,
+        "fatG": 6
+      },
+      {
+        "name": "Sweet potato, baked whole",
+        "amount": "200g",
+        "calories": 172,
+        "proteinG": 3.2,
+        "carbsG": 40,
+        "fatG": 0
+      },
+      {
+        "name": "Sugar-free BBQ sauce",
+        "amount": "2 tbsp",
+        "calories": 20,
+        "proteinG": 0,
+        "carbsG": 4,
+        "fatG": 0
+      },
+      {
+        "name": "Smoked paprika",
+        "amount": "1 tsp",
+        "calories": 3,
+        "proteinG": 0,
+        "carbsG": 0.5,
+        "fatG": 0
+      },
+      {
+        "name": "Garlic powder",
+        "amount": "1 tsp",
+        "calories": 4,
+        "proteinG": 0,
+        "carbsG": 1,
+        "fatG": 0
+      },
+      {
+        "name": "Broccoli, steamed",
+        "amount": "100g",
+        "calories": 34,
+        "proteinG": 2.8,
+        "carbsG": 6.6,
+        "fatG": 0
+      },
+      {
+        "name": "Salt and pepper",
+        "amount": "to taste",
+        "calories": 0,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 0
+      }
+    ],
+    "instructions": [
+      "Poke sweet potato with a fork and bake whole at 200\u00b0C for 40\u201345 minutes.",
+      "Coat chicken breast with BBQ sauce, smoked paprika, garlic powder, salt and pepper.",
+      "Oven-bake chicken at 190\u00b0C for 25 minutes.",
+      "Steam broccoli for 5 minutes.",
+      "Serve chicken alongside sweet potato and broccoli."
+    ],
+    "totalMacros": {
+      "calories": 508,
+      "proteinG": 57,
+      "carbsG": 52.1,
+      "fatG": 6
+    }
+  },
+  {
+    "id": "teriyaki-chicken-rice-bowl-cut",
+    "name": "Teriyaki Chicken Rice Bowl",
+    "description": "No-oil teriyaki chicken breast with soy, honey and ginger over rice with shredded cabbage and carrot slaw.",
+    "goal": "cut",
+    "mealType": "lunch",
+    "prepTimeMins": 10,
+    "cookTimeMins": 15,
+    "tags": [
+      "high-protein",
+      "meal-prep",
+      "chicken-breast",
+      "cutting",
+      "quick"
+    ],
+    "ingredients": [
+      {
+        "name": "Chicken breast, sliced thin",
+        "amount": "250g",
+        "calories": 275,
+        "proteinG": 51,
+        "carbsG": 0,
+        "fatG": 6
+      },
+      {
+        "name": "White rice, cooked",
+        "amount": "150g",
+        "calories": 195,
+        "proteinG": 4,
+        "carbsG": 43,
+        "fatG": 0
+      },
+      {
+        "name": "Low-sodium soy sauce",
+        "amount": "2 tsp",
+        "calories": 6,
+        "proteinG": 0.6,
+        "carbsG": 0.8,
+        "fatG": 0
+      },
+      {
+        "name": "Honey",
+        "amount": "1 tsp",
+        "calories": 21,
+        "proteinG": 0,
+        "carbsG": 5.8,
+        "fatG": 0
+      },
+      {
+        "name": "Ginger, grated",
+        "amount": "1 tsp",
+        "calories": 2,
+        "proteinG": 0,
+        "carbsG": 0.5,
+        "fatG": 0
+      },
+      {
+        "name": "Garlic, minced",
+        "amount": "2 cloves",
+        "calories": 8,
+        "proteinG": 0.3,
+        "carbsG": 2,
+        "fatG": 0
+      },
+      {
+        "name": "Shredded cabbage",
+        "amount": "100g",
+        "calories": 25,
+        "proteinG": 1.3,
+        "carbsG": 5.8,
+        "fatG": 0
+      },
+      {
+        "name": "Shredded carrot",
+        "amount": "50g",
+        "calories": 20,
+        "proteinG": 0.5,
+        "carbsG": 4.7,
+        "fatG": 0
+      },
+      {
+        "name": "Rice vinegar",
+        "amount": "1 tbsp",
+        "calories": 3,
+        "proteinG": 0,
+        "carbsG": 0.5,
+        "fatG": 0
+      },
+      {
+        "name": "Olive oil",
+        "amount": "1 tsp",
+        "calories": 40,
+        "proteinG": 0,
+        "carbsG": 0,
+        "fatG": 4.5
+      }
+    ],
+    "instructions": [
+      "Mix soy sauce, honey, ginger and garlic to make teriyaki sauce.",
+      "Cook sliced chicken in a non-stick pan on medium heat with no oil, pour sauce over.",
+      "Cook 7\u20138 minutes until chicken is glazed and cooked through.",
+      "Toss cabbage and carrot with rice vinegar and olive oil for a quick slaw.",
+      "Serve chicken and slaw over rice."
+    ],
+    "totalMacros": {
+      "calories": 595,
+      "proteinG": 57.7,
+      "carbsG": 62.1,
+      "fatG": 10.5
+    }
+  }
+]

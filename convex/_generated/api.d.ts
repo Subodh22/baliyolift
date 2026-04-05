@@ -26,6 +26,7 @@ import type * as seed from "../seed.js";
 import type * as sets from "../sets.js";
 import type * as templates from "../templates.js";
 import type * as userProfile from "../userProfile.js";
+import type * as userRecipes from "../userRecipes.js";
 import type * as users from "../users.js";
 import type * as weightTracking from "../weightTracking.js";
 import type * as workouts from "../workouts.js";
@@ -55,6 +56,7 @@ declare const fullApi: ApiFromModules<{
   sets: typeof sets;
   templates: typeof templates;
   userProfile: typeof userProfile;
+  userRecipes: typeof userRecipes;
   users: typeof users;
   weightTracking: typeof weightTracking;
   workouts: typeof workouts;

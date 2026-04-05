@@ -52,10 +52,10 @@ async function callMutation(convexUrl, fnPath, args) {
 
 const args = process.argv.slice(2);
 const overwrite = args.includes("--overwrite");
-const clear     = args.includes("--clear");
+const clear = args.includes("--clear");
 
 const convexUrl = await getConvexUrl();
-const recipes   = JSON.parse(await readFile(resolve(ROOT, "data/recipes.json"), "utf8"));
+const recipes = JSON.parse(await readFile(resolve(ROOT, "data/rr.json"), "utf8"));
 
 console.log(`Convex: ${convexUrl}`);
 console.log(`Recipes to import: ${recipes.length}`);

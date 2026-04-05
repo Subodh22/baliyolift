@@ -1,6 +1,6 @@
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
-  Modal, Pressable, ActivityIndicator, Platform,
+  Modal, Pressable, ActivityIndicator, Platform, Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
@@ -8,6 +8,7 @@ import { useState, useMemo } from "react";
 import { useRouter } from "expo-router";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { P } from "@/constants/colors";
 import { CG, CG_ITALIC, OUT_L, OUT } from "@/constants/typography";
@@ -24,12 +25,13 @@ const C_FAT     = "#E88C35";
 function round1(n: number) { return Math.round(n * 10) / 10; }
 
 // ── Goal tab definitions ──────────────────────────────────────────────────
-type GoalFilter = "all" | GoalType;
+type GoalFilter = "all" | GoalType | "mine";
 const GOAL_TABS: { key: GoalFilter; label: string }[] = [
   { key: "all",      label: "ALL"      },
   { key: "cut",      label: "CUT"      },
   { key: "bulk",     label: "BULK"     },
   { key: "maintain", label: "MAINTAIN" },
+  { key: "mine",     label: "MY MEALS" },
 ];
 
 // ── Meal type filter chips ─────────────────────────────────────────────────
@@ -79,11 +81,15 @@ function MacroPill({ label, value, color, unit = "g" }: { label: string; value: 
 function RecipeCard({
   recipe,
   saved,
+  isUserRecipe,
   onPress,
+  onToggleStar,
 }: {
   recipe: Recipe;
   saved: boolean;
+  isUserRecipe: boolean;
   onPress: () => void;
+  onToggleStar: () => void;
 }) {
   const m = recipe.totalMacros;
   return (
@@ -93,7 +99,18 @@ function RecipeCard({
         <View style={s.cardTop}>
           <GoalBadge goal={recipe.goal} />
           <Text style={s.cardMealType}>{MEAL_TYPE_LABELS[recipe.mealType].toUpperCase()}</Text>
-          {saved && <Text style={s.savedIcon}>♥</Text>}
+          {!isUserRecipe && (
+            <TouchableOpacity
+              onPress={e => { e.stopPropagation(); onToggleStar(); }}
+              hitSlop={12}
+              style={s.starBtn}
+            >
+              <Text style={[s.starIcon, saved && s.starIconActive]}>
+                {saved ? "★" : "☆"}
+              </Text>
+            </TouchableOpacity>
+          )}
+          {isUserRecipe && <Text style={s.myMealBadge}>MY MEAL</Text>}
         </View>
 
         {/* Name + description */}
@@ -134,16 +151,20 @@ function RecipeCard({
 function RecipeDetail({
   recipe,
   saved,
+  isUserRecipe,
   onClose,
   onToggleSave,
   onLog,
+  onDelete,
   logging,
 }: {
   recipe: Recipe;
   saved: boolean;
+  isUserRecipe: boolean;
   onClose: () => void;
   onToggleSave: () => void;
   onLog: (mealType: "breakfast" | "lunch" | "dinner" | "snack") => void;
+  onDelete: () => void;
   logging: boolean;
 }) {
   const [showLogOptions, setShowLogOptions] = useState(false);
@@ -158,11 +179,17 @@ function RecipeDetail({
           <Text style={s.modalCloseText}>×</Text>
         </TouchableOpacity>
         <View style={{ flex: 1 }} />
-        <TouchableOpacity onPress={onToggleSave} hitSlop={12} style={s.saveBtn}>
-          <Text style={[s.saveBtnText, saved && { color: "#E05555" }]}>
-            {saved ? "♥" : "♡"}
-          </Text>
-        </TouchableOpacity>
+        {isUserRecipe ? (
+          <TouchableOpacity onPress={onDelete} hitSlop={12} style={s.saveBtn}>
+            <Text style={[s.saveBtnText, { color: P.red }]}>⌫</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity onPress={onToggleSave} hitSlop={12} style={s.saveBtn}>
+            <Text style={[s.saveBtnText, saved && { color: P.gold }]}>
+              {saved ? "★" : "☆"}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <ScrollView contentContainerStyle={s.modalScroll} showsVerticalScrollIndicator={false}>
@@ -301,11 +328,13 @@ export default function MealPlansScreen() {
   const router = useRouter();
   const { userId } = useCurrentUser();
 
-  const savedIds     = useQuery(api.mealPlans.getSaved, userId ? { userId } : "skip") ?? [];
-  const convexRecipes = useQuery(api.mealPlans.listRecipes) ?? [];
-  const saveRecipe   = useMutation(api.mealPlans.save);
-  const unsaveRecipe = useMutation(api.mealPlans.unsave);
-  const addEntry     = useMutation(api.nutrition.addFoodEntry);
+  const savedIds      = useQuery(api.mealPlans.getSaved,        userId ? { userId } : "skip") ?? [];
+  const convexRecipes = useQuery(api.mealPlans.listRecipes)     ?? [];
+  const userRecipesRaw = useQuery(api.userRecipes.getUserRecipes, userId ? { userId } : "skip") ?? [];
+  const saveRecipe    = useMutation(api.mealPlans.save);
+  const unsaveRecipe  = useMutation(api.mealPlans.unsave);
+  const addEntry      = useMutation(api.nutrition.addFoodEntry);
+  const deleteUserRecipe = useMutation(api.userRecipes.deleteUserRecipe);
 
   const [goalFilter, setGoalFilter] = useState<GoalFilter>("all");
   const [mealFilter, setMealFilter] = useState<MealFilter>("all");
@@ -314,7 +343,7 @@ export default function MealPlansScreen() {
 
   const savedSet = useMemo(() => new Set(savedIds), [savedIds]);
 
-  const allRecipes = useMemo<Recipe[]>(() =>
+  const globalRecipes = useMemo<Recipe[]>(() =>
     convexRecipes.map(r => ({
       id:           r.recipeId,
       name:         r.name,
@@ -337,13 +366,48 @@ export default function MealPlansScreen() {
     })),
   [convexRecipes]);
 
+  const userRecipes = useMemo<Recipe[]>(() =>
+    userRecipesRaw.map(r => ({
+      id:           `user:${r._id}`,
+      name:         r.name,
+      description:  r.description,
+      goal:         r.goal,
+      mealType:     r.mealType as MealType,
+      prepTimeMins: r.prepTimeMins,
+      cookTimeMins: r.cookTimeMins,
+      tags:         r.tags,
+      ingredients:  r.ingredients,
+      instructions: r.instructions,
+      totalMacros:  r.totalMacros,
+    })),
+  [userRecipesRaw]);
+
   const filtered = useMemo(() => {
-    return allRecipes.filter(r => {
+    if (goalFilter === "mine") {
+      const starred = globalRecipes.filter(r => savedSet.has(r.id));
+      return [...userRecipes, ...starred];
+    }
+    return globalRecipes.filter(r => {
       if (goalFilter !== "all" && r.goal !== goalFilter) return false;
       if (mealFilter !== "all" && r.mealType !== mealFilter) return false;
       return true;
     });
-  }, [allRecipes, goalFilter, mealFilter]);
+  }, [globalRecipes, userRecipes, savedSet, goalFilter, mealFilter]);
+
+  const handleDeleteUserMeal = (recipe: Recipe) => {
+    if (!userId) return;
+    Alert.alert("Delete meal?", recipe.name, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete", style: "destructive",
+        onPress: async () => {
+          const docId = recipe.id.replace("user:", "") as Id<"userRecipes">;
+          await deleteUserRecipe({ userId, recipeDocId: docId });
+          setSelected(null);
+        },
+      },
+    ]);
+  };
 
   const handleToggleSave = async () => {
     if (!userId || !selected) return;
@@ -391,12 +455,21 @@ export default function MealPlansScreen() {
             <Text style={s.eyebrow}>NUTRITION</Text>
             <Text style={s.heroItalic}>Meal Plans.</Text>
           </View>
-          <TouchableOpacity
-            style={s.plannerBtn}
-            onPress={() => router.push("/meal-planner")}
-          >
-            <Text style={s.plannerBtnText}>WEEK PLAN</Text>
-          </TouchableOpacity>
+          {goalFilter === "mine" ? (
+            <TouchableOpacity
+              style={s.plannerBtn}
+              onPress={() => router.push("/create-meal")}
+            >
+              <Text style={s.plannerBtnText}>+ CREATE</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={s.plannerBtn}
+              onPress={() => router.push("/meal-planner")}
+            >
+              <Text style={s.plannerBtnText}>WEEK PLAN</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* ── Sticky filters ──────────────────────────────────────────── */}
@@ -417,40 +490,61 @@ export default function MealPlansScreen() {
             ))}
           </View>
 
-          {/* Meal type chips */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={s.chipsRow}
-          >
-            {MEAL_CHIPS.map(chip => (
-              <TouchableOpacity
-                key={chip.key}
-                style={[s.chip, mealFilter === chip.key && s.chipActive]}
-                onPress={() => setMealFilter(chip.key)}
-                activeOpacity={0.8}
-              >
-                <Text style={[s.chipText, mealFilter === chip.key && s.chipTextActive]}>
-                  {chip.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+          {/* Meal type chips — hidden on MY MEALS tab */}
+          {goalFilter !== "mine" && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={s.chipsRow}
+            >
+              {MEAL_CHIPS.map(chip => (
+                <TouchableOpacity
+                  key={chip.key}
+                  style={[s.chip, mealFilter === chip.key && s.chipActive]}
+                  onPress={() => setMealFilter(chip.key)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[s.chipText, mealFilter === chip.key && s.chipTextActive]}>
+                    {chip.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
         </View>
 
         {/* ── Recipe list ──────────────────────────────────────────────── */}
         <View style={s.listWrap}>
           {filtered.length === 0 ? (
-            <View style={s.empty}>
-              <Text style={s.emptyText}>No recipes match these filters.</Text>
-            </View>
+            goalFilter === "mine" ? (
+              <View style={s.empty}>
+                <Text style={s.emptyTitle}>No meals in your routine.</Text>
+                <Text style={s.emptySubtext}>Tap ☆ on any recipe to star it, or create your own.</Text>
+                <TouchableOpacity style={s.emptyCreateBtn} onPress={() => router.push("/create-meal")}>
+                  <Text style={s.emptyCreateBtnText}>+ CREATE MEAL</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={s.empty}>
+                <Text style={s.emptyText}>No recipes match these filters.</Text>
+              </View>
+            )
           ) : (
             filtered.map(recipe => (
               <RecipeCard
                 key={recipe.id}
                 recipe={recipe}
                 saved={savedSet.has(recipe.id)}
+                isUserRecipe={recipe.id.startsWith("user:")}
                 onPress={() => setSelected(recipe)}
+                onToggleStar={() => {
+                  if (!userId) return;
+                  if (savedSet.has(recipe.id)) {
+                    unsaveRecipe({ userId, recipeId: recipe.id });
+                  } else {
+                    saveRecipe({ userId, recipeId: recipe.id });
+                  }
+                }}
               />
             ))
           )}
@@ -468,9 +562,11 @@ export default function MealPlansScreen() {
           <RecipeDetail
             recipe={selected}
             saved={savedSet.has(selected.id)}
+            isUserRecipe={selected.id.startsWith("user:")}
             onClose={() => setSelected(null)}
             onToggleSave={handleToggleSave}
             onLog={handleLog}
+            onDelete={() => handleDeleteUserMeal(selected)}
             logging={logging}
           />
         )}
@@ -506,15 +602,22 @@ const s = StyleSheet.create({
   chipTextActive: { color: P.gold },
 
   // Recipe list
-  listWrap:     { paddingHorizontal: 20, paddingTop: 16, gap: 12 },
-  empty:        { paddingVertical: 60, alignItems: "center" },
-  emptyText:    { fontFamily: OUT_L, fontSize: 14, color: P.mid },
+  listWrap:       { paddingHorizontal: 20, paddingTop: 16, gap: 12 },
+  empty:          { paddingVertical: 60, alignItems: "center", gap: 10 },
+  emptyText:      { fontFamily: OUT_L, fontSize: 14, color: P.mid },
+  emptyTitle:     { fontFamily: CG, fontSize: 22, color: P.ink, letterSpacing: -0.3 },
+  emptySubtext:   { fontFamily: OUT_L, fontSize: 13, color: P.mid },
+  emptyCreateBtn: { marginTop: 8, borderWidth: StyleSheet.hairlineWidth, borderColor: P.gold, paddingHorizontal: 24, paddingVertical: 12 },
+  emptyCreateBtnText: { fontFamily: OUT_L, fontSize: 10, letterSpacing: 2, color: P.gold, textTransform: "uppercase" },
 
   // Recipe card
   card:         { backgroundColor: P.s1, borderWidth: StyleSheet.hairlineWidth, borderColor: P.border, padding: 18, gap: 10 },
   cardTop:      { flexDirection: "row", alignItems: "center", gap: 8 },
   cardMealType: { fontFamily: OUT_L, fontSize: 9, letterSpacing: 2, color: P.mid },
-  savedIcon:    { marginLeft: "auto", fontSize: 14, color: "#E05555" },
+  starBtn:      { marginLeft: "auto", padding: 2 },
+  starIcon:     { fontSize: 18, color: P.dim },
+  starIconActive: { color: P.gold },
+  myMealBadge:  { marginLeft: "auto", fontFamily: OUT_L, fontSize: 8, letterSpacing: 2, color: P.gold, borderWidth: StyleSheet.hairlineWidth, borderColor: P.gold, paddingHorizontal: 6, paddingVertical: 2 },
   cardName:     { fontFamily: CG, fontSize: 22, color: P.ink, letterSpacing: -0.3 },
   cardDesc:     { fontFamily: OUT_L, fontSize: 12, color: P.mid, lineHeight: 18 },
   cardMacroRow: { flexDirection: "row", alignItems: "center", gap: 14, marginTop: 4 },
