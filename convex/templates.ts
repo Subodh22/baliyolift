@@ -763,17 +763,9 @@ export const createJeffNippardTemplate = mutation({
 });
 
 /**
- * Sam Sulek "Plan A" rotating split.
- *
- * The original plan rotates over 8 training days. Sessions in this app map to a
- * day of the week, and there are only 7 unique days — so the 8th session can't
- * get its own slot (two sessions collide on the same dayOfWeek). We condense to
- * 7 days by dropping the SECOND Hamstrings & Quads day (original Day 7); the
- * original Day 3 already covers that, so nothing unique is lost.
- *
- * Exercises are kept EXACTLY as written in the plan. Any movement not already in
- * the library is created on the fly (as a custom exercise) so every name matches
- * the plan 1:1 instead of being swapped for a similarly-named seed exercise.
+ * Sam Sulek 8-day rotating split — train every day, rest only when needed.
+ * Back/Rear Delts · Bi/Tri · Hams/Quads · Chest/Side Delts (×2 rotation).
+ * Exercises are findOrCreate'd so the template works even on an unseeded library.
  */
 export const createSamSulekTemplate = mutation({
   args: {
@@ -783,155 +775,161 @@ export const createSamSulekTemplate = mutation({
   handler: async (ctx, args) => {
     const weeks = args.weeks ?? 5;
 
-    // Resolve an exercise by exact (case-insensitive) name, creating it if it
-    // doesn't exist. Cached by name so repeated names (e.g. finishers, or the
-    // same movement across days) resolve to a single library row.
-    const existing = await ctx.db.query("exercises").collect();
+    // Resolve an exercise by exact name (case-insensitive); create it if missing.
+    // Fetch the library once and keep an in-memory name→id map so repeats and
+    // newly-created exercises resolve without re-querying.
+    const all = await ctx.db.query("exercises").collect();
     const byName = new Map<string, any>();
-    for (const e of existing) byName.set(e.name.toLowerCase(), e._id);
+    for (const e of all) byName.set(e.name.toLowerCase(), e._id);
 
-    const findOrCreateEx = async (
-      name: string,
-      muscleGroup: string,
-      equipment: string,
-      sfr: string,
-    ): Promise<any> => {
-      const key = name.toLowerCase();
-      const cached = byName.get(key);
-      if (cached) return cached;
+    const findOrCreate = async (exDef: {
+      name: string;
+      muscleGroup: any;
+      equipment: any;
+      sfr: any;
+    }) => {
+      const key = exDef.name.toLowerCase();
+      const existing = byName.get(key);
+      if (existing) return existing;
       const id = await ctx.db.insert("exercises", {
-        name,
-        muscleGroup: muscleGroup as any,
-        equipment: equipment as any,
-        sfr: sfr as any,
-        isCustom: true,
-        userId: args.userId,
+        name: exDef.name,
+        muscleGroup: exDef.muscleGroup,
+        equipment: exDef.equipment,
+        sfr: exDef.sfr,
+        isCustom: false,
       });
       byName.set(key, id);
       return id;
     };
 
-    // ─── Session definitions (7 days, Mon→Sun) ────────────────────────────────
-    // Each exercise: [name, muscleGroup, equipment, sfr, targetSets, repMin, repMax]
-    type ExDef = [string, string, string, string, number, number, number];
-    const sessionDefs: {
-      name: string;
-      dayOfWeek: number;
-      order: number;
-      muscleGroups: string[];
-      exercises: ExDef[];
-    }[] = [
+    // mg = muscleGroup, eq = equipment. Reps/sets parsed from Sam's table;
+    // "Failure" finishers are modelled as a single all-out set.
+    const sessionDefs = [
       {
         name: "Back & Rear Delts",
-        dayOfWeek: 1, // Mon — original Day 1
+        dayOfWeek: 1,
         order: 0,
         muscleGroups: ["back", "shoulders"],
         exercises: [
-          ["Shoulder-width Grip Front Pull-down", "back", "cable", "high", 3, 12, 15],
-          ["Wider Hammer Grip Pull-down", "back", "cable", "high", 3, 10, 12],
-          ["Machine Low Row", "back", "machine", "high", 3, 12, 15],
-          ["Machine Lat Pullover", "back", "machine", "medium", 3, 12, 15],
-          ["Seated Low Cable Row", "back", "cable", "high", 3, 12, 15],
-          ["Lying Face Pull", "shoulders", "cable", "medium", 3, 10, 12],
+          { name: "Shoulder-width Grip Front Pull-down", mg: "back",      eq: "cable",   sfr: "high",   repRangeMin: 12, repRangeMax: 15, targetSets: 3, setType: "regular" as const },
+          { name: "Wider Hammer Grip Pull-down",         mg: "back",      eq: "cable",   sfr: "high",   repRangeMin: 10, repRangeMax: 12, targetSets: 3, setType: "regular" as const },
+          { name: "Machine Low Row",                     mg: "back",      eq: "machine", sfr: "high",   repRangeMin: 12, repRangeMax: 15, targetSets: 3, setType: "regular" as const },
+          { name: "Machine Lat Pullover",                mg: "back",      eq: "machine", sfr: "high",   repRangeMin: 12, repRangeMax: 15, targetSets: 3, setType: "regular" as const },
+          { name: "Seated Low Cable Row",                mg: "back",      eq: "cable",   sfr: "high",   repRangeMin: 12, repRangeMax: 15, targetSets: 3, setType: "regular" as const },
+          { name: "Lying Face Pull",                     mg: "shoulders", eq: "cable",   sfr: "high",   repRangeMin: 10, repRangeMax: 12, targetSets: 3, setType: "regular" as const },
         ],
       },
       {
         name: "Biceps & Triceps",
-        dayOfWeek: 2, // Tue — original Day 2
+        dayOfWeek: 2,
         order: 1,
         muscleGroups: ["biceps", "triceps"],
         exercises: [
-          ["Cross Cable Triceps Extension", "triceps", "cable", "medium", 3, 12, 15],
-          ["Machine Dips", "triceps", "machine", "high", 3, 10, 12],
-          ["Triceps Press Downs", "triceps", "cable", "medium", 3, 12, 15],
-          ["Alternating Dumbbell Curls", "biceps", "dumbbell", "high", 3, 8, 10],
-          ["Seated Machine Biceps Curls", "biceps", "machine", "medium", 3, 12, 15],
-          ["Standard Barbell Curl", "biceps", "barbell", "high", 3, 10, 12],
-          ["Alternating DB Curls (Finisher)", "biceps", "dumbbell", "medium", 3, 8, 10],
+          { name: "Cross Cable Triceps Extension",       mg: "triceps", eq: "cable",    sfr: "high",   repRangeMin: 12, repRangeMax: 15, targetSets: 3, setType: "regular" as const },
+          { name: "Machine Dips",                        mg: "triceps", eq: "machine",  sfr: "high",   repRangeMin: 10, repRangeMax: 12, targetSets: 3, setType: "regular" as const },
+          { name: "Triceps Press Downs",                 mg: "triceps", eq: "cable",    sfr: "high",   repRangeMin: 12, repRangeMax: 15, targetSets: 3, setType: "regular" as const },
+          { name: "Alternating Dumbbell Curls",          mg: "biceps",  eq: "dumbbell", sfr: "high",   repRangeMin: 8,  repRangeMax: 10, targetSets: 3, setType: "regular" as const },
+          { name: "Seated Machine Biceps Curls",         mg: "biceps",  eq: "machine",  sfr: "high",   repRangeMin: 12, repRangeMax: 15, targetSets: 3, setType: "regular" as const },
+          { name: "Standard Barbell Curl",               mg: "biceps",  eq: "barbell",  sfr: "medium", repRangeMin: 10, repRangeMax: 12, targetSets: 3, setType: "regular" as const },
+          { name: "Alternating DB Curls (finisher)",     mg: "biceps",  eq: "dumbbell", sfr: "high",   repRangeMin: 8,  repRangeMax: 10, targetSets: 3, setType: "regular" as const },
         ],
       },
       {
         name: "Hamstrings & Quads",
-        dayOfWeek: 3, // Wed — original Day 3
+        dayOfWeek: 3,
         order: 2,
         muscleGroups: ["hamstrings", "quads"],
         exercises: [
-          ["Lying Leg Curl", "hamstrings", "machine", "high", 4, 12, 15],
-          ["Unilateral Leg Extension", "quads", "machine", "medium", 3, 12, 15],
-          ["Bilateral Leg Extension (Finisher)", "quads", "machine", "medium", 1, 12, 20],
-          ["Heel Elevated Back Squat", "quads", "barbell", "high", 4, 10, 12],
-          ["Unilateral Leg Extension (Finisher)", "quads", "machine", "medium", 1, 12, 20],
+          { name: "Lying Leg Curl",                      mg: "hamstrings", eq: "machine", sfr: "high",   repRangeMin: 12, repRangeMax: 15, targetSets: 4, setType: "regular" as const },
+          { name: "Unilateral Leg Extension",            mg: "quads",      eq: "machine", sfr: "high",   repRangeMin: 12, repRangeMax: 15, targetSets: 3, setType: "regular" as const },
+          { name: "Bilateral Leg Extension (finisher)",  mg: "quads",      eq: "machine", sfr: "high",   repRangeMin: 12, repRangeMax: 15, targetSets: 1, setType: "regular" as const },
+          { name: "Heel Elevated Back Squat",            mg: "quads",      eq: "barbell", sfr: "medium", repRangeMin: 10, repRangeMax: 12, targetSets: 4, setType: "regular" as const },
+          { name: "Unilateral Leg Extension (finisher)", mg: "quads",      eq: "machine", sfr: "high",   repRangeMin: 12, repRangeMax: 15, targetSets: 1, setType: "regular" as const },
         ],
       },
       {
-        name: "Chest & Side Delts (A)",
-        dayOfWeek: 4, // Thu — original Day 4
+        name: "Chest & Side Delts",
+        dayOfWeek: 4,
         order: 3,
         muscleGroups: ["chest", "shoulders"],
         exercises: [
-          ["Incline Bench Press", "chest", "barbell", "high", 5, 10, 12],
-          ["Bent-Over Cable Chest Fly", "chest", "cable", "medium", 3, 10, 12],
-          ["Standing Cable Horizontal Fly", "chest", "cable", "medium", 3, 10, 12],
-          ["Machine Lateral Raises", "shoulders", "machine", "high", 3, 10, 12],
-          ["DB Side Delt Raises", "shoulders", "dumbbell", "high", 3, 8, 10],
+          { name: "Incline Bench Press",                 mg: "chest",     eq: "barbell",  sfr: "medium", repRangeMin: 10, repRangeMax: 12, targetSets: 5, setType: "regular" as const },
+          { name: "Bent-Over Cable Chest Fly",           mg: "chest",     eq: "cable",    sfr: "high",   repRangeMin: 10, repRangeMax: 12, targetSets: 3, setType: "regular" as const },
+          { name: "Standing Cable Horizontal Fly",       mg: "chest",     eq: "cable",    sfr: "high",   repRangeMin: 10, repRangeMax: 12, targetSets: 3, setType: "regular" as const },
+          { name: "Machine Lateral Raises",              mg: "shoulders", eq: "machine",  sfr: "high",   repRangeMin: 10, repRangeMax: 12, targetSets: 3, setType: "regular" as const },
+          { name: "DB Side Delt Raises",                 mg: "shoulders", eq: "dumbbell", sfr: "high",   repRangeMin: 8,  repRangeMax: 10, targetSets: 3, setType: "regular" as const },
         ],
       },
       {
         name: "Back, Rear Delts & Calves",
-        dayOfWeek: 5, // Fri — original Day 5
+        dayOfWeek: 5,
         order: 4,
         muscleGroups: ["back", "shoulders", "calves"],
         exercises: [
-          ["Seated Cable Row (Shoulder-width Grip)", "back", "cable", "high", 4, 10, 15],
-          ["One-arm Straight Arm Lat Pulldown", "back", "cable", "medium", 2, 10, 10],
-          ["Wide Grip Seated Cable Row", "back", "cable", "high", 3, 10, 12],
-          ["Single-arm Lat Pulldown", "back", "cable", "medium", 1, 10, 10],
-          ["Shoulder-width Cable Row (Finisher)", "back", "cable", "high", 1, 10, 15],
-          ["Lying Face Pull", "shoulders", "cable", "medium", 4, 10, 12],
-          ["Seated Calf Raises", "calves", "machine", "medium", 4, 10, 15],
+          { name: "Seated Cable Row (shoulder-width grip)", mg: "back",      eq: "cable",   sfr: "high",   repRangeMin: 10, repRangeMax: 15, targetSets: 4, setType: "regular" as const },
+          { name: "One-arm Straight Arm Lat Pulldown",      mg: "back",      eq: "cable",   sfr: "high",   repRangeMin: 10, repRangeMax: 10, targetSets: 2, setType: "regular" as const },
+          { name: "Wide Grip Seated Cable Row",             mg: "back",      eq: "cable",   sfr: "high",   repRangeMin: 10, repRangeMax: 12, targetSets: 3, setType: "regular" as const },
+          { name: "Single-arm Lat Pulldown",                mg: "back",      eq: "cable",   sfr: "high",   repRangeMin: 10, repRangeMax: 10, targetSets: 1, setType: "regular" as const },
+          { name: "Shoulder-width Cable Row (finisher)",    mg: "back",      eq: "cable",   sfr: "high",   repRangeMin: 10, repRangeMax: 12, targetSets: 1, setType: "regular" as const },
+          { name: "Lying Face Pull",                        mg: "shoulders", eq: "cable",   sfr: "high",   repRangeMin: 10, repRangeMax: 12, targetSets: 4, setType: "regular" as const },
+          { name: "Seated Calf Raises",                     mg: "calves",    eq: "machine", sfr: "high",   repRangeMin: 10, repRangeMax: 15, targetSets: 4, setType: "regular" as const },
         ],
       },
       {
         name: "Triceps & Biceps",
-        dayOfWeek: 6, // Sat — original Day 6
+        dayOfWeek: 6,
         order: 5,
         muscleGroups: ["triceps", "biceps"],
         exercises: [
-          ["Cross Body Cable Tricep Extension", "triceps", "cable", "medium", 3, 12, 15],
-          ["Single-arm Overhead Triceps Extension", "triceps", "cable", "medium", 2, 10, 10],
-          ["Machine Dips (Finisher)", "triceps", "machine", "high", 1, 10, 12],
-          ["Triceps Bar Press Down", "triceps", "cable", "medium", 2, 8, 10],
-          ["Alternating DB Biceps Curls", "biceps", "dumbbell", "high", 2, 12, 15],
-          ["Standard Barbell Curl (Finisher)", "biceps", "barbell", "high", 2, 10, 12],
-          ["Single-arm Cable Curls", "biceps", "cable", "medium", 2, 10, 12],
-          ["Alternating DB Biceps Curls (Finisher)", "biceps", "dumbbell", "medium", 2, 8, 8],
+          { name: "Cross Body Cable Tricep Extension",        mg: "triceps", eq: "cable",    sfr: "high",   repRangeMin: 12, repRangeMax: 15, targetSets: 3, setType: "regular" as const },
+          { name: "Single-arm Overhead Triceps Extension",    mg: "triceps", eq: "cable",    sfr: "high",   repRangeMin: 10, repRangeMax: 10, targetSets: 2, setType: "regular" as const },
+          { name: "Machine Dips (finisher)",                  mg: "triceps", eq: "machine",  sfr: "high",   repRangeMin: 10, repRangeMax: 12, targetSets: 1, setType: "regular" as const },
+          { name: "Triceps Bar Press Down",                   mg: "triceps", eq: "cable",    sfr: "high",   repRangeMin: 8,  repRangeMax: 10, targetSets: 2, setType: "regular" as const },
+          { name: "Alternating DB Biceps Curls",              mg: "biceps",  eq: "dumbbell", sfr: "high",   repRangeMin: 12, repRangeMax: 15, targetSets: 2, setType: "regular" as const },
+          { name: "Standard Barbell Curl (finisher)",         mg: "biceps",  eq: "barbell",  sfr: "medium", repRangeMin: 10, repRangeMax: 12, targetSets: 2, setType: "regular" as const },
+          { name: "Single-arm Cable Curls",                   mg: "biceps",  eq: "cable",    sfr: "high",   repRangeMin: 10, repRangeMax: 12, targetSets: 2, setType: "regular" as const },
+          { name: "Alternating DB Biceps Curls (finisher)",   mg: "biceps",  eq: "dumbbell", sfr: "high",   repRangeMin: 8,  repRangeMax: 8,  targetSets: 2, setType: "regular" as const },
         ],
       },
       {
-        name: "Chest & Side Delts (B)",
-        dayOfWeek: 0, // Sun — original Day 8
+        name: "Hamstrings & Quads",
+        dayOfWeek: 7,
         order: 6,
+        muscleGroups: ["hamstrings", "quads"],
+        exercises: [
+          { name: "Seated Leg Curls",                     mg: "hamstrings", eq: "machine", sfr: "high",   repRangeMin: 15, repRangeMax: 20, targetSets: 4, setType: "regular" as const },
+          { name: "Bilateral Leg Extension",              mg: "quads",      eq: "machine", sfr: "high",   repRangeMin: 15, repRangeMax: 20, targetSets: 2, setType: "regular" as const },
+          { name: "Single Leg Extension",                 mg: "quads",      eq: "machine", sfr: "high",   repRangeMin: 15, repRangeMax: 15, targetSets: 2, setType: "regular" as const },
+          { name: "Heel Elevated Back Squat",             mg: "quads",      eq: "barbell", sfr: "medium", repRangeMin: 8,  repRangeMax: 10, targetSets: 2, setType: "regular" as const },
+          { name: "Leg Extension",                        mg: "quads",      eq: "machine", sfr: "high",   repRangeMin: 10, repRangeMax: 12, targetSets: 1, setType: "regular" as const },
+          { name: "One-Legged Leg Extension (finisher)",  mg: "quads",      eq: "machine", sfr: "high",   repRangeMin: 10, repRangeMax: 12, targetSets: 1, setType: "regular" as const },
+        ],
+      },
+      {
+        name: "Chest & Side Delts",
+        dayOfWeek: 8,
+        order: 7,
         muscleGroups: ["chest", "shoulders"],
         exercises: [
-          ["Incline Bench Press", "chest", "barbell", "high", 4, 10, 12],
-          ["Bent-Over Cable Chest Fly", "chest", "cable", "medium", 3, 10, 12],
-          ["Standing Cable Horizontal Fly", "chest", "cable", "medium", 2, 10, 12],
-          ["Bent-Over Parallel Cable Fly", "chest", "cable", "medium", 2, 10, 12],
-          ["Machine Lateral Raises", "shoulders", "machine", "high", 2, 10, 12],
-          ["DB Side Delt Raises", "shoulders", "dumbbell", "high", 2, 8, 10],
+          { name: "Incline Bench Press",                 mg: "chest",     eq: "barbell",  sfr: "medium", repRangeMin: 10, repRangeMax: 12, targetSets: 4, setType: "regular" as const },
+          { name: "Bent-Over Cable Chest Fly",           mg: "chest",     eq: "cable",    sfr: "high",   repRangeMin: 10, repRangeMax: 12, targetSets: 3, setType: "regular" as const },
+          { name: "Standing Cable Horizontal Fly",       mg: "chest",     eq: "cable",    sfr: "high",   repRangeMin: 10, repRangeMax: 12, targetSets: 2, setType: "regular" as const },
+          { name: "Bent-Over Parallel Cable Fly",        mg: "chest",     eq: "cable",    sfr: "high",   repRangeMin: 10, repRangeMax: 12, targetSets: 2, setType: "regular" as const },
+          { name: "Machine Lateral Raises",              mg: "shoulders", eq: "machine",  sfr: "high",   repRangeMin: 10, repRangeMax: 12, targetSets: 2, setType: "regular" as const },
+          { name: "DB Side Delt Raises",                 mg: "shoulders", eq: "dumbbell", sfr: "high",   repRangeMin: 8,  repRangeMax: 10, targetSets: 3, setType: "regular" as const },
         ],
       },
     ];
 
     const volumeTargets = [
-      { muscleGroup: "back",       mev: 12, mav: 20, mrv: 28 },
-      { muscleGroup: "chest",      mev: 10, mav: 16, mrv: 22 },
-      { muscleGroup: "shoulders",  mev: 12, mav: 20, mrv: 28 },
-      { muscleGroup: "biceps",     mev: 10, mav: 18, mrv: 24 },
-      { muscleGroup: "triceps",    mev: 10, mav: 18, mrv: 24 },
-      { muscleGroup: "quads",      mev: 8,  mav: 14, mrv: 20 },
-      { muscleGroup: "hamstrings", mev: 6,  mav: 10, mrv: 16 },
-      { muscleGroup: "calves",     mev: 6,  mav: 12, mrv: 18 },
+      { muscleGroup: "back",       mev: 10, mav: 16, mrv: 22 },
+      { muscleGroup: "shoulders",  mev: 10, mav: 16, mrv: 22 },
+      { muscleGroup: "chest",      mev: 8,  mav: 14, mrv: 20 },
+      { muscleGroup: "biceps",     mev: 10, mav: 16, mrv: 20 },
+      { muscleGroup: "triceps",    mev: 10, mav: 16, mrv: 20 },
+      { muscleGroup: "quads",      mev: 10, mav: 16, mrv: 22 },
+      { muscleGroup: "hamstrings", mev: 8,  mav: 12, mrv: 18 },
+      { muscleGroup: "calves",     mev: 8,  mav: 12, mrv: 16 },
     ];
 
     // Pause any currently active mesocycle
@@ -943,7 +941,7 @@ export const createSamSulekTemplate = mutation({
 
     const mesoId = await ctx.db.insert("mesocycles", {
       userId: args.userId,
-      name: "Sam Sulek Rotating Split",
+      name: "Sam Sulek 8-Day Split",
       startDate: Date.now(),
       weeks,
       status: "active",
@@ -951,11 +949,16 @@ export const createSamSulekTemplate = mutation({
     });
 
     for (const def of sessionDefs) {
-      // Resolve (creating if needed) every exercise, preserving order + duplicates
-      const resolved: { id: any; sets: number; min: number; max: number }[] = [];
-      for (const [name, mg, eq, sfr, sets, min, max] of def.exercises) {
-        const id = await findOrCreateEx(name, mg, eq, sfr);
-        resolved.push({ id, sets, min, max });
+      // Resolve (and create if needed) every exercise in this day, preserving order + duplicates.
+      const resolved: { id: any; exDef: (typeof def.exercises)[number] }[] = [];
+      for (const exDef of def.exercises) {
+        const id = await findOrCreate({
+          name: exDef.name,
+          muscleGroup: exDef.mg,
+          equipment: exDef.eq,
+          sfr: exDef.sfr,
+        });
+        resolved.push({ id, exDef });
       }
 
       const sessionId = await ctx.db.insert("sessions", {
@@ -969,15 +972,15 @@ export const createSamSulekTemplate = mutation({
       });
 
       for (let i = 0; i < resolved.length; i++) {
-        const r = resolved[i];
+        const { id, exDef } = resolved[i];
         await ctx.db.insert("sessionExercises", {
           sessionId,
-          exerciseId: r.id,
+          exerciseId: id,
           order: i,
-          repRangeMin: r.min,
-          repRangeMax: r.max,
-          targetSets: r.sets,
-          setType: "regular",
+          repRangeMin: exDef.repRangeMin,
+          repRangeMax: exDef.repRangeMax,
+          targetSets: exDef.targetSets,
+          setType: exDef.setType,
         });
       }
     }

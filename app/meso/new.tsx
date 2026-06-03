@@ -164,20 +164,21 @@ const TEMPLATES = [
   },
   {
     id: "sam_sulek",
-    name: "Sam Sulek Rotating Split",
-    subtitle: "7 days · Back · Arms · Legs · Chest · Back · Arms · Chest",
+    name: "Sam Sulek 8-Day Split",
+    subtitle: "8 days · rotating · train every day",
     tag: "High Volume",
-    tagColor: "#FF453A",
-    description: "Sam Sulek's high-frequency rotating split run every day. Condensed from the 8-day rotation to 7 unique days (the second leg day is dropped). Push finishers to failure; add 30 min of LISS cardio each morning.",
+    tagColor: "#FF3B30",
+    description: "Sam Sulek's 8-day rotating split. Train every day, rest only when needed. Push finisher sets to failure. Pair with 30 min of LISS cardio each morning.",
     weeks: 5,
     sessions: [
-      { day: 1, name: "Back & Rear Delts", exercises: ["Shoulder-width Grip Front Pull-down", "Wider Hammer Grip Pull-down", "Machine Low Row", "Machine Lat Pullover", "Seated Low Cable Row", "Lying Face Pull"] },
-      { day: 2, name: "Biceps & Triceps", exercises: ["Cross Cable Triceps Extension", "Machine Dips", "Triceps Press Downs", "Alternating Dumbbell Curls", "Seated Machine Biceps Curls", "Standard Barbell Curl", "Alternating DB Curls (Finisher)"] },
-      { day: 3, name: "Hamstrings & Quads", exercises: ["Lying Leg Curl", "Unilateral Leg Extension", "Bilateral Leg Extension (Finisher)", "Heel Elevated Back Squat", "Unilateral Leg Extension (Finisher)"] },
-      { day: 4, name: "Chest & Side Delts (A)", exercises: ["Incline Bench Press", "Bent-Over Cable Chest Fly", "Standing Cable Horizontal Fly", "Machine Lateral Raises", "DB Side Delt Raises"] },
-      { day: 5, name: "Back, Rear Delts & Calves", exercises: ["Seated Cable Row (Shoulder-width Grip)", "One-arm Straight Arm Lat Pulldown", "Wide Grip Seated Cable Row", "Single-arm Lat Pulldown", "Shoulder-width Cable Row (Finisher)", "Lying Face Pull", "Seated Calf Raises"] },
-      { day: 6, name: "Triceps & Biceps", exercises: ["Cross Body Cable Tricep Extension", "Single-arm Overhead Triceps Extension", "Machine Dips (Finisher)", "Triceps Bar Press Down", "Alternating DB Biceps Curls", "Standard Barbell Curl (Finisher)", "Single-arm Cable Curls", "Alternating DB Biceps Curls (Finisher)"] },
-      { day: 0, name: "Chest & Side Delts (B)", exercises: ["Incline Bench Press", "Bent-Over Cable Chest Fly", "Standing Cable Horizontal Fly", "Bent-Over Parallel Cable Fly", "Machine Lateral Raises", "DB Side Delt Raises"] },
+      { day: 1, label: "Day 1", name: "Back & Rear Delts", exercises: ["Shoulder-width Grip Front Pull-down", "Wider Hammer Grip Pull-down", "Machine Low Row", "Machine Lat Pullover", "Seated Low Cable Row", "Lying Face Pull"] },
+      { day: 2, label: "Day 2", name: "Biceps & Triceps", exercises: ["Cross Cable Triceps Extension", "Machine Dips", "Triceps Press Downs", "Alternating Dumbbell Curls", "Seated Machine Biceps Curls", "Standard Barbell Curl", "Alternating DB Curls (finisher)"] },
+      { day: 3, label: "Day 3", name: "Hamstrings & Quads", exercises: ["Lying Leg Curl", "Unilateral Leg Extension", "Bilateral Leg Extension (finisher)", "Heel Elevated Back Squat", "Unilateral Leg Extension (finisher)"] },
+      { day: 4, label: "Day 4", name: "Chest & Side Delts", exercises: ["Incline Bench Press", "Bent-Over Cable Chest Fly", "Standing Cable Horizontal Fly", "Machine Lateral Raises", "DB Side Delt Raises"] },
+      { day: 5, label: "Day 5", name: "Back, Rear Delts & Calves", exercises: ["Seated Cable Row (shoulder-width grip)", "One-arm Straight Arm Lat Pulldown", "Wide Grip Seated Cable Row", "Single-arm Lat Pulldown", "Shoulder-width Cable Row (finisher)", "Lying Face Pull", "Seated Calf Raises"] },
+      { day: 6, label: "Day 6", name: "Triceps & Biceps", exercises: ["Cross Body Cable Tricep Extension", "Single-arm Overhead Triceps Extension", "Machine Dips (finisher)", "Triceps Bar Press Down", "Alternating DB Biceps Curls", "Standard Barbell Curl (finisher)", "Single-arm Cable Curls", "Alternating DB Biceps Curls (finisher)"] },
+      { day: 7, label: "Day 7", name: "Hamstrings & Quads", exercises: ["Seated Leg Curls", "Bilateral Leg Extension", "Single Leg Extension", "Heel Elevated Back Squat", "Leg Extension", "One-Legged Leg Extension (finisher)"] },
+      { day: 8, label: "Day 8", name: "Chest & Side Delts", exercises: ["Incline Bench Press", "Bent-Over Cable Chest Fly", "Standing Cable Horizontal Fly", "Bent-Over Parallel Cable Fly", "Machine Lateral Raises", "DB Side Delt Raises"] },
     ],
   },
   {
@@ -248,7 +249,7 @@ function TemplateConfirmSheet({ template, onConfirm, onCancel, loading, colors, 
                 <View key={idx} style={[confirmStyles.sessionCard, { borderBottomColor: colors.separator }]}>
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 }}>
                     <Text style={{ fontSize: 10, color: colors.accent, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: "700", minWidth: 28 }}>
-                      {template.rotating ? `D${idx + 1}` : DAY_SHORT[session.day]}
+                      {session.label ?? DAY_SHORT[session.day] ?? `D${session.day}`}
                     </Text>
                     <Text style={[typography.subheadline, { color: colors.label, fontWeight: "600" }]}>
                       {session.name}
