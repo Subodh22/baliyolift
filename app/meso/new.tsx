@@ -164,11 +164,11 @@ const TEMPLATES = [
   },
   {
     id: "sam_sulek",
-    name: "Sam Sulek 8-Day Split",
-    subtitle: "8 days · rotating · train every day",
+    name: "Sam Sulek 7-Day Split",
+    subtitle: "7 days · rotating · train (almost) every day",
     tag: "High Volume",
     tagColor: "#FF3B30",
-    description: "Sam Sulek's 8-day rotating split. Train every day, rest only when needed. Push finisher sets to failure. Pair with 30 min of LISS cardio each morning.",
+    description: "Sam Sulek's high-volume 7-day rotating split. Push hard and train nearly every day, resting only when you genuinely need it. Finishers are taken to failure; add easy morning cardio if bulking.",
     weeks: 5,
     sessions: [
       { day: 1, label: "Day 1", name: "Back & Rear Delts", exercises: ["Shoulder-width Grip Front Pull-down", "Wider Hammer Grip Pull-down", "Machine Low Row", "Machine Lat Pullover", "Seated Low Cable Row", "Lying Face Pull"] },
@@ -177,8 +177,7 @@ const TEMPLATES = [
       { day: 4, label: "Day 4", name: "Chest & Side Delts", exercises: ["Incline Bench Press", "Bent-Over Cable Chest Fly", "Standing Cable Horizontal Fly", "Machine Lateral Raises", "DB Side Delt Raises"] },
       { day: 5, label: "Day 5", name: "Back, Rear Delts & Calves", exercises: ["Seated Cable Row (shoulder-width grip)", "One-arm Straight Arm Lat Pulldown", "Wide Grip Seated Cable Row", "Single-arm Lat Pulldown", "Shoulder-width Cable Row (finisher)", "Lying Face Pull", "Seated Calf Raises"] },
       { day: 6, label: "Day 6", name: "Triceps & Biceps", exercises: ["Cross Body Cable Tricep Extension", "Single-arm Overhead Triceps Extension", "Machine Dips (finisher)", "Triceps Bar Press Down", "Alternating DB Biceps Curls", "Standard Barbell Curl (finisher)", "Single-arm Cable Curls", "Alternating DB Biceps Curls (finisher)"] },
-      { day: 7, label: "Day 7", name: "Hamstrings & Quads", exercises: ["Seated Leg Curls", "Bilateral Leg Extension", "Single Leg Extension", "Heel Elevated Back Squat", "Leg Extension", "One-Legged Leg Extension (finisher)"] },
-      { day: 8, label: "Day 8", name: "Chest & Side Delts", exercises: ["Incline Bench Press", "Bent-Over Cable Chest Fly", "Standing Cable Horizontal Fly", "Bent-Over Parallel Cable Fly", "Machine Lateral Raises", "DB Side Delt Raises"] },
+      { day: 7, label: "Day 7", name: "Chest & Side Delts", exercises: ["Incline Bench Press", "Bent-Over Cable Chest Fly", "Standing Cable Horizontal Fly", "Bent-Over Parallel Cable Fly", "Machine Lateral Raises", "DB Side Delt Raises"] },
     ],
   },
   {

@@ -763,8 +763,8 @@ export const createJeffNippardTemplate = mutation({
 });
 
 /**
- * Sam Sulek 8-day rotating split — train every day, rest only when needed.
- * Back/Rear Delts · Bi/Tri · Hams/Quads · Chest/Side Delts (×2 rotation).
+ * Sam Sulek 7-day rotating split — train every day, rest only when needed.
+ * Back/Rear Delts · Bi/Tri · Hams/Quads · Chest/Side Delts · Back-Calves · Tri/Bi · Chest/Side Delts.
  * Exercises are findOrCreate'd so the template works even on an unseeded library.
  */
 export const createSamSulekTemplate = mutation({
@@ -892,23 +892,9 @@ export const createSamSulekTemplate = mutation({
         ],
       },
       {
-        name: "Hamstrings & Quads",
+        name: "Chest & Side Delts",
         dayOfWeek: 7,
         order: 6,
-        muscleGroups: ["hamstrings", "quads"],
-        exercises: [
-          { name: "Seated Leg Curls",                     mg: "hamstrings", eq: "machine", sfr: "high",   repRangeMin: 15, repRangeMax: 20, targetSets: 4, setType: "regular" as const },
-          { name: "Bilateral Leg Extension",              mg: "quads",      eq: "machine", sfr: "high",   repRangeMin: 15, repRangeMax: 20, targetSets: 2, setType: "regular" as const },
-          { name: "Single Leg Extension",                 mg: "quads",      eq: "machine", sfr: "high",   repRangeMin: 15, repRangeMax: 15, targetSets: 2, setType: "regular" as const },
-          { name: "Heel Elevated Back Squat",             mg: "quads",      eq: "barbell", sfr: "medium", repRangeMin: 8,  repRangeMax: 10, targetSets: 2, setType: "regular" as const },
-          { name: "Leg Extension",                        mg: "quads",      eq: "machine", sfr: "high",   repRangeMin: 10, repRangeMax: 12, targetSets: 1, setType: "regular" as const },
-          { name: "One-Legged Leg Extension (finisher)",  mg: "quads",      eq: "machine", sfr: "high",   repRangeMin: 10, repRangeMax: 12, targetSets: 1, setType: "regular" as const },
-        ],
-      },
-      {
-        name: "Chest & Side Delts",
-        dayOfWeek: 8,
-        order: 7,
         muscleGroups: ["chest", "shoulders"],
         exercises: [
           { name: "Incline Bench Press",                 mg: "chest",     eq: "barbell",  sfr: "medium", repRangeMin: 10, repRangeMax: 12, targetSets: 4, setType: "regular" as const },
@@ -916,7 +902,7 @@ export const createSamSulekTemplate = mutation({
           { name: "Standing Cable Horizontal Fly",       mg: "chest",     eq: "cable",    sfr: "high",   repRangeMin: 10, repRangeMax: 12, targetSets: 2, setType: "regular" as const },
           { name: "Bent-Over Parallel Cable Fly",        mg: "chest",     eq: "cable",    sfr: "high",   repRangeMin: 10, repRangeMax: 12, targetSets: 2, setType: "regular" as const },
           { name: "Machine Lateral Raises",              mg: "shoulders", eq: "machine",  sfr: "high",   repRangeMin: 10, repRangeMax: 12, targetSets: 2, setType: "regular" as const },
-          { name: "DB Side Delt Raises",                 mg: "shoulders", eq: "dumbbell", sfr: "high",   repRangeMin: 8,  repRangeMax: 10, targetSets: 3, setType: "regular" as const },
+          { name: "DB Side Delt Raises",                 mg: "shoulders", eq: "dumbbell", sfr: "high",   repRangeMin: 8,  repRangeMax: 10, targetSets: 2, setType: "regular" as const },
         ],
       },
     ];
@@ -941,7 +927,7 @@ export const createSamSulekTemplate = mutation({
 
     const mesoId = await ctx.db.insert("mesocycles", {
       userId: args.userId,
-      name: "Sam Sulek 8-Day Split",
+      name: "Sam Sulek 7-Day Split",
       startDate: Date.now(),
       weeks,
       status: "active",
