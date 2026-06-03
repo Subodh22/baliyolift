@@ -163,6 +163,22 @@ const TEMPLATES = [
     ],
   },
   {
+    id: "sam_sulek",
+    name: "Sam Sulek High-Intensity",
+    subtitle: "5 days · Chest · Back · Shoulders · Arms · Legs",
+    tag: "High Intensity",
+    tagColor: "#FF3B30",
+    description: "Sam Sulek's high-volume bro split. One muscle group per day taken to failure with drop sets and heavy machine work.",
+    weeks: 5,
+    sessions: [
+      { day: 1, name: "Chest", exercises: ["Smith Machine Incline Press", "Flat Dumbbell Press", "Machine Chest Press", "Pec Deck Machine", "Cable Fly", "Cable Pushdown"] },
+      { day: 2, name: "Back", exercises: ["Lat Pulldown", "T-Bar Row", "Cable Row", "Dumbbell Row", "Cable Pullover", "Incline Dumbbell Curl"] },
+      { day: 4, name: "Shoulders", exercises: ["Overhead Press Dumbbell", "Dumbbell Lateral Raise", "Cable Lateral Raise", "Machine Lateral Raise", "Reverse Pec Deck", "Cable Face Pull"] },
+      { day: 5, name: "Arms", exercises: ["EZ Bar Curl", "Cable Overhead Tricep Extension", "Incline Dumbbell Curl", "EZ Bar Skull Crusher", "Hammer Curl", "Cable Pushdown"] },
+      { day: 6, name: "Legs", exercises: ["Leg Press", "Hack Squat Machine", "Leg Extension", "Lying Leg Curl", "Romanian Deadlift", "Standing Calf Raise", "Seated Calf Raise"] },
+    ],
+  },
+  {
     id: "jeff_nippard_fundamentals_hypertrophy_program",
     name: "Jeff Nippard Fundamentals Hypertrophy Program",
     subtitle: "4 days · Mon · Tue · Thu · Fri",
@@ -973,6 +989,7 @@ export default function MesoNew() {
   const createCBum        = useMutation(api.templates.createCBumTemplate);
   const createJeffNippard = useMutation(api.templates.createJeffNippardTemplate);
   const createLeanBeefPatty = useMutation(api.templates.createLeanBeefPattyTemplate);
+  const createSamSulek    = useMutation(api.templates.createSamSulekTemplate);
 
   // -1 = template picker, 0–4 = wizard steps
   const [step, setStep] = useState(-1);
@@ -1000,6 +1017,7 @@ export default function MesoNew() {
       else if (id === "cbum")            await createCBum({ userId });
       else if (id === "jeff_nippard")    await createJeffNippard({ userId });
       else if (id === "lean_beef_patty") await createLeanBeefPatty({ userId });
+      else if (id === "sam_sulek")       await createSamSulek({ userId });
       else {
         // Generic imported template — use createCustom with session data
         const allMuscleGroups = [...new Set(
