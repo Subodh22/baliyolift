@@ -196,6 +196,28 @@ const TEMPLATES = [
       { day: 5, name: "Squat Focus", muscleGroups: ["quads","glutes","hamstrings","chest","back","shoulders","biceps","triceps","abs"], exercises: ["Barbell Back Squat","Flat Dumbbell Press","Lat Pulldown","Hip Thrust","Dumbbell Lateral Raise","Hammer Curl","Cable Pushdown","Hanging Leg Raise"] }
     ],
   },
+  {
+    id: "sam_sulek",
+    name: "Sam Sulek 8-Day Split",
+    subtitle: "8 days · rotating · train (almost) every day",
+    tag: "High Volume",
+    tagColor: "#FF453A",
+    // 8-day rotating split — does NOT map to a 7-day week. Sessions are served in
+    // `order` (D1→D8→D1…) by getNextSession, independent of the calendar weekday.
+    rotating: true,
+    description: "Sam Sulek's 8-day rotating split. Push hard and train nearly every day, resting only when you genuinely need it — the cycle repeats independently of the calendar week. Finishers are taken to failure; add easy morning cardio if bulking.",
+    weeks: 5,
+    sessions: [
+      { day: 1, name: "Day 1 — Back & Rear Delts",            muscleGroups: ["back","shoulders"],          exercises: ["Lat Pulldown","V Bar Pulldown","Cable Row","Straight-Arm Pulldown","Single-Arm Cable Row","Cable Face Pull","Reverse Pec Deck"] },
+      { day: 2, name: "Day 2 — Arms (Biceps & Triceps)",      muscleGroups: ["biceps","triceps"],          exercises: ["Cable Pushdown","Dips Tricep Focus","Overhead DB Extension","Hammer Curl","Preacher Curl Machine","Barbell Curl","Incline Dumbbell Curl"] },
+      { day: 3, name: "Day 3 — Hamstrings & Quads",           muscleGroups: ["hamstrings","quads"],        exercises: ["Lying Leg Curl","Leg Extension","Barbell Back Squat","Hack Squat Machine","Seated Leg Curl"] },
+      { day: 4, name: "Day 4 — Chest & Side Delts",           muscleGroups: ["chest","shoulders"],         exercises: ["Incline Barbell Press","Cable Fly","Low-to-High Cable Fly","Machine Lateral Raise","Dumbbell Lateral Raise"] },
+      { day: 5, name: "Day 5 — Back, Rear Delts & Calves",    muscleGroups: ["back","shoulders","calves"], exercises: ["Seated Cable Row Wide Grip","Straight-Arm Pulldown","Single-Arm Cable Row","Cable Row","Cable Face Pull","Standing Calf Raise","Seated Calf Raise"] },
+      { day: 6, name: "Day 6 — Arms (Triceps & Biceps)",      muscleGroups: ["triceps","biceps"],          exercises: ["Cable Overhead Tricep Extension","Single-Arm Cable Pushdown","Dips Tricep Focus","Cable Pushdown","Hammer Curl","Barbell Curl","Cable Curl"] },
+      { day: 7, name: "Day 7 — Hamstrings & Quads",           muscleGroups: ["hamstrings","quads"],        exercises: ["Seated Leg Curl","Leg Extension","Barbell Back Squat","Leg Press","Lying Leg Curl"] },
+      { day: 8, name: "Day 8 — Chest & Side Delts",           muscleGroups: ["chest","shoulders"],         exercises: ["Incline Dumbbell Press","Cable Fly","Incline Cable Fly","Machine Lateral Raise","Dumbbell Lateral Raise"] },
+    ],
+  },
 ];
 
 // ─── Template Confirm Sheet ───────────────────────────────────────────────────
@@ -223,11 +245,11 @@ function TemplateConfirmSheet({ template, onConfirm, onCancel, loading, colors, 
 
           <ScrollView style={{ maxHeight: 340 }} showsVerticalScrollIndicator={false}>
             <View style={{ gap: 10, marginBottom: 20 }}>
-              {template.sessions.map((session: any) => (
-                <View key={session.day} style={[confirmStyles.sessionCard, { borderBottomColor: colors.separator }]}>
+              {template.sessions.map((session: any, idx: number) => (
+                <View key={idx} style={[confirmStyles.sessionCard, { borderBottomColor: colors.separator }]}>
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 }}>
                     <Text style={{ fontSize: 10, color: colors.accent, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: "700", minWidth: 28 }}>
-                      {DAY_SHORT[session.day]}
+                      {template.rotating ? `D${idx + 1}` : DAY_SHORT[session.day]}
                     </Text>
                     <Text style={[typography.subheadline, { color: colors.label, fontWeight: "600" }]}>
                       {session.name}

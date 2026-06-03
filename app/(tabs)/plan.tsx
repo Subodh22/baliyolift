@@ -52,6 +52,14 @@ function MesoCard({
   const isActive = meso.status === "active";
   const pct = isActive ? ((meso.weekNumber - 1) / meso.weeks) * 100 : 100;
 
+  // Rotating splits (e.g. Sam Sulek's 8-day) don't map onto a 7-day week, so label
+  // sessions by cycle position (D1…Dn) instead of a misleading/blank weekday name.
+  const dows = meso.sessions.map((x) => x.dayOfWeek);
+  const isRotating =
+    meso.sessions.length > 7 ||
+    new Set(dows).size !== dows.length ||
+    dows.some((d) => d < 0 || d > 6);
+
   const toggle = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setOpen((v) => !v);
@@ -107,11 +115,11 @@ function MesoCard({
       {/* Sessions list — collapsible */}
       {open && (
         <View style={[s.sessionsList, { borderTopColor: P.border }]}>
-          {meso.sessions.map((session) => (
+          {meso.sessions.map((session, idx) => (
             <View key={session._id as string} style={[s.sessionRow, { borderBottomColor: P.border }]}>
               <View style={s.dayBadge}>
                 <Text style={{ fontFamily: OUT_L, fontSize: 10, color: P.mid }}>
-                  {DAY_LABELS[session.dayOfWeek]}
+                  {isRotating ? `D${idx + 1}` : DAY_LABELS[session.dayOfWeek]}
                 </Text>
               </View>
               <View style={{ flex: 1 }}>

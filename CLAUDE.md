@@ -1,22 +1,36 @@
-# baliyolift
+# BaliyoLift — Project Notes
 
-Expo / React Native (expo-router) hypertrophy-training + nutrition app. Backend is **Convex**. Auth is **Clerk**.
+Expo / React Native (Expo Router) app with a Convex backend. Training (mesocycles,
+sessions, sets, progressive overload) + nutrition (meal planning, food logging).
 
-## Stack
-- **App:** Expo SDK 54, React Native 0.81, expo-router v6, react-native-reanimated. TS strict-ish.
-- **Backend:** Convex (`convex/`). Schema in `convex/schema.ts`; generated types in `convex/_generated/`.
-- **No test runner is configured.** Validate with `npx tsc --noEmit` (typecheck). Convex validates schemas/functions on `npx convex dev`/`deploy`.
+## Layout
+- `app/` — Expo Router screens. Tabs in `app/(tabs)/`. Workout flow in `app/workout/[id].tsx`,
+  mesocycle creation wizard in `app/meso/new.tsx`.
+- `convex/` — backend functions + `schema.ts`. Run `npx convex dev` to typecheck/deploy
+  backend; `convex/_generated/` is codegen — do not edit by hand.
+- `data/` — static seed data (exercises, foods, recipes). Exercise names here are the
+  canonical strings used to resolve template/session exercises by name.
+- `constants/` — colors, typography, muscle-group volume landmarks (`muscles.ts`).
 
-## Key domain model (training)
-- `mesocycles` → `sessions` (training days) → `sessionExercises` (per-exercise rep range / set count / set type).
-- `exercises` is the shared exercise library (`isCustom: false`, no `userId` = global; `isCustom: true` + `userId` = user-created).
-- Actual logging: `workouts` → `sets` / `cardioSets`.
+## Mesocycle scheduling model (important)
+- A mesocycle has N `sessions`, each with a numeric `order` and a `dayOfWeek`.
+- **Scheduling is order-based, not calendar-based.** `convex/workouts.ts:getNextSession`
+  walks sessions by `order` and serves the first not-yet-completed *this week*. `dayOfWeek`
+  is only a display hint on some screens (`plan.tsx`, `progress.tsx` weekly roadmap,
+  `index.tsx` heatmap) and assumes a 7-day week (0=Sun…6=Sat).
+- Because scheduling is order-based, **rotating splits longer than 7 days work** (e.g. the
+  Sam Sulek 8-day split). For such templates the weekday displays are cosmetic; screens
+  label sessions by cycle position (`D1…D8`) when a meso isn't a clean weekly layout.
 
-## Mesocycle templates
-- Named templates live in `convex/templates.ts` as mutations (`createPPLTemplate`, `createLaxmanTemplate`, `createSamSulekTemplate`, …).
-- The template **picker UI** is `app/meso/new.tsx` — the `TEMPLATES` array drives the list/preview, and `handleConfirmTemplate` maps each template `id` to its mutation (with a generic `createCustom` fallback for imported templates).
-- Most templates resolve exercises by name via a `findEx` helper that **silently skips** names missing from the library. If a program uses exercises not in the seed, the template mutation must **create the missing exercises** (find-or-create) so names are preserved exactly — see `createSamSulekTemplate`.
+## Templates
+- Preset programs live in `app/meso/new.tsx` `TEMPLATES`. Each is either:
+  - mapped to a dedicated mutation in `convex/templates.ts` (PPL, Laxman, etc.), or
+  - created through the generic `convex/mesocycles.ts:createCustom` path (the `else`
+    branch in `handleConfirmTemplate`), which resolves `exercises` by name and builds
+    volume targets from `muscleGroups`.
+- The generic path is preferred for new templates — no new backend mutation/deploy needed.
+  **Every exercise name must exist in `data/exercises.ts`** or it is silently skipped.
 
 ## Conventions
-- Conventional commits.
-- Run `npx tsc --noEmit` before pushing.
+- Conventional commits. Run tests before pushing (no test script is configured yet;
+  `npx tsc --noEmit` is the closest validation).
