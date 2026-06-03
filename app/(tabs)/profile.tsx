@@ -1,14 +1,21 @@
-import { View, Text, ScrollView, StyleSheet, Switch, ActivityIndicator, TouchableOpacity, Image, Pressable, Platform } from "react-native";
+import { View, Text, ScrollView, StyleSheet, Switch, ActivityIndicator, TouchableOpacity, Image, Pressable, Platform, Modal } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useState } from "react";
 import { Row, RowGroup } from "@/components/ui/Row";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useRouter } from "expo-router";
 import { P } from "@/constants/colors";
 import { CG_ITALIC, OUT_L, OUT } from "@/constants/typography";
+import { calcTargetsForGoal, GOAL_LABEL, type Goal } from "@/utils/nutritionTargets";
+
+const GOAL_OPTIONS: { goal: Goal; blurb: string }[] = [
+  { goal: "cut",      blurb: "Lose fat — calories set below maintenance." },
+  { goal: "maintain", blurb: "Hold weight — calories at maintenance." },
+  { goal: "bulk",     blurb: "Build muscle — calories above maintenance." },
+];
 
 const { useAuth, useUser } = Platform.OS === "web"
   ? require("@clerk/clerk-react")
@@ -19,11 +26,32 @@ export default function ProfileScreen() {
   const [notifications, setNotifications] = useState(true);
   const [resetting, setResetting] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [goalPickerOpen, setGoalPickerOpen] = useState(false);
+  const [savingGoal, setSavingGoal] = useState(false);
   const { userId } = useCurrentUser();
   const { user } = useUser();
   const deleteAllData = useMutation(api.users.deleteAllUserData);
+  const saveFoodTarget = useMutation(api.nutrition.saveFoodTarget);
+  const profile = useQuery(api.userProfile.getByUser, userId ? { userId } : "skip");
+  const foodTarget = useQuery(api.nutrition.getFoodTarget, userId ? { userId } : "skip");
   const router = useRouter();
   const authHook = useAuth();
+
+  const currentGoal: Goal = foodTarget?.goal ?? "maintain";
+
+  const handleSelectGoal = async (goal: Goal) => {
+    if (!userId || !profile) { setGoalPickerOpen(false); return; }
+    setSavingGoal(true);
+    try {
+      const targets = calcTargetsForGoal(profile, goal);
+      await saveFoodTarget({ userId, ...targets });
+    } catch (e: any) {
+      console.log("Goal update error:", e.message);
+    } finally {
+      setSavingGoal(false);
+      setGoalPickerOpen(false);
+    }
+  };
 
   const displayName = user?.fullName ?? user?.firstName ?? "Athlete";
   const imageUrl    = user?.imageUrl ?? null;
@@ -108,6 +136,11 @@ export default function ProfileScreen() {
         <Animated.View entering={FadeInDown.delay(240).springify()}>
           <Text style={s.sectionLabel}>NUTRITION</Text>
           <RowGroup>
+            <Row
+              label="Nutrition Goal"
+              value={foodTarget ? GOAL_LABEL[currentGoal] : "—"}
+              onPress={() => setGoalPickerOpen(true)}
+            />
             <Row label="Meal Plans" value="25 recipes" onPress={() => router.push("/meal-plans")} />
           </RowGroup>
         </Animated.View>
@@ -160,6 +193,39 @@ export default function ProfileScreen() {
           BALIYO v1.0.0
         </Text>
       </ScrollView>
+
+      {/* Nutrition goal picker */}
+      <Modal visible={goalPickerOpen} transparent animationType="slide" onRequestClose={() => setGoalPickerOpen(false)}>
+        <TouchableOpacity style={s.overlay} activeOpacity={1} onPress={() => setGoalPickerOpen(false)} />
+        <View style={s.sheet}>
+          <View style={s.sheetHandle} />
+          <Text style={s.sheetTitle}>NUTRITION GOAL</Text>
+          <Text style={s.sheetDesc}>
+            Pick what you're doing right now. Your daily calories and macros recalculate from your profile.
+          </Text>
+          {GOAL_OPTIONS.map(({ goal, blurb }) => {
+            const active = goal === currentGoal;
+            return (
+              <TouchableOpacity
+                key={goal}
+                onPress={() => handleSelectGoal(goal)}
+                disabled={savingGoal || !profile}
+                activeOpacity={0.7}
+                style={[s.goalOption, active && s.goalOptionActive]}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={[s.goalOptionLabel, active && { color: P.gold }]}>{GOAL_LABEL[goal]}</Text>
+                  <Text style={s.goalOptionBlurb}>{blurb}</Text>
+                </View>
+                {active && <Text style={s.goalCheck}>✓</Text>}
+              </TouchableOpacity>
+            );
+          })}
+          {!profile && (
+            <Text style={s.goalHint}>Complete onboarding first to set your targets.</Text>
+          )}
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -176,4 +242,16 @@ const s = StyleSheet.create({
   confirmBox:  { borderWidth: 1, borderColor: P.red + "40", backgroundColor: P.red + "10", padding: 20, marginTop: 8 },
   confirmBtn:  { paddingVertical: 13, alignItems: "center" },
   resetBtn:    { borderWidth: 1, borderColor: P.red + "30", paddingVertical: 16, alignItems: "center", marginTop: 8 },
+
+  overlay:         { flex: 1, backgroundColor: "rgba(0,0,0,0.6)" },
+  sheet:           { backgroundColor: P.s1, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 24, paddingBottom: 40, borderTopWidth: 1, borderColor: P.border },
+  sheetHandle:     { width: 36, height: 4, borderRadius: 2, backgroundColor: P.border, alignSelf: "center", marginBottom: 20 },
+  sheetTitle:      { fontFamily: OUT_L, fontSize: 10, letterSpacing: 4, color: P.mid, marginBottom: 8 },
+  sheetDesc:       { fontFamily: OUT_L, fontSize: 13, color: P.mid, lineHeight: 19, marginBottom: 20 },
+  goalOption:      { flexDirection: "row", alignItems: "center", padding: 16, borderWidth: 1, borderColor: P.border, borderRadius: 10, marginBottom: 10, backgroundColor: P.s2 },
+  goalOptionActive:{ borderColor: P.gold, backgroundColor: "rgba(201,168,76,0.10)" },
+  goalOptionLabel: { fontFamily: OUT, fontSize: 16, color: P.ink },
+  goalOptionBlurb: { fontFamily: OUT_L, fontSize: 12, color: P.mid, marginTop: 3, lineHeight: 17 },
+  goalCheck:       { fontFamily: OUT, fontSize: 16, color: P.gold, marginLeft: 12 },
+  goalHint:        { fontFamily: OUT_L, fontSize: 12, color: P.dim, textAlign: "center", marginTop: 4 },
 });

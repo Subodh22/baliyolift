@@ -11,6 +11,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { P } from "@/constants/colors";
 import { CG, CG_ITALIC, OUT_L, OUT } from "@/constants/typography";
+import { calcTargets } from "@/utils/nutritionTargets";
 
 // ── Macro colours ─────────────────────────────────────────────────────────────
 const C_PROTEIN = P.gold;
@@ -64,30 +65,6 @@ function fmtDate(dateStr: string): string {
   return new Date(dateStr + "T12:00:00").toLocaleDateString("en-AU", {
     weekday: "short", month: "short", day: "numeric",
   });
-}
-
-// Katch-McArdle BMR + RP macro split
-function calcTargets(profile: {
-  weightKg: number; currentBf: number; targetBf: number;
-  weeklyGoal: number; sex: string; age: number; heightCm: number;
-}): { calories: number; proteinG: number; carbsG: number; fatG: number; goal: "cut" | "bulk" | "maintain" } {
-  const lbm = profile.weightKg * (1 - profile.currentBf / 100);
-  const bmr = 370 + 21.6 * lbm;
-  const actMap: Record<number, number> = { 3: 1.55, 4: 1.60, 5: 1.725 };
-  const tdee = bmr * (actMap[profile.weeklyGoal] ?? 1.55);
-
-  const bfDiff = profile.currentBf - profile.targetBf;
-  let goal: "cut" | "bulk" | "maintain";
-  let calories: number;
-  if (bfDiff > 3)       { goal = "cut";      calories = Math.round(tdee - 400); }
-  else if (bfDiff < -3) { goal = "bulk";      calories = Math.round(tdee + 250); }
-  else                  { goal = "maintain";  calories = Math.round(tdee); }
-
-  const proteinG = Math.round(profile.weightKg * (goal === "cut" ? 2.5 : 2.2));
-  const fatG     = Math.round(calories * 0.27 / 9);
-  const carbsG   = Math.max(0, Math.round((calories - proteinG * 4 - fatG * 9) / 4));
-
-  return { calories, proteinG, carbsG, fatG, goal };
 }
 
 function goalColor(goal: "cut" | "bulk" | "maintain") {
