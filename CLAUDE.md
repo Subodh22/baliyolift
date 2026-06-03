@@ -1,36 +1,29 @@
-# BaliyoLift — Project Notes
+# baliyolift
 
-Expo / React Native (Expo Router) app with a Convex backend. Training (mesocycles,
-sessions, sets, progressive overload) + nutrition (meal planning, food logging).
+Expo / React Native (web + native) hypertrophy training app. Frontend is Expo Router; backend is Convex; auth is Clerk.
 
-## Layout
-- `app/` — Expo Router screens. Tabs in `app/(tabs)/`. Workout flow in `app/workout/[id].tsx`,
-  mesocycle creation wizard in `app/meso/new.tsx`.
-- `convex/` — backend functions + `schema.ts`. Run `npx convex dev` to typecheck/deploy
-  backend; `convex/_generated/` is codegen — do not edit by hand.
-- `data/` — static seed data (exercises, foods, recipes). Exercise names here are the
-  canonical strings used to resolve template/session exercises by name.
-- `constants/` — colors, typography, muscle-group volume landmarks (`muscles.ts`).
+## Stack
+- **App**: Expo Router (`app/`), React Native 0.81, React 19, Reanimated. Web via `react-native-web`.
+- **Backend**: Convex (`convex/`) — queries/mutations/actions. Generated client in `convex/_generated/`.
+- **Auth**: Clerk (`@clerk/clerk-expo`).
+- **Theming**: `hooks/useTheme.ts` + `constants/` (colors, typography, muscles).
 
-## Mesocycle scheduling model (important)
-- A mesocycle has N `sessions`, each with a numeric `order` and a `dayOfWeek`.
-- **Scheduling is order-based, not calendar-based.** `convex/workouts.ts:getNextSession`
-  walks sessions by `order` and serves the first not-yet-completed *this week*. `dayOfWeek`
-  is only a display hint on some screens (`plan.tsx`, `progress.tsx` weekly roadmap,
-  `index.tsx` heatmap) and assumes a 7-day week (0=Sun…6=Sat).
-- Because scheduling is order-based, **rotating splits longer than 7 days work** (e.g. the
-  Sam Sulek 8-day split). For such templates the weekday displays are cosmetic; screens
-  label sessions by cycle position (`D1…D8`) when a meso isn't a clean weekly layout.
-
-## Templates
-- Preset programs live in `app/meso/new.tsx` `TEMPLATES`. Each is either:
-  - mapped to a dedicated mutation in `convex/templates.ts` (PPL, Laxman, etc.), or
-  - created through the generic `convex/mesocycles.ts:createCustom` path (the `else`
-    branch in `handleConfirmTemplate`), which resolves `exercises` by name and builds
-    volume targets from `muscleGroups`.
-- The generic path is preferred for new templates — no new backend mutation/deploy needed.
-  **Every exercise name must exist in `data/exercises.ts`** or it is silently skipped.
+## Commands
+- `npm run start` — Expo dev server. `npm run web` / `ios` / `android` for a platform.
+- `npx convex dev` — run Convex locally / push functions; **`npx convex codegen`** regenerates `convex/_generated` (run after adding/renaming Convex functions, otherwise `api.*` types are stale).
+- Typecheck: `npx tsc --noEmit`. There is **no test runner** configured — typecheck is the gate before pushing.
 
 ## Conventions
-- Conventional commits. Run tests before pushing (no test script is configured yet;
-  `npx tsc --noEmit` is the closest validation).
+- Conventional commits.
+- TypeScript everywhere. Match surrounding style (compact object literals, aligned columns in data tables).
+
+## Domain model (Convex `schema.ts`)
+- **mesocycles** → **sessions** (one per training day, keyed by `dayOfWeek` 0=Sun..6=Sat + `order`) → **sessionExercises** (per-exercise `repRangeMin/Max`, `targetSets`, `setType`). `sessions.exerciseIds` is kept in sync with `sessionExercises` for legacy reads.
+- **exercises** is the shared library; `isCustom`/`userId` mark user-created ones. Seed data lives in `data/exercises.ts` (`EXERCISE_SEED_DATA`).
+- **workouts** are logged instances of a session; **sets** are the atomic logged unit.
+- Nutrition: `foodEntries`, `foodTargets`, `customFoods`, recipes/meal-planner tables.
+
+## Program templates
+- Named templates are Convex mutations in `convex/templates.ts` (e.g. `createPPLTemplate`, `createSamSulekTemplate`). Most resolve exercises by name from the seeded library and **skip** unknown names. `createSamSulekTemplate` instead **find-or-creates** exercises so plan names are preserved exactly.
+- The picker UI lives in `app/meso/new.tsx`: a `TEMPLATES` array drives the preview sheet, and `handleConfirmTemplate` dispatches each template `id` to its mutation. Adding a template = add a `TEMPLATES` entry **and** a dispatch branch + `useMutation` hook.
+- Sessions map to days of the week, so a template can have **at most 7 sessions** (one per unique `dayOfWeek`). Splits longer than 7 days must be condensed.
