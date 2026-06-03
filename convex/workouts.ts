@@ -283,20 +283,28 @@ export const getNextSession = query({
     const nextSession = sessions.find((s) => !completedIds.has(s._id as string)) ?? null;
 
     if (!nextSession) {
-      // Return all sessions as "upcoming" so the UI can show next week preview
-      const upcomingSessions = sessions.map((s) => ({
-        _id: s._id,
-        name: s.name,
-        order: s.order,
-        muscleGroups: s.muscleGroups ?? [],
-      }));
+      if (weekNumber >= meso.weeks) {
+        return {
+          weekNumber,
+          mesoWeeks: meso.weeks,
+          status: "meso_complete" as const,
+          session: null,
+          workoutId: null,
+        };
+      }
+      // Week done but meso continues — show the first session of next week as "up next"
+      const first = sessions[0];
       return {
-        weekNumber,
+        weekNumber: weekNumber + 1,
         mesoWeeks: meso.weeks,
-        status: weekNumber >= meso.weeks ? ("meso_complete" as const) : ("week_complete" as const),
-        session: null,
+        status: "up_next" as const,
+        session: {
+          _id: first._id,
+          name: first.name,
+          order: first.order,
+          muscleGroups: first.muscleGroups ?? [],
+        },
         workoutId: null,
-        upcomingSessions,
       };
     }
 

@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
 
 function epley1RM(weight: number, reps: number): number {
   return Math.round(weight * (1 + reps / 30));
@@ -43,7 +44,7 @@ export const getDashboard = query({
 
     const prs = await Promise.all(
       topPRExIds.map(async (id) => {
-        const ex = await ctx.db.get(id as any);
+        const ex = await ctx.db.get(id as Id<"exercises">);
         return {
           exerciseId: id,
           name: ex?.name ?? "Unknown",
@@ -55,7 +56,7 @@ export const getDashboard = query({
 
     // ── Strength chart: most-trained exercise ─────────────────────────────────
     const topExId = Object.entries(countByEx).sort((a, b) => b[1] - a[1])[0][0];
-    const topEx = await ctx.db.get(topExId as any);
+    const topEx = await ctx.db.get(topExId as Id<"exercises">);
 
     // Group sets by workoutId, take best e1RM per session, last 10 sessions
     const workoutMap = new Map<string, { sets: typeof allSets; date: number; weekNumber: number }>();

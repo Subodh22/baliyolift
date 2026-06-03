@@ -113,6 +113,13 @@ export const deleteAllUserData = mutation({
   },
 });
 
+export const listAll = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("users").collect();
+  },
+});
+
 export const updateExperienceLevel = mutation({
   args: {
     userId: v.id("users"),

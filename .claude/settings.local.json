@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx expo:*)"
+      "Bash(npx expo:*)",
+      "Bash(npx convex *)",
+      "Bash(node -e \"process.stdout.write\\(require\\('fs'\\).readFileSync\\('./data/mp-upper-lower.json','utf8'\\)\\)\")",
+      "Bash(node -e \"const fs=require\\('fs'\\); const meso=JSON.parse\\(fs.readFileSync\\('./data/mp-upper-lower.json','utf8'\\)\\); const args={clerkId:'user_3Ah5L5sjFWHbSeD9PLNpzBH1SwX',meso}; fs.writeFileSync\\('./data/mp-import-args.json', JSON.stringify\\(args\\)\\);\")"
     ]
   }
 }

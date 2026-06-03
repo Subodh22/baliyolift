@@ -176,7 +176,7 @@ export const getDaySuggestions = query({
       let goal: string = "maintain";
       let prepTimeMins = 0;
       let cookTimeMins = 0;
-      let ingredients: { name: string; amount: string; calories: number; proteinG: number; carbsG: number; fatG: number }[] = [];
+      let ingredients: { name: string; amount: string; calories?: number; proteinG?: number; carbsG?: number; fatG?: number }[] = [];
       let instructions: string[] = [];
       let baseMacros = { calories: 0, proteinG: 0, carbsG: 0, fatG: 0 };
 
@@ -212,10 +212,12 @@ export const getDaySuggestions = query({
 
       if (!name) return null;
 
+      const portion = slot.portion ?? 1;
+
       return {
         slotId: slot._id,
         mealType: slot.mealType,
-        portion: slot.portion,
+        portion,
         name,
         description,
         goal,
@@ -225,10 +227,10 @@ export const getDaySuggestions = query({
         instructions,
         totalMacros: baseMacros,
         scaledMacros: {
-          calories: Math.round(baseMacros.calories * slot.portion),
-          proteinG: Math.round(baseMacros.proteinG * slot.portion * 10) / 10,
-          carbsG:   Math.round(baseMacros.carbsG   * slot.portion * 10) / 10,
-          fatG:     Math.round(baseMacros.fatG      * slot.portion * 10) / 10,
+          calories: Math.round(baseMacros.calories * portion),
+          proteinG: Math.round(baseMacros.proteinG * portion * 10) / 10,
+          carbsG:   Math.round(baseMacros.carbsG   * portion * 10) / 10,
+          fatG:     Math.round(baseMacros.fatG      * portion * 10) / 10,
         },
       };
     }));

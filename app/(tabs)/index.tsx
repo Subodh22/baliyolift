@@ -258,7 +258,9 @@ export default function HomeScreen() {
 
         {/* ── Today's session ─────────────────────────────────────────── */}
         <View style={s.section}>
-          <Text style={s.sectionLabel}>TODAY'S SESSION</Text>
+          <Text style={s.sectionLabel}>
+            {next?.status === "up_next" ? "NEXT SESSION" : "TODAY'S SESSION"}
+          </Text>
 
           {!isLoading && !meso && (
             <View style={{ marginTop: 20, gap: 10 }}>
@@ -291,7 +293,14 @@ export default function HomeScreen() {
               <View style={s.goldStripe} />
               <View style={{ flex: 1 }}>
                 <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", paddingRight: 16, paddingTop: 16 }}>
-                  <Text style={[s.sessionName, { paddingTop: 0, paddingHorizontal: 20 }]}>{nextSession.name}</Text>
+                  <View style={{ flex: 1, paddingHorizontal: 20 }}>
+                    {next?.status === "up_next" && (
+                      <Text style={{ fontFamily: OUT_L, fontSize: 9, letterSpacing: 2, color: P.gold, marginBottom: 4 }}>
+                        WEEK {weekNum} · UP NEXT
+                      </Text>
+                    )}
+                    <Text style={[s.sessionName, { paddingTop: 0, paddingHorizontal: 0 }]}>{nextSession.name}</Text>
+                  </View>
                   <TouchableOpacity onPress={() => setSessionPickerOpen(true)} style={{ paddingTop: 6 }}>
                     <Text style={{ fontFamily: OUT_L, fontSize: 10, letterSpacing: 2, color: P.gold }}>CHANGE</Text>
                   </TouchableOpacity>
@@ -332,11 +341,11 @@ export default function HomeScreen() {
             </View>
           )}
 
-          {!isLoading && meso && !nextSession && (
+          {!isLoading && meso && !nextSession && next?.status === "meso_complete" && (
             <View style={{ marginTop: 20 }}>
-              <Text style={{ fontFamily: CG_ITALIC, fontSize: 28, color: P.ink }}>Rest day.</Text>
+              <Text style={{ fontFamily: CG_ITALIC, fontSize: 28, color: P.gold }}>Meso complete.</Text>
               <Text style={{ fontFamily: OUT_L, fontSize: 13, color: P.mid, marginTop: 8 }}>
-                Recovery is progress. Next session soon.
+                All {next.mesoWeeks} weeks done. Start a new mesocycle to keep progressing.
               </Text>
             </View>
           )}
