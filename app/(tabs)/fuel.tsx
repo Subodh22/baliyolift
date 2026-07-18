@@ -11,7 +11,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { P } from "@/constants/colors";
 import { CG, CG_ITALIC, OUT_L, OUT } from "@/constants/typography";
-import { calcTargets } from "@/utils/nutritionTargets";
+import { calcTargets, calcTargetsForGoal } from "@/utils/nutritionTargets";
 
 // ── Macro colours ─────────────────────────────────────────────────────────────
 const C_PROTEIN = P.gold;
@@ -349,6 +349,7 @@ export default function FuelScreen() {
   // ── Queries ───────────────────────────────────────────────────────────────
   const profile       = useQuery(api.userProfile.getByUser,          userId ? { userId } : "skip");
   const storedTarget  = useQuery(api.nutrition.getFoodTarget,         userId ? { userId } : "skip");
+  const latestWeight  = useQuery(api.weightTracking.getLatestWeight,  userId ? { userId } : "skip");
   const dayEntries    = useQuery(api.nutrition.getDayEntries,         userId ? { userId, date } : "skip") ?? [];
   const weekSummary   = useQuery(api.nutrition.getWeekSummary,        userId ? { userId, date } : "skip") ?? [];
   const suggestions   = useQuery(api.mealPlanSlots.getDaySuggestions, userId ? { userId, date } : "skip") ?? [];
@@ -359,15 +360,33 @@ export default function FuelScreen() {
   const addFoodEntry     = useMutation(api.nutrition.addFoodEntry);
   const updateSlotPortion = useMutation(api.mealPlanSlots.updatePortion);
 
-  // Auto-init targets from profile the first time (storedTarget === null means loaded but no record)
+  const targetProfile = useMemo(
+    () => profile ? { ...profile, weightKg: latestWeight?.weightKg ?? profile.weightKg } : null,
+    [profile, latestWeight?.weightKg]
+  );
+  const computedTargets = useMemo(
+    () => targetProfile
+      ? storedTarget
+        ? calcTargetsForGoal(targetProfile, storedTarget.goal)
+        : calcTargets(targetProfile)
+      : null,
+    [targetProfile, storedTarget]
+  );
+
+  // Auto-init and refresh targets from profile + latest weigh-in.
   useEffect(() => {
-    if (!userId || !profile || storedTarget !== null) return;
-    const computed = calcTargets(profile);
-    saveFoodTarget({ userId, ...computed });
-  }, [userId, profile, storedTarget]);
+    if (!userId || !computedTargets || storedTarget === undefined) return;
+    const unchanged = storedTarget
+      && storedTarget.goal === computedTargets.goal
+      && storedTarget.calories === computedTargets.calories
+      && storedTarget.proteinG === computedTargets.proteinG
+      && storedTarget.carbsG === computedTargets.carbsG
+      && storedTarget.fatG === computedTargets.fatG;
+    if (!unchanged) saveFoodTarget({ userId, ...computedTargets });
+  }, [userId, computedTargets, storedTarget]);
 
   // ── Computed ──────────────────────────────────────────────────────────────
-  const targets   = storedTarget ?? (profile ? calcTargets(profile) : null);
+  const targets   = computedTargets ?? storedTarget ?? null;
   const totalCals  = dayEntries.reduce((s, e) => s + e.calories, 0);
   const totalPro   = dayEntries.reduce((s, e) => s + e.proteinG, 0);
   const totalCarbs = dayEntries.reduce((s, e) => s + e.carbsG, 0);

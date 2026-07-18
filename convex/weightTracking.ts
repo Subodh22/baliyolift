@@ -28,6 +28,18 @@ export const getTodayWeight = query({
   },
 });
 
+// Get the most recent logged weight, regardless of date
+export const getLatestWeight = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, { userId }) => {
+    return await ctx.db
+      .query("weightEntries")
+      .withIndex("by_user_date", q => q.eq("userId", userId))
+      .order("desc")
+      .first();
+  },
+});
+
 // Get last N days of weight entries (sorted oldest → newest)
 export const getWeightHistory = query({
   args: { userId: v.id("users"), days: v.number() },

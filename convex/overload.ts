@@ -330,9 +330,11 @@ export const getCardioSuggestion = query({
     userId: v.id("users"),
     exerciseId: v.id("exercises"),
     weekNumber: v.number(),
+    totalWeeks: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const targetRpe = args.weekNumber <= 1 ? 6 : args.weekNumber === 2 ? 7 : 8;
+    const deloadWeek = args.totalWeeks != null && args.totalWeeks > 1 && args.weekNumber >= args.totalWeeks;
+    const targetRpe = deloadWeek ? 5 : args.weekNumber <= 1 ? 6 : args.weekNumber === 2 ? 7 : 8;
 
     const history = await ctx.db
       .query("cardioSets")
@@ -360,6 +362,21 @@ export const getCardioSuggestion = query({
     const lastDuration = last.durationSec;
     const lastDistance = last.distanceM ?? null;
     const lastRpe = last.rpe;
+
+    if (deloadWeek) {
+      const deloadDuration = Math.max(10 * 60, Math.round(lastDuration * 0.5 / 60) * 60);
+      return {
+        suggestedDurationSec: deloadDuration,
+        suggestedDistanceM: lastDistance != null ? Math.round(lastDistance * 0.5) : null,
+        suggestedIntervalCount: last.intervalCount != null ? Math.max(1, Math.ceil(last.intervalCount / 2)) : null,
+        suggestedIntervalWorkSec: last.intervalWorkSec ?? null,
+        suggestedIntervalRestSec: last.intervalRestSec ?? null,
+        targetRpe,
+        overloadIndicator: "decrease" as const,
+        reason: "Deload week — cut cardio volume about in half and keep effort easy.",
+        lastSession: { durationSec: lastDuration, distanceM: lastDistance, intervalCount: last.intervalCount ?? null, rpe: lastRpe },
+      };
+    }
 
     // Interval mode
     if (last.intervalCount != null) {
@@ -456,4 +473,3 @@ export const saveFeedback = mutation({
     }
   },
 });
-

@@ -13,7 +13,7 @@
  *
  * // Today screen:
  * const activeMeso = useQuery(api.mesocycles.getActive, { userId });
- * const todaysWorkout = useQuery(api.workouts.getTodaysWorkout, { userId });
+ * const todaysWorkout = useQuery(api.workouts.getTodaysWorkout, { userId, timezoneOffsetMinutes: new Date().getTimezoneOffset() });
  * const weeklyVolume = useQuery(api.workouts.getWeeklyVolume, { userId, mesocycleId, weekNumber });
  *
  * // Workout runner:

@@ -16,6 +16,22 @@ const sessionInputValidator = v.object({
   muscleGroups: v.optional(v.array(v.string())),
 });
 
+function currentWeekFromFinishedSessions(
+  workouts: { sessionId: unknown; weekNumber: number; status: string }[],
+  sessionCount: number,
+  totalWeeks: number
+): number {
+  if (sessionCount <= 0) return 1;
+  const finishedKeys = new Set(
+    workouts
+      .filter((w) => w.status === "completed" || w.status === "skipped")
+      .map((w) => `${w.weekNumber}:${w.sessionId as string}`)
+  );
+  const cycleWeek = Math.floor(finishedKeys.size / sessionCount) + 1;
+  const maxLoggedWeek = workouts.length > 0 ? Math.max(...workouts.map((w) => w.weekNumber)) : 1;
+  return Math.min(Math.max(cycleWeek, maxLoggedWeek), totalWeeks);
+}
+
 export const create = mutation({
   args: {
     userId: v.id("users"),
@@ -371,22 +387,13 @@ export const getActiveWithDetails = query({
 
     sessionsWithDetails.sort((a, b) => a.order - b.order);
 
-    // Week number = max(calendar week, highest week of any logged workout)
-    // This ensures starting a week early is reflected immediately
-    const msPerWeek = 7 * 24 * 60 * 60 * 1000;
-    const calendarWeek = Math.max(1, Math.ceil((Date.now() - meso.startDate) / msPerWeek));
-
     const allWorkouts = await ctx.db
       .query("workouts")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .filter((q) => q.eq(q.field("mesocycleId"), meso._id))
       .collect();
 
-    const maxLoggedWeek = allWorkouts.length > 0
-      ? Math.max(...allWorkouts.map((w) => w.weekNumber))
-      : 1;
-
-    const weekNumber = Math.min(Math.max(calendarWeek, maxLoggedWeek), meso.weeks);
+    const weekNumber = currentWeekFromFinishedSessions(allWorkouts, sessions.length, meso.weeks);
 
     return { ...meso, sessions: sessionsWithDetails, weekNumber };
   },
@@ -560,15 +567,12 @@ export const listAllWithSessions = query({
         // Week number for active mesos
         let weekNumber = 1;
         if (meso.status === "active") {
-          const msPerWeek = 7 * 24 * 60 * 60 * 1000;
-          const calendarWeek = Math.max(1, Math.ceil((Date.now() - meso.startDate) / msPerWeek));
           const allWorkouts = await ctx.db
             .query("workouts")
             .withIndex("by_user", (q) => q.eq("userId", userId))
             .filter((q) => q.eq(q.field("mesocycleId"), meso._id))
             .collect();
-          const maxLoggedWeek = allWorkouts.length > 0 ? Math.max(...allWorkouts.map((w) => w.weekNumber)) : 1;
-          weekNumber = Math.min(Math.max(calendarWeek, maxLoggedWeek), meso.weeks);
+          weekNumber = currentWeekFromFinishedSessions(allWorkouts, sessions.length, meso.weeks);
         }
 
         return { ...meso, sessions: sessionsWithDetails, weekNumber };

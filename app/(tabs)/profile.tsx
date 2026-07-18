@@ -1,7 +1,7 @@
 import { View, Text, ScrollView, StyleSheet, Switch, ActivityIndicator, TouchableOpacity, Image, Pressable, Platform, Modal } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Row, RowGroup } from "@/components/ui/Row";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -34,16 +34,21 @@ export default function ProfileScreen() {
   const saveFoodTarget = useMutation(api.nutrition.saveFoodTarget);
   const profile = useQuery(api.userProfile.getByUser, userId ? { userId } : "skip");
   const foodTarget = useQuery(api.nutrition.getFoodTarget, userId ? { userId } : "skip");
+  const latestWeight = useQuery(api.weightTracking.getLatestWeight, userId ? { userId } : "skip");
   const router = useRouter();
   const authHook = useAuth();
 
   const currentGoal: Goal = foodTarget?.goal ?? "maintain";
+  const targetProfile = useMemo(
+    () => profile ? { ...profile, weightKg: latestWeight?.weightKg ?? profile.weightKg } : null,
+    [profile, latestWeight?.weightKg]
+  );
 
   const handleSelectGoal = async (goal: Goal) => {
-    if (!userId || !profile) { setGoalPickerOpen(false); return; }
+    if (!userId || !targetProfile) { setGoalPickerOpen(false); return; }
     setSavingGoal(true);
     try {
-      const targets = calcTargetsForGoal(profile, goal);
+      const targets = calcTargetsForGoal(targetProfile, goal);
       await saveFoodTarget({ userId, ...targets });
     } catch (e: any) {
       console.log("Goal update error:", e.message);

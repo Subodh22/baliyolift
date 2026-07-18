@@ -771,14 +771,14 @@ function CardioExCard({ se, exId, cardioState, suggestion, dispatch, workoutId, 
   );
 }
 
-function CardioExCardWithSuggestion({ se, exId, cardioState, dispatch, workoutId, userId, weekNumber, onDelete }: {
+function CardioExCardWithSuggestion({ se, exId, cardioState, dispatch, workoutId, userId, weekNumber, totalWeeks, onDelete }: {
   se: any; exId: string; cardioState: LocalCardioState | undefined;
   dispatch: React.Dispatch<Action>; workoutId: Id<"workouts"> | null;
-  userId: Id<"users"> | null; weekNumber: number; onDelete: (scope: "today" | "meso") => void;
+  userId: Id<"users"> | null; weekNumber: number; totalWeeks?: number; onDelete: (scope: "today" | "meso") => void;
 }) {
   const suggestion = useQuery(
     api.overload.getCardioSuggestion,
-    userId ? { userId, exerciseId: se.exerciseId, weekNumber } : "skip"
+    userId ? { userId, exerciseId: se.exerciseId, weekNumber, totalWeeks } : "skip"
   );
   return (
     <CardioExCard se={se} exId={exId} cardioState={cardioState} suggestion={suggestion}
@@ -1007,6 +1007,7 @@ export default function WorkoutScreen() {
                 workoutId={wid}
                 userId={userId ?? null}
                 weekNumber={weekNumber}
+                totalWeeks={meso?.weeks}
                 onDelete={(scope) => handleDeleteExercise(oldExId, seId, scope)}
               />
             );
@@ -1063,6 +1064,7 @@ export default function WorkoutScreen() {
                 workoutId={wid}
                 userId={userId ?? null}
                 weekNumber={weekNumber}
+                totalWeeks={meso?.weeks}
                 onDelete={(scope) => handleDeleteExercise(exId, ex.seId, scope)}
               />
             );
@@ -1158,7 +1160,6 @@ export default function WorkoutScreen() {
             <TouchableOpacity
               onPress={() => dispatch({ type: "HIDE_REST" })}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              onStartShouldSetResponder={() => true}
             >
               <Text style={{ color: colors.labelTertiary, fontSize: 16 }}>✕</Text>
             </TouchableOpacity>

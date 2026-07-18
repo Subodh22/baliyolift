@@ -14,6 +14,22 @@ function weeklyVolumeTarget(mev: number, mrv: number, weekNumber: number, totalW
   return Math.round(mev + (mrv - mev) * frac);
 }
 
+function currentWeekFromFinishedSessions(
+  workouts: { sessionId: unknown; weekNumber: number; status: string }[],
+  sessionCount: number,
+  totalWeeks: number
+): number {
+  if (sessionCount <= 0) return 1;
+  const finishedKeys = new Set(
+    workouts
+      .filter((w) => w.status === "completed" || w.status === "skipped")
+      .map((w) => `${w.weekNumber}:${w.sessionId as string}`)
+  );
+  const cycleWeek = Math.floor(finishedKeys.size / sessionCount) + 1;
+  const maxLoggedWeek = workouts.length > 0 ? Math.max(...workouts.map((w) => w.weekNumber)) : 1;
+  return Math.min(Math.max(cycleWeek, maxLoggedWeek), totalWeeks);
+}
+
 export const startWorkout = mutation({
   args: {
     userId: v.id("users"),
@@ -72,11 +88,16 @@ export const completeWorkout = mutation({
 export const getTodaysWorkout = query({
   args: {
     userId: v.id("users"),
+    timezoneOffsetMinutes: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    // Start of today in UTC (midnight)
+    // Start of the user's local day. JS getTimezoneOffset-style offset:
+    // UTC = local + offset, so local timestamp = UTC - offset.
     const now = Date.now();
-    const startOfDay = now - (now % 86400000);
+    const offsetMs = (args.timezoneOffsetMinutes ?? 0) * 60 * 1000;
+    const localNow = now - offsetMs;
+    const startOfLocalDay = localNow - (localNow % 86400000);
+    const startOfDay = startOfLocalDay + offsetMs;
     const endOfDay = startOfDay + 86400000;
 
     const workouts = await ctx.db
@@ -254,16 +275,12 @@ export const getNextSession = query({
       )
       .first();
 
-    // Week number = max(calendar week, highest week logged) so early-start works
-    const msPerWeek = 7 * 24 * 60 * 60 * 1000;
-    const calendarWeek = Math.max(1, Math.ceil((Date.now() - meso.startDate) / msPerWeek));
     const allWorkouts = await ctx.db
       .query("workouts")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .filter((q) => q.eq(q.field("mesocycleId"), meso._id))
       .collect();
-    const maxLoggedWeek = allWorkouts.length > 0 ? Math.max(...allWorkouts.map((w) => w.weekNumber)) : 1;
-    const weekNumber = Math.min(Math.max(calendarWeek, maxLoggedWeek), meso.weeks);
+    const weekNumber = currentWeekFromFinishedSessions(allWorkouts, sessions.length, meso.weeks);
 
     if (inProgress) {
       const session = sessions.find((s) => s._id === inProgress.sessionId) ?? null;
