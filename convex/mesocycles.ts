@@ -27,12 +27,14 @@ export const create = mutation({
     sessions: v.optional(v.array(sessionInputValidator)),
   },
   handler: async (ctx, args) => {
-    // Enforce one active meso at a time
+    // Enforce one active meso at a time — pause the previous one (consistent
+    // with setActive). Marking it "completed" would falsely claim it was
+    // finished when it may have been abandoned mid-way.
     const existing = await ctx.db
       .query("mesocycles")
       .withIndex("by_user_status", (q) => q.eq("userId", args.userId).eq("status", "active"))
       .first();
-    if (existing) await ctx.db.patch(existing._id, { status: "completed" });
+    if (existing) await ctx.db.patch(existing._id, { status: "paused" });
 
     const mesocycleId = await ctx.db.insert("mesocycles", {
       userId: args.userId,
@@ -155,6 +157,15 @@ export const deleteAllForUser = mutation({
       }
       await ctx.db.delete(meso._id);
     }
+    // Also delete the user's workouts + their sets, which were previously
+    // orphaned here (deleteMesocycle cleans them up — keep the two cascades
+    // consistent).
+    const workouts = await ctx.db.query("workouts").withIndex("by_user", (q) => q.eq("userId", args.userId)).collect();
+    for (const workout of workouts) {
+      const sets = await ctx.db.query("sets").withIndex("by_workout", (q) => q.eq("workoutId", workout._id)).collect();
+      for (const set of sets) await ctx.db.delete(set._id);
+      await ctx.db.delete(workout._id);
+    }
   },
 });
 
@@ -186,12 +197,13 @@ export const createCustom = mutation({
     })),
   },
   handler: async (ctx, args) => {
-    // Enforce one active meso at a time
+    // Enforce one active meso at a time — pause the previous one (consistent
+    // with setActive), rather than falsely marking it "completed".
     const existing = await ctx.db
       .query("mesocycles")
       .withIndex("by_user_status", (q) => q.eq("userId", args.userId).eq("status", "active"))
       .first();
-    if (existing) await ctx.db.patch(existing._id, { status: "completed" });
+    if (existing) await ctx.db.patch(existing._id, { status: "paused" });
 
     const mesoId = await ctx.db.insert("mesocycles", {
       userId: args.userId,
@@ -264,15 +276,6 @@ export const createCustom = mutation({
     }
 
     return mesoId;
-  },
-});
-
-export const startDeload = mutation({
-  args: {
-    mesocycleId: v.id("mesocycles"),
-  },
-  handler: async (ctx, args) => {
-    await ctx.db.patch(args.mesocycleId, { status: "deload" });
   },
 });
 
