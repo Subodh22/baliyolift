@@ -2,8 +2,12 @@ import { v } from "convex/values";
 import { query } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 
-function epley1RM(weight: number, reps: number): number {
-  return Math.round(weight * (1 + reps / 30));
+// Estimated 1RM using effective reps (reps + RIR), a rep cap to tame Epley's
+// high-rep inaccuracy, and 0 for weightless bodyweight sets. See sets.ts.
+function estimated1RM(weight: number, reps: number, rir = 0): number {
+  if (weight <= 0) return 0;
+  const effectiveReps = Math.min(reps + rir, 12);
+  return Math.round(weight * (1 + effectiveReps / 30));
 }
 
 export const getDashboard = query({
@@ -30,7 +34,8 @@ export const getDashboard = query({
     const bestByEx: Record<string, { weight: number; reps: number; e1rm: number; timestamp: number }> = {};
     for (const s of allSets) {
       const id = s.exerciseId as string;
-      const e1rm = epley1RM(s.weight, s.reps);
+      const e1rm = estimated1RM(s.weight, s.reps, s.rir);
+      if (e1rm <= 0) continue; // skip bodyweight / weightless sets — no meaningful 1RM
       if (!bestByEx[id] || e1rm > bestByEx[id].e1rm) {
         bestByEx[id] = { weight: s.weight, reps: s.reps, e1rm, timestamp: s.timestamp };
       }
@@ -70,11 +75,9 @@ export const getDashboard = query({
     // Resolve workout dates
     const chartPoints = await Promise.all(
       Array.from(workoutMap.entries()).map(async ([wid, { sets }]) => {
-        const workout = await ctx.db.query("workouts")
-          .filter((q) => q.eq(q.field("_id"), wid))
-          .first();
-        const topE1RM = Math.max(...sets.map((s) => epley1RM(s.weight, s.reps)));
-        const topSet = sets.reduce((best, s) => epley1RM(s.weight, s.reps) > epley1RM(best.weight, best.reps) ? s : best);
+        const workout = await ctx.db.get(wid as Id<"workouts">);
+        const topE1RM = Math.max(...sets.map((s) => estimated1RM(s.weight, s.reps, s.rir)));
+        const topSet = sets.reduce((best, s) => estimated1RM(s.weight, s.reps, s.rir) > estimated1RM(best.weight, best.reps, best.rir) ? s : best);
         return {
           date: workout?.date ?? 0,
           weekNumber: workout?.weekNumber ?? 0,

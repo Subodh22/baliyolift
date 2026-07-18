@@ -1,9 +1,16 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
 
-// Epley formula for estimated 1RM
-function epley1RM(weight: number, reps: number): number {
-  return weight * (1 + reps / 30);
+// Estimated 1RM from a working set. Uses effective reps (reps + RIR) so sets
+// left further from failure aren't undervalued, caps the rep count Epley sees
+// (it grows wildly inaccurate past ~12 reps, and half this app's ranges reach
+// 15–20), and returns 0 for weightless bodyweight sets, which have no
+// meaningful 1RM.
+function estimated1RM(weight: number, reps: number, rir = 0): number {
+  if (weight <= 0) return 0;
+  const effectiveReps = Math.min(reps + rir, 12);
+  return weight * (1 + effectiveReps / 30);
 }
 
 export const logSet = mutation({
@@ -77,12 +84,12 @@ export const getPersonalBest = query({
 
     if (sets.length === 0) return null;
 
-    // Find set with highest estimated 1RM using Epley formula
+    // Find set with highest estimated 1RM
     let best = sets[0];
-    let bestE1RM = epley1RM(best.weight, best.reps);
+    let bestE1RM = estimated1RM(best.weight, best.reps, best.rir);
 
     for (const set of sets) {
-      const e1rm = epley1RM(set.weight, set.reps);
+      const e1rm = estimated1RM(set.weight, set.reps, set.rir);
       if (e1rm > bestE1RM) {
         best = set;
         bestE1RM = e1rm;
@@ -133,9 +140,7 @@ export const getProgressionHistory = query({
     // Build result
     const results = await Promise.all(
       workoutEntries.map(async ({ workoutId, sets }) => {
-        const workout = await ctx.db.query("workouts")
-          .filter((q) => q.eq(q.field("_id"), workoutId))
-          .first();
+        const workout = await ctx.db.get(workoutId as Id<"workouts">);
         const totalVolume = sets.reduce(
           (sum, s) => sum + s.weight * s.reps,
           0
@@ -157,7 +162,7 @@ export const getProgressionHistory = query({
           avgRIR: Math.round(avgRIR * 10) / 10,
           totalVolume: Math.round(totalVolume),
           bestE1RM: Math.max(
-            ...sets.map((s) => epley1RM(s.weight, s.reps))
+            ...sets.map((s) => estimated1RM(s.weight, s.reps, s.rir))
           ),
         };
       })
