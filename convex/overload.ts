@@ -3,60 +3,106 @@ import { mutation, query } from "./_generated/server";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-/** Round to nearest increment (default 2.5 kg) */
-function roundToIncrement(value: number, increment = 2.5): number {
-  return Math.round(value / increment) * increment;
+/** Round to nearest step. */
+function roundToStep(value: number, step: number): number {
+  return Math.round(value / step) * step;
+}
+
+/** Smallest sensible load increment for a given equipment type (kg). */
+function stepForEquipment(equipment?: string | null): number {
+  switch (equipment) {
+    case "dumbbell": return 1;   // small dumbbells / micro-loading
+    case "bodyweight": return 1; // added load, when any
+    default: return 2.5;         // barbell (1.25/side), cable, machine, other
+  }
 }
 
 /**
- * Week-based target RIR — Dr. Mike Israetel's RP mesocycle progression:
- * Week 1 = highest RIR (most reserve), final week = 0 RIR (near failure).
- * This creates a gradual fatigue accumulation across the meso.
+ * Next working weight — ~2.5% progression, snapped up to at least one equipment
+ * step. Percent-based so light isolation work and heavy compounds both advance
+ * sensibly, and rounded to the equipment step so sub-20 kg loads actually move
+ * (the old `+1 then round-to-2.5` snapped straight back).
  */
-function targetRirForWeek(weekNumber: number, totalWeeks = 4): number {
-  if (weekNumber <= 1) return 3;
-  if (weekNumber === 2) return 2;
-  if (weekNumber === 3) return 1;
-  return 0; // week 4+
+function nextWeight(current: number, equipment?: string | null): number {
+  const step = stepForEquipment(equipment);
+  const inc = Math.max(step, roundToStep(current * 0.025, step));
+  return roundToStep(current + inc, step);
+}
+
+/** Estimated 1RM (Epley) — used only to pick the best working set as reference. */
+function e1rm(weight: number, reps: number): number {
+  return weight * (1 + reps / 30);
+}
+
+const START_RIR = 3;
+
+/**
+ * The final week of a multi-week mesocycle is a programmed deload.
+ * (A 1-week meso has no deload.)
+ */
+function isDeloadWeek(weekNumber: number, totalWeeks: number): boolean {
+  return totalWeeks > 1 && weekNumber >= totalWeeks;
+}
+
+/**
+ * Week-based target RIR — RP mesocycle progression scaled to the meso length.
+ * RIR ramps from START_RIR (most reserve) down to 0 (near failure) across the
+ * training weeks, then the final week deloads at a high RIR. Interpolating on
+ * `totalWeeks` means a 5- or 6-week meso no longer grinds at failure for its
+ * last weeks the way a hardcoded 4-week ramp did.
+ */
+function targetRirForWeek(weekNumber: number, totalWeeks: number): number {
+  if (isDeloadWeek(weekNumber, totalWeeks)) return 4; // deload — stay well shy of failure
+  const trainingWeeks = totalWeeks > 1 ? totalWeeks - 1 : totalWeeks;
+  if (trainingWeeks <= 1) return START_RIR;
+  const w = Math.min(Math.max(weekNumber, 1), trainingWeeks);
+  return Math.round(START_RIR * (1 - (w - 1) / (trainingWeeks - 1)));
 }
 
 // ─── Queries ─────────────────────────────────────────────────────────────────
 
 /**
- * Core progressive overload suggestion using RP double-progression + feedback.
- *
- * Algorithm (Dr. Mike Israetel / RP Hypertrophy methodology):
- * 1. Determine target RIR from week number (3/2/1/0)
- * 2. Fetch last working session's top set for this exercise
- * 3. Apply double-progression rules:
- *    - Rep range not full + RIR okay → add 1 rep (add_rep)
- *    - Rep range full AND RIR ≤ target → increase weight (increase)
- *    - Reps below range → decrease weight (decrease)
- *    - Within range at target RIR → maintain
- * 4. Apply feedback adjustments from last session's soreness/pump/workload
- * 5. Deload detection: week ≥ 4 AND 2 consecutive sessions at 0 RIR at low reps
+ * Per-exercise set ramp used when the mesocycle has no volume landmark for the
+ * muscle (fallback only): week 1 = targetSets, +1 per training week capped at
+ * +3, deload week ≈ half.
  */
+function rampSetsForWeek(weekNumber: number, totalWeeks: number, targetSets: number): number {
+  if (isDeloadWeek(weekNumber, totalWeeks)) {
+    return Math.max(1, Math.ceil(targetSets / 2));
+  }
+  const trainingWeeks = totalWeeks > 1 ? totalWeeks - 1 : totalWeeks;
+  const maxAdded = Math.min(3, Math.max(trainingWeeks - 1, 0));
+  return targetSets + Math.min(Math.max(weekNumber - 1, 0), maxAdded);
+}
+
 /**
- * RP set volume progression:
- * Week 1 = targetSets (MEV baseline)
- * Each subsequent week adds 1 set, capped at targetSets+3.
- * Feedback can suppress the addition (workload/soreness too high) or add an extra (everything easy).
+ * Weekly per-muscle set budget from the mesocycle's RP landmarks: ramps
+ * MEV (week 1) → MRV (last training week) so the volume reference line is
+ * week-dependent, and deloads to ~half MEV on the final week. This is the
+ * whole-week target for the muscle; it gets split across the muscle's
+ * exercises by the caller so per-muscle weekly sets stay ≤ MRV.
  */
-function suggestedSetsForWeek(
+function muscleWeeklyBudget(
+  target: { mev: number; mrv: number },
   weekNumber: number,
-  targetSets: number,
-  feedbackWorkload?: number,
-  feedbackSoreness?: number
+  totalWeeks: number
 ): number {
-  const maxAdded = 3;
-  let addedSets = Math.min(weekNumber - 1, maxAdded);
-  // Too much workload → don't add this week
-  if (feedbackWorkload === 3) addedSets = Math.max(addedSets - 1, 0);
-  // Still sore → pull back one set
-  if (feedbackSoreness === 3) addedSets = Math.max(addedSets - 1, 0);
-  // Too easy → bonus set
-  if (feedbackWorkload === 0 && feedbackSoreness === 0 && addedSets < maxAdded) addedSets += 1;
-  return targetSets + addedSets;
+  if (isDeloadWeek(weekNumber, totalWeeks)) return Math.max(1, Math.round(target.mev / 2));
+  const trainingWeeks = totalWeeks > 1 ? totalWeeks - 1 : totalWeeks;
+  const frac = trainingWeeks <= 1 ? 1 : Math.min(1, Math.max(0, (weekNumber - 1) / (trainingWeeks - 1)));
+  return Math.round(target.mev + (target.mrv - target.mev) * frac);
+}
+
+/**
+ * Feedback adjusts volume only (never load), applied exactly once:
+ * too much workload or still-sore → pull a set; everything easy → add one.
+ */
+function applyFeedbackToSets(sets: number, feedbackWorkload?: number, feedbackSoreness?: number): number {
+  let s = sets;
+  if (feedbackWorkload === 3) s -= 1;
+  if (feedbackSoreness === 3) s -= 1;
+  if (feedbackWorkload === 0 && feedbackSoreness === 0) s += 1;
+  return Math.max(1, s);
 }
 
 export const getSuggestionV2 = query({
@@ -70,35 +116,108 @@ export const getSuggestionV2 = query({
     targetSets: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const targetRir = targetRirForWeek(args.weekNumber);
+    const meso = await ctx.db.get(args.mesocycleId);
+    const totalWeeks = meso?.weeks ?? 4;
+    const targetRir = targetRirForWeek(args.weekNumber, totalWeeks);
+    const deloadWeek = isDeloadWeek(args.weekNumber, totalWeeks);
     const baseSets = args.targetSets ?? 3;
 
-    // --- Fetch last 2 sessions' sets for this exercise ---
-    const allSets = await ctx.db
+    // Workouts belonging to the current mesocycle — used to scope both history
+    // and feedback so a stale session from a previous meso (different rep range,
+    // months old) can't silently drive today's suggestion.
+    const mesoWorkouts = await ctx.db
+      .query("workouts")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .filter((q) => q.eq(q.field("mesocycleId"), args.mesocycleId))
+      .collect();
+    const mesoWorkoutIds = new Set(mesoWorkouts.map((w) => w._id as string));
+
+    // Bounded recent history for this exercise (most recent first).
+    const recentSets = await ctx.db
       .query("sets")
       .withIndex("by_exercise_user", (q) =>
         q.eq("exerciseId", args.exerciseId).eq("userId", args.userId)
       )
       .filter((q) => q.eq(q.field("isWarmup"), false))
       .order("desc")
-      .collect();
+      .take(50);
 
-    if (allSets.length === 0) {
+    // Prefer this meso's sets; fall back to all-time only when the meso has no
+    // data for this exercise yet (week 1 / first time performing it).
+    const scoped = recentSets.filter((s) => mesoWorkoutIds.has(s.workoutId as string));
+    const usableSets = scoped.length > 0 ? scoped : recentSets;
+
+    // --- Feedback for this muscle group, scoped to the current meso ---
+    const exercise = await ctx.db.get(args.exerciseId);
+    let feedbackWorkload: number | undefined;
+    let feedbackSoreness: number | undefined;
+    if (exercise) {
+      const recentFeedback = await ctx.db
+        .query("sessionFeedback")
+        .withIndex("by_user_muscle", (q) =>
+          q.eq("userId", args.userId).eq("muscleGroup", exercise.muscleGroup)
+        )
+        .order("desc")
+        .take(10);
+      // Most recent feedback for this muscle from within this mesocycle.
+      const feedback = recentFeedback.find((f) => mesoWorkoutIds.has(f.workoutId as string));
+      if (feedback) {
+        feedbackWorkload = feedback.workload;
+        feedbackSoreness = feedback.soreness;
+      }
+    }
+
+    // --- Volume: budget per muscle group from the meso's RP landmarks ---
+    // Ramp the muscle's weekly set target MEV→MRV, then split it across the
+    // muscle's exercise slots in this meso so total weekly sets stay ≤ MRV.
+    // Falls back to a per-exercise ramp when the meso has no landmark for the
+    // muscle. Feedback is then applied to volume exactly once.
+    let rampedSets = rampSetsForWeek(args.weekNumber, totalWeeks, baseSets);
+    const volTarget = exercise
+      ? meso?.volumeTargets.find((t) => t.muscleGroup === exercise.muscleGroup)
+      : undefined;
+    if (exercise && meso && volTarget) {
+      const sessions = await ctx.db
+        .query("sessions")
+        .withIndex("by_mesocycle", (q) => q.eq("mesocycleId", meso._id))
+        .collect();
+      const uniqueIds = [...new Set(sessions.flatMap((s) => s.exerciseIds.map((id) => id as string)))];
+      const mgById = new Map<string, string>();
+      await Promise.all(
+        uniqueIds.map(async (id) => {
+          const ex = await ctx.db.get(id as typeof args.exerciseId);
+          if (ex) mgById.set(id, ex.muscleGroup);
+        })
+      );
+      // Count occurrences (not distinct) so a muscle trained across multiple
+      // sessions splits its weekly budget across every slot.
+      let muscleSlots = 0;
+      for (const s of sessions) {
+        for (const id of s.exerciseIds) {
+          if (mgById.get(id as string) === exercise.muscleGroup) muscleSlots++;
+        }
+      }
+      const weekly = muscleWeeklyBudget(volTarget, args.weekNumber, totalWeeks);
+      rampedSets = Math.max(1, Math.round(weekly / Math.max(1, muscleSlots)));
+    }
+    const suggestedSets = applyFeedbackToSets(rampedSets, feedbackWorkload, feedbackSoreness);
+
+    if (usableSets.length === 0) {
       return {
         suggestedWeight: null,
         suggestedReps: args.repRangeMin,
-        suggestedSets: suggestedSetsForWeek(args.weekNumber, baseSets),
+        suggestedSets,
         targetRir,
         overloadIndicator: "maintain" as const,
         reason: "No history — start with a comfortable weight.",
         lastSession: null,
-        deloadFlag: false,
+        deloadFlag: deloadWeek,
       };
     }
 
-    // Group by workoutId → distinct sessions (most recent first)
-    const workoutMap = new Map<string, typeof allSets>();
-    for (const set of allSets) {
+    // Group by workoutId → distinct sessions (most recent first).
+    const workoutMap = new Map<string, typeof usableSets>();
+    for (const set of usableSets) {
       const key = set.workoutId as string;
       if (!workoutMap.has(key)) workoutMap.set(key, []);
       workoutMap.get(key)!.push(set);
@@ -106,114 +225,90 @@ export const getSuggestionV2 = query({
 
     const sessions = Array.from(workoutMap.values());
     const lastSession = sessions[0];
-    const prevSession = sessions[1] ?? null;
 
-    // Top set = highest setNumber (last working set) in that session
+    // Reference = the best working set of the session (highest e1RM), not the
+    // last set. The last set is the most fatigued, so keying progression off it
+    // systematically under-progresses.
     const topSet = lastSession.reduce((best, s) =>
-      s.setNumber > best.setNumber ? s : best
+      e1rm(s.weight, s.reps) > e1rm(best.weight, best.reps) ? s : best
     );
 
     const lastWeight = topSet.weight;
     const lastReps = topSet.reps;
     const lastRir = topSet.rir;
+    const step = stepForEquipment(exercise?.equipment);
 
     const lastSessionSummary = { weight: lastWeight, reps: lastReps, rir: lastRir };
 
-    // --- Fetch feedback adjustment for this muscle group ---
-    const exercise = await ctx.db.get(args.exerciseId);
-    let weightMultiplier = 1.0;
-    let volumeDelta = 0;
-    let feedbackWorkload: number | undefined;
-    let feedbackSoreness: number | undefined;
-
-    if (exercise) {
-      const feedback = await ctx.db
-        .query("sessionFeedback")
-        .withIndex("by_user_muscle", (q) =>
-          q.eq("userId", args.userId).eq("muscleGroup", exercise.muscleGroup)
-        )
-        .order("desc")
-        .first();
-
-      if (feedback) {
-        feedbackWorkload = feedback.workload;
-        feedbackSoreness = feedback.soreness;
-        if (feedback.soreness === 3) { weightMultiplier *= 0.95; volumeDelta = -1; }
-        if (feedback.workload === 3) { weightMultiplier *= 0.95; volumeDelta = Math.min(volumeDelta, -1); }
-        if (feedback.workload === 0 && feedback.soreness === 0) { weightMultiplier *= 1.05; volumeDelta = 1; }
-      }
-    }
-
-    const suggestedSets = suggestedSetsForWeek(args.weekNumber, baseSets, feedbackWorkload, feedbackSoreness);
-
-    // --- Deload detection ---
-    let deloadFlag = false;
-    if (args.weekNumber >= 4 && prevSession) {
-      const prevTop = prevSession.reduce((best, s) =>
-        s.setNumber > best.setNumber ? s : best
-      );
-      if (
-        topSet.rir === 0 && topSet.reps <= args.repRangeMin &&
-        prevTop.rir === 0 && prevTop.reps <= args.repRangeMin
-      ) {
-        deloadFlag = true;
-      }
+    // --- Programmed deload week ---
+    // Recovery week: ~90% load, half the sets, well shy of failure. This
+    // replaces the old reactive "2 sessions at 0 RIR" detector, which could
+    // never fire while RIR was hardcoded.
+    if (deloadWeek) {
+      const deloadWeight = lastWeight > 0 ? roundToStep(lastWeight * 0.9, step) : lastWeight;
+      return {
+        suggestedWeight: deloadWeight > 0 ? deloadWeight : null,
+        suggestedReps: args.repRangeMin,
+        suggestedSets,
+        targetRir,
+        overloadIndicator: "decrease" as const,
+        reason: `Deload week — ~90% load, half the sets, keep ${targetRir}+ RIR to recover.`,
+        lastSession: lastSessionSummary,
+        deloadFlag: true,
+      };
     }
 
     // --- Double Progression Algorithm ---
+    // Feedback never touches load here — it only adjusts volume (suggestedSets),
+    // applied exactly once above.
     if (lastReps < args.repRangeMin) {
       return {
-        suggestedWeight: Math.max(roundToIncrement(lastWeight * 0.95 * weightMultiplier), 2.5),
+        suggestedWeight: lastWeight > 0 ? Math.max(step, roundToStep(lastWeight * 0.95, step)) : null,
         suggestedReps: args.repRangeMin,
         suggestedSets,
         targetRir,
         overloadIndicator: "decrease" as const,
         reason: `${lastReps} reps below range (${args.repRangeMin}–${args.repRangeMax}). Reduce weight to hit target reps.`,
         lastSession: lastSessionSummary,
-        deloadFlag,
-        volumeDelta,
+        deloadFlag: false,
       };
     }
 
     if (lastReps >= args.repRangeMax && lastRir <= targetRir) {
-      const increase = lastWeight < 20 ? 1 : 2.5;
       return {
-        suggestedWeight: roundToIncrement(lastWeight * weightMultiplier + increase),
+        suggestedWeight: lastWeight > 0 ? nextWeight(lastWeight, exercise?.equipment) : null,
         suggestedReps: args.repRangeMin,
         suggestedSets,
         targetRir,
         overloadIndicator: "increase" as const,
         reason: `Hit ${lastReps} reps at RIR ${lastRir} — top of range. Add weight, reset to ${args.repRangeMin} reps.`,
         lastSession: lastSessionSummary,
-        deloadFlag,
-        volumeDelta,
+        deloadFlag: false,
       };
     }
 
     if (lastReps < args.repRangeMax && lastRir > targetRir) {
       return {
-        suggestedWeight: roundToIncrement(lastWeight * weightMultiplier),
+        suggestedWeight: lastWeight > 0 ? roundToStep(lastWeight, step) : null,
         suggestedReps: Math.min(lastReps + 1, args.repRangeMax),
         suggestedSets,
         targetRir,
         overloadIndicator: "add_rep" as const,
         reason: `RIR ${lastRir} > target ${targetRir}. Same weight, push for +1 rep.`,
         lastSession: lastSessionSummary,
-        deloadFlag,
-        volumeDelta,
+        deloadFlag: false,
       };
     }
 
     return {
-      suggestedWeight: roundToIncrement(lastWeight * weightMultiplier),
+      suggestedWeight: lastWeight > 0 ? roundToStep(lastWeight, step) : null,
       suggestedReps: lastReps,
       suggestedSets,
       targetRir,
       overloadIndicator: "maintain" as const,
       reason: `${lastReps} reps at RIR ${lastRir} — on track. Match this session.`,
       lastSession: lastSessionSummary,
-      deloadFlag,
-      volumeDelta,
+      deloadFlag: false,
     };
   },
 });
@@ -329,42 +424,6 @@ export const getCardioSuggestion = query({
   },
 });
 
-/**
- * Legacy query — kept for backward compat with any existing consumers.
- */
-export const getSuggestion = query({
-  args: {
-    userId: v.id("users"),
-    exerciseId: v.id("exercises"),
-    mesocycleId: v.id("mesocycles"),
-  },
-  handler: async (ctx, args) => {
-    const allSets = await ctx.db
-      .query("sets")
-      .withIndex("by_exercise_user", (q) =>
-        q.eq("exerciseId", args.exerciseId).eq("userId", args.userId)
-      )
-      .filter((q) => q.eq(q.field("isWarmup"), false))
-      .order("desc")
-      .collect();
-
-    if (allSets.length === 0) {
-      return { suggestedWeight: null, suggestedReps: null, hasData: false };
-    }
-
-    const recent = allSets.slice(0, 5);
-    const avgWeight = recent.reduce((s, x) => s + x.weight, 0) / recent.length;
-    const avgRir = recent.reduce((s, x) => s + x.rir, 0) / recent.length;
-    const avgReps = recent.reduce((s, x) => s + x.reps, 0) / recent.length;
-
-    return {
-      suggestedWeight: avgRir > 2 ? avgWeight + 2.5 : avgWeight,
-      suggestedReps: Math.round(avgReps),
-      hasData: true,
-    };
-  },
-});
-
 // ─── Mutations ────────────────────────────────────────────────────────────────
 
 /**
@@ -398,33 +457,3 @@ export const saveFeedback = mutation({
   },
 });
 
-/**
- * Get the feedback adjustment multipliers for a muscle group.
- * Used to adjust weight/volume suggestions based on last session's feedback.
- */
-export const getFeedbackAdjustments = query({
-  args: {
-    userId: v.id("users"),
-    muscleGroup: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const feedback = await ctx.db
-      .query("sessionFeedback")
-      .withIndex("by_user_muscle", (q) =>
-        q.eq("userId", args.userId).eq("muscleGroup", args.muscleGroup)
-      )
-      .order("desc")
-      .first();
-
-    if (!feedback) return { weightMultiplier: 1.0, volumeDelta: 0 };
-
-    let weightMultiplier = 1.0;
-    let volumeDelta = 0;
-
-    if (feedback.soreness === 3) { weightMultiplier *= 0.95; volumeDelta = -1; }
-    if (feedback.workload === 3) { weightMultiplier *= 0.95; volumeDelta = Math.min(volumeDelta, -1); }
-    if (feedback.workload === 0 && feedback.soreness === 0) { weightMultiplier = 1.05; volumeDelta = 1; }
-
-    return { weightMultiplier, volumeDelta };
-  },
-});

@@ -1,6 +1,19 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
+/**
+ * Week-dependent volume reference for a muscle group: ramps MEV (week 1) → MRV
+ * (last training week), deloading to ~half MEV on the final week. Mirrors the
+ * set-budget ramp in overload.ts so the dashboard's target line matches what
+ * the suggestion engine is actually driving toward (was statically MAV).
+ */
+function weeklyVolumeTarget(mev: number, mrv: number, weekNumber: number, totalWeeks: number): number {
+  if (totalWeeks > 1 && weekNumber >= totalWeeks) return Math.max(1, Math.round(mev / 2));
+  const trainingWeeks = totalWeeks > 1 ? totalWeeks - 1 : totalWeeks;
+  const frac = trainingWeeks <= 1 ? 1 : Math.min(1, Math.max(0, (weekNumber - 1) / (trainingWeeks - 1)));
+  return Math.round(mev + (mrv - mev) * frac);
+}
+
 export const startWorkout = mutation({
   args: {
     userId: v.id("users"),
@@ -197,11 +210,12 @@ export const getWeeklyVolume = query({
       }
     }
 
-    // Build result with volume targets
+    // Build result with a week-dependent target (MEV→MRV ramp) instead of a
+    // static MAV, matching the RP volume progression the meso implements.
     return mesocycle.volumeTargets.map((target) => ({
       muscleGroup: target.muscleGroup,
       sets: muscleGroupSets[target.muscleGroup] ?? 0,
-      target: target.mav, // use MAV as the reference target
+      target: weeklyVolumeTarget(target.mev, target.mrv, args.weekNumber, mesocycle.weeks),
       mev: target.mev,
       mrv: target.mrv,
     }));
@@ -264,22 +278,27 @@ export const getNextSession = query({
       };
     }
 
-    // Completed workouts this week
-    const completedThisWeek = await ctx.db
+    // Sessions finished this week — completed OR skipped. A skipped session
+    // must advance the pointer, otherwise a skipped Monday is re-suggested all
+    // week and blocks the queue.
+    const finishedThisWeek = await ctx.db
       .query("workouts")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .filter((q) =>
         q.and(
           q.eq(q.field("mesocycleId"), meso._id),
           q.eq(q.field("weekNumber"), weekNumber),
-          q.eq(q.field("status"), "completed")
+          q.or(
+            q.eq(q.field("status"), "completed"),
+            q.eq(q.field("status"), "skipped")
+          )
         )
       )
       .collect();
 
-    const completedIds = new Set(completedThisWeek.map((w) => w.sessionId as string));
+    const completedIds = new Set(finishedThisWeek.map((w) => w.sessionId as string));
 
-    // First session not yet completed this week
+    // First session not yet completed or skipped this week
     const nextSession = sessions.find((s) => !completedIds.has(s._id as string)) ?? null;
 
     if (!nextSession) {

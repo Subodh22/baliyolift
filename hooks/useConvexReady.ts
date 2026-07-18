@@ -18,7 +18,7 @@
  *
  * // Workout runner:
  * const logSet = useMutation(api.sets.logSet);
- * const suggestion = useQuery(api.overload.getSuggestion, { userId, exerciseId, mesocycleId });
+ * const suggestion = useQuery(api.overload.getSuggestionV2, { userId, exerciseId, mesocycleId, weekNumber, repRangeMin, repRangeMax });
  *
  * // Meso wizard final step:
  * const createMeso = useMutation(api.mesocycles.create);

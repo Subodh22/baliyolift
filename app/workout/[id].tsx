@@ -101,6 +101,7 @@ type Action =
   | { type: "BLUR" }
   | { type: "LOG"; exId: string; setIdx: number; sid: Id<"sets">; ind: OverloadIndicator }
   | { type: "UNLOG"; exId: string; setIdx: number }
+  | { type: "SET_RIR"; exId: string; setIdx: number; rir: number }
   | { type: "ADD_SET"; exId: string }
   | { type: "DEL_SET"; exId: string; setIdx: number }
   | { type: "SET_TYPE"; exId: string; st: SetType }
@@ -116,8 +117,8 @@ type Action =
   | { type: "ADD_EXTRA_EX"; exercise: ExtraExercise }
   | { type: "SET_EXTRA_SEID"; exId: string; seId: Id<"sessionExercises"> };
 
-function mkSet(w: string, r: string, exId: string, i: number): LocalSet {
-  return { localId: `${exId}_${i}_${Date.now()}`, convexSetId: null, weight: w, reps: r, rir: 2, isLogged: false, overloadIndicator: null };
+function mkSet(w: string, r: string, exId: string, i: number, rir = 2): LocalSet {
+  return { localId: `${exId}_${i}_${Date.now()}`, convexSetId: null, weight: w, reps: r, rir, isLogged: false, overloadIndicator: null };
 }
 
 function reducer(s: WState, a: Action): WState {
@@ -180,7 +181,12 @@ function reducer(s: WState, a: Action): WState {
       const ex = s.exStates[a.exId];
       if (!ex) return s;
       const last = ex.sets[ex.sets.length - 1];
-      return { ...s, exStates: { ...s.exStates, [a.exId]: { ...ex, sets: [...ex.sets, mkSet(last?.weight ?? "0", last?.reps ?? "10", a.exId, ex.sets.length)] } } };
+      return { ...s, exStates: { ...s.exStates, [a.exId]: { ...ex, sets: [...ex.sets, mkSet(last?.weight ?? "0", last?.reps ?? "10", a.exId, ex.sets.length, last?.rir ?? 2)] } } };
+    }
+    case "SET_RIR": {
+      const ex = s.exStates[a.exId];
+      if (!ex) return s;
+      return { ...s, exStates: { ...s.exStates, [a.exId]: { ...ex, sets: ex.sets.map((set, i) => i === a.setIdx ? { ...set, rir: a.rir } : set) } } };
     }
     case "DEL_SET": {
       const ex = s.exStates[a.exId];
@@ -242,10 +248,10 @@ function MuscleBadge({ muscle }: { muscle: string }) {
 
 // ─── Set row ──────────────────────────────────────────────────────────────────
 
-function SetRow({ set, setIdx, totalSets, exId, activeCell, onFocus, onLog, onMenu, onDelete, colors }: {
+function SetRow({ set, setIdx, totalSets, exId, activeCell, onFocus, onLog, onMenu, onDelete, onCycleRir, colors }: {
   set: LocalSet; setIdx: number; totalSets: number; exId: string;
   activeCell: WState["activeCell"]; onFocus: (f: "weight" | "reps") => void;
-  onLog: () => void; onMenu: () => void; onDelete: () => void; colors: any;
+  onLog: () => void; onMenu: () => void; onDelete: () => void; onCycleRir: () => void; colors: any;
 }) {
   const wActive = activeCell?.exId === exId && activeCell.setIdx === setIdx && activeCell.field === "weight";
   const rActive = activeCell?.exId === exId && activeCell.setIdx === setIdx && activeCell.field === "reps";
@@ -262,6 +268,9 @@ function SetRow({ set, setIdx, totalSets, exId, activeCell, onFocus, onLog, onMe
       </Pressable>
       <Pressable style={[styles.cell, { backgroundColor: rActive ? colors.repRangeBg : "transparent" }]} onPress={() => onFocus("reps")}>
         <Text style={[styles.cellNum, { color: set.isLogged ? colors.labelSecondary : colors.label }]}>{set.reps}</Text>
+      </Pressable>
+      <Pressable style={styles.rirCell} onPress={() => { selectionAsync(); onCycleRir(); }} hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}>
+        <Text style={{ fontSize: 15, fontFamily: "CormorantGaramond_300Light", color: set.isLogged ? colors.labelSecondary : colors.label }}>{set.rir}</Text>
       </Pressable>
       <Arrow ind={set.isLogged ? set.overloadIndicator : null} colors={colors} />
       <Pressable style={[styles.checkbox, { backgroundColor: set.isLogged ? colors.loggedCheckBg : colors.separator }]} onPress={onLog}>
@@ -290,7 +299,8 @@ function ExCard({ se, originalExId, exState, suggestion, activeCell, dispatch, w
       const w = suggestion?.suggestedWeight?.toString() ?? "0";
       const r = suggestion?.suggestedReps?.toString() ?? se.repRangeMin.toString();
       const numSets = suggestion?.suggestedSets ?? se.targetSets;
-      const sets = Array.from({ length: numSets }, (_, i) => mkSet(w, r, originalExId, i));
+      const rir = suggestion?.targetRir ?? 2;
+      const sets = Array.from({ length: numSets }, (_, i) => mkSet(w, r, originalExId, i, rir));
       dispatch({ type: "INIT_EX", exId: originalExId, sets, setType: se.setType ?? "regular" });
     }
   }, [suggestion, exState]);
@@ -430,7 +440,7 @@ function ExCard({ se, originalExId, exState, suggestion, activeCell, dispatch, w
             </View>
             {suggestion.deloadFlag && (
               <View style={{ backgroundColor: colors.accentOrange + "25", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }}>
-                <Text style={{ color: colors.accentOrange, fontSize: 10, fontFamily: "Outfit_400Regular" }}>DELOAD{"\n"}SOON</Text>
+                <Text style={{ color: colors.accentOrange, fontSize: 10, fontFamily: "Outfit_400Regular" }}>DELOAD{"\n"}WEEK</Text>
               </View>
             )}
           </View>
@@ -442,6 +452,7 @@ function ExCard({ se, originalExId, exState, suggestion, activeCell, dispatch, w
         <View style={{ width: 32 }} />
         <Text style={[styles.tblHdr, { color: colors.labelTertiary }]}>WEIGHT</Text>
         <Text style={[styles.tblHdr, { color: colors.labelTertiary }]}>REPS</Text>
+        <Text style={{ width: 40, textAlign: "center", fontSize: 11, fontFamily: "Outfit_400Regular", letterSpacing: 0.5, color: colors.labelTertiary }}>RIR</Text>
         <View style={{ width: 26 }} />
         <Text style={{ width: 34, textAlign: "center", fontSize: 11, fontFamily: "Outfit_400Regular", letterSpacing: 0.5, color: colors.labelTertiary }}>LOG</Text>
       </View>
@@ -450,7 +461,8 @@ function ExCard({ se, originalExId, exState, suggestion, activeCell, dispatch, w
       {sets.map((set, idx) => (
         <SetRow key={set.localId} set={set} setIdx={idx} totalSets={sets.length} exId={originalExId} activeCell={activeCell}
           onFocus={(f) => dispatch({ type: "FOCUS", exId: originalExId, setIdx: idx, field: f, val: f === "weight" ? set.weight : set.reps })}
-          onLog={() => set.isLogged ? handleUnlog(idx) : handleLog(idx)} onMenu={() => showMenu(idx)} onDelete={() => handleDeleteSet(idx)} colors={colors} />
+          onLog={() => set.isLogged ? handleUnlog(idx) : handleLog(idx)} onMenu={() => showMenu(idx)} onDelete={() => handleDeleteSet(idx)}
+          onCycleRir={() => dispatch({ type: "SET_RIR", exId: originalExId, setIdx: idx, rir: (set.rir + 1) % 5 })} colors={colors} />
       ))}
 
       {/* Add set */}
@@ -856,9 +868,13 @@ export default function WorkoutScreen() {
     }
     for (const se of sessionExs as any[]) {
       const exId = se.exercise._id as string;
+      const stateKey = se._id as string;
       const logged = (setsByEx[exId] ?? []).sort((a: any, b: any) => a.setNumber - b.setNumber);
+      // Nothing logged yet for this exercise — leave it uninitialized so the card
+      // seeds itself from the algorithm's suggestion (weight/reps/sets) instead of 0.
+      if (logged.length === 0) continue;
       const loggedSets: LocalSet[] = logged.map((s: any, i: number) => ({
-        localId: `resume_${exId}_${i}`,
+        localId: `resume_${stateKey}_${i}`,
         convexSetId: s._id,
         weight: s.weight.toString(),
         reps: s.reps.toString(),
@@ -868,14 +884,13 @@ export default function WorkoutScreen() {
       }));
       const lastLogged = logged[logged.length - 1];
       const pendingCount = Math.max(0, se.targetSets - logged.length);
-      const pendingW = lastLogged ? lastLogged.weight.toString() : "0";
-      const pendingR = lastLogged ? lastLogged.reps.toString() : se.repRangeMin.toString();
+      const pendingW = lastLogged.weight.toString();
+      const pendingR = lastLogged.reps.toString();
       const pendingSets: LocalSet[] = Array.from({ length: pendingCount }, (_, i) =>
-        mkSet(pendingW, pendingR, exId, logged.length + i)
+        mkSet(pendingW, pendingR, stateKey, logged.length + i, lastLogged.rir)
       );
       const sets: LocalSet[] = [...loggedSets, ...pendingSets];
-      if (sets.length === 0) sets.push(mkSet("0", se.repRangeMin.toString(), exId, 0));
-      dispatch({ type: "INIT_EX", exId, sets, setType: se.setType ?? "regular" });
+      dispatch({ type: "INIT_EX", exId: stateKey, sets, setType: se.setType ?? "regular" });
     }
   }, [existingWorkoutId, existingWorkout, sessionExs]);
 
@@ -904,11 +919,11 @@ export default function WorkoutScreen() {
   const allLogged = useMemo(() => {
     if (!sessionExs || !(sessionExs as any[]).length) return false;
     return (sessionExs as any[]).every((se: any) => {
-      const exId = se.exercise._id as string;
+      const stateKey = se._id as string;
       if (se.exercise.category === "cardio") {
-        return state.cardioStates[exId]?.isLogged ?? false;
+        return state.cardioStates[stateKey]?.isLogged ?? false;
       }
-      const ex = state.exStates[exId];
+      const ex = state.exStates[stateKey];
       return ex && ex.sets.length > 0 && ex.sets.every((s) => s.isLogged);
     });
   }, [state.exStates, state.cardioStates, sessionExs]);
@@ -972,6 +987,9 @@ export default function WorkoutScreen() {
         {/* Session exercises (planned) */}
         {(sessionExs as any[] | undefined)?.filter((se: any) => !state.hiddenExIds.includes(se.exercise._id as string)).map((se: any) => {
           const oldExId = se.exercise._id as string;
+          // Local set-state key: unique per session-exercise slot so duplicate
+          // exercises don't share (and mutually toggle) the same state.
+          const stateKey = se._id as string;
           const override = state.swapOverrides[oldExId];
           const effectiveSe = override
             ? { ...se, exerciseId: override.exerciseId, exercise: { ...se.exercise, ...override.exercise } }
@@ -983,8 +1001,8 @@ export default function WorkoutScreen() {
               <CardioExCardWithSuggestion
                 key={se._id ?? se.exerciseId}
                 se={effectiveSe}
-                exId={oldExId}
-                cardioState={state.cardioStates[oldExId]}
+                exId={stateKey}
+                cardioState={state.cardioStates[stateKey]}
                 dispatch={dispatch}
                 workoutId={wid}
                 userId={userId ?? null}
@@ -998,8 +1016,8 @@ export default function WorkoutScreen() {
             <ExCardWithSuggestion
               key={se._id ?? se.exerciseId}
               se={effectiveSe}
-              originalExId={oldExId}
-              exState={state.exStates[oldExId]}
+              originalExId={stateKey}
+              exState={state.exStates[stateKey]}
               activeCell={state.activeCell}
               dispatch={dispatch}
               workoutId={wid}
@@ -1236,6 +1254,7 @@ const styles = StyleSheet.create({
   tblHdr: { flex: 1, textAlign: "center", fontSize: 11, fontFamily: "Outfit_400Regular", letterSpacing: 0.6 },
   setRow: { flexDirection: "row", alignItems: "center", paddingVertical: 3, paddingHorizontal: 2, minHeight: 46, borderRadius: 6 },
   cell: { flex: 1, height: 40, borderRadius: 6, alignItems: "center", justifyContent: "center", marginHorizontal: 2 },
+  rirCell: { width: 40, height: 40, borderRadius: 6, alignItems: "center", justifyContent: "center" },
   cellNum: { fontSize: 17, fontFamily: "CormorantGaramond_300Light" },
   arrowCell: { width: 26, alignItems: "center", justifyContent: "center" },
   checkbox: { width: 34, height: 34, borderRadius: 4, alignItems: "center", justifyContent: "center", marginLeft: 2 },
