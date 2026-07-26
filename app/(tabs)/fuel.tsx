@@ -349,7 +349,6 @@ export default function FuelScreen() {
   // ── Queries ───────────────────────────────────────────────────────────────
   const profile       = useQuery(api.userProfile.getByUser,          userId ? { userId } : "skip");
   const storedTarget  = useQuery(api.nutrition.getFoodTarget,         userId ? { userId } : "skip");
-  const latestWeight  = useQuery(api.weightTracking.getLatestWeight,  userId ? { userId } : "skip");
   const dayEntries    = useQuery(api.nutrition.getDayEntries,         userId ? { userId, date } : "skip") ?? [];
   const weekSummary   = useQuery(api.nutrition.getWeekSummary,        userId ? { userId, date } : "skip") ?? [];
   const suggestions   = useQuery(api.mealPlanSlots.getDaySuggestions, userId ? { userId, date } : "skip") ?? [];
@@ -360,9 +359,13 @@ export default function FuelScreen() {
   const addFoodEntry     = useMutation(api.nutrition.addFoodEntry);
   const updateSlotPortion = useMutation(api.mealPlanSlots.updatePortion);
 
+  // NOTE: previously blended in the latest weigh-in via
+  // api.weightTracking.getLatestWeight, but that query crashes the whole tab on
+  // deployments where the function/index is out of sync. Use the profile weight
+  // directly; re-add the weigh-in override once the deployment is synced.
   const targetProfile = useMemo(
-    () => profile ? { ...profile, weightKg: latestWeight?.weightKg ?? profile.weightKg } : null,
-    [profile, latestWeight?.weightKg]
+    () => profile ?? null,
+    [profile]
   );
   const computedTargets = useMemo(
     () => targetProfile
