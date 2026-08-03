@@ -408,12 +408,22 @@ function ExCard({ se, originalExId, exState, suggestion, activeCell, dispatch, w
           <Text style={{ color: colors.repRangeFg, fontSize: 13, marginRight: 4 }}>✎</Text>
           <Text style={{ color: colors.repRangeFg, fontSize: 15, fontFamily: "Outfit_400Regular" }}>{se.repRangeMin}–{se.repRangeMax}</Text>
         </View>
-        {suggestion?.lastSession && (
-          <Text style={{ color: colors.labelTertiary, fontSize: 11, marginLeft: "auto" as any }}>
-            Last: {suggestion.lastSession.weight}kg × {suggestion.lastSession.reps} @ RIR {suggestion.lastSession.rir}
-          </Text>
-        )}
       </View>
+
+      {/* Last session — every set performed, so a low set is never hidden */}
+      {suggestion?.lastSessionSets && suggestion.lastSessionSets.length > 0 && (
+        <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+          <Text style={{ color: colors.labelTertiary, fontSize: 11, fontFamily: "Outfit_400Regular", letterSpacing: 0.5, marginRight: 2 }}>LAST</Text>
+          {suggestion.lastSessionSets.map((s: { weight: number; reps: number; rir: number }, i: number) => (
+            <View key={i} style={{ backgroundColor: colors.fillSecondary, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 }}>
+              <Text style={{ color: colors.labelSecondary, fontSize: 12, fontFamily: "Outfit_400Regular" }}>
+                {s.weight}×{s.reps}
+                <Text style={{ color: colors.labelTertiary, fontSize: 10 }}> @{s.rir}</Text>
+              </Text>
+            </View>
+          ))}
+        </View>
+      )}
 
       {/* Today's target banner */}
       {suggestion && (() => {

@@ -120,6 +120,12 @@ export const getSuggestionV2 = query({
       const mrvSession = volTarget
         ? Math.max(seedSum, Math.ceil(volTarget.mrv / freq))
         : seedSum + 3;
+      // MAV = the productive middle band's per-session share. Below it we add
+      // sets freely; at/above it we're in the high-fatigue MAV→MRV zone near the
+      // recoverable ceiling, so additions decelerate (see the loop below).
+      const mavSession = volTarget
+        ? Math.min(mrvSession, Math.max(1, Math.ceil(volTarget.mav / freq)))
+        : Infinity;
 
       const counts = muscleSlots.map((s) => s.seed);
       if (deloadWeek) {
@@ -197,6 +203,13 @@ export const getSuggestionV2 = query({
           // recovery) are down. Backing off (negative delta) is never clamped.
           if ((meso.phase === "cut" || meso.phase === "prep") && delta > 1) delta = 1;
 
+          // MAV checkpoint: once the muscle's session volume is inside the
+          // MAV→MRV band it's in the high-fatigue zone near the recoverable
+          // ceiling, so decelerate — cap the add at +1/week and require
+          // confirmed recovery (no auto-progress on an unrated session). MRV
+          // below remains the hard ceiling.
+          if (delta > 0 && sum() >= mavSession) delta = hasFeedback ? Math.min(delta, 1) : 0;
+
           while (delta > 0 && sum() < mrvSession) {
             // Route the added set to the eligible exercise that under-delivered:
             // lowest pump first, skipping any that reported "too much" workload,
@@ -245,6 +258,7 @@ export const getSuggestionV2 = query({
         overloadIndicator: "maintain" as const,
         reason: "No history — start with a comfortable weight.",
         lastSession: null,
+        lastSessionSets: [] as { weight: number; reps: number; rir: number }[],
         deloadFlag: deloadWeek,
       };
     }
@@ -274,6 +288,12 @@ export const getSuggestionV2 = query({
 
     const lastSessionSummary = { weight: lastWeight, reps: lastReps, rir: lastRir };
 
+    // Every working set of the last session, in the order performed — so the UI
+    // can show the full picture ("40×8, 40×7, 35×6"), not just the top set.
+    const lastSessionSets = [...lastSession]
+      .sort((a, b) => a.setNumber - b.setNumber)
+      .map((s) => ({ weight: s.weight, reps: s.reps, rir: s.rir }));
+
     // --- Programmed deload week ---
     // Recovery week: ~60% load, half the sets, well shy of failure. This
     // replaces the old reactive "2 sessions at 0 RIR" detector, which could
@@ -288,6 +308,7 @@ export const getSuggestionV2 = query({
         overloadIndicator: "decrease" as const,
         reason: `Deload week — ~60% load, half the sets, keep ${targetRir}+ RIR to recover.`,
         lastSession: lastSessionSummary,
+        lastSessionSets,
         deloadFlag: true,
       };
     }
@@ -304,6 +325,7 @@ export const getSuggestionV2 = query({
         overloadIndicator: "decrease" as const,
         reason: `${lastReps} reps below range (${args.repRangeMin}–${args.repRangeMax}). Reduce weight to hit target reps.`,
         lastSession: lastSessionSummary,
+        lastSessionSets,
         deloadFlag: false,
       };
     }
@@ -317,6 +339,7 @@ export const getSuggestionV2 = query({
         overloadIndicator: "increase" as const,
         reason: `Hit ${lastReps} reps at RIR ${lastRir} — top of range. Add weight, reset to ${args.repRangeMin} reps.`,
         lastSession: lastSessionSummary,
+        lastSessionSets,
         deloadFlag: false,
       };
     }
@@ -330,6 +353,7 @@ export const getSuggestionV2 = query({
         overloadIndicator: "add_rep" as const,
         reason: `RIR ${lastRir} > target ${targetRir}. Same weight, push for +1 rep.`,
         lastSession: lastSessionSummary,
+        lastSessionSets,
         deloadFlag: false,
       };
     }
