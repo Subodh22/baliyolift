@@ -1,19 +1,52 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
-// Upsert today's weight (one entry per day)
+// Upsert today's weight (one entry per day). waistCm is optional — logged
+// weekly — and only written when provided, so a daily weigh-in never wipes the
+// week's waist measurement.
 export const logWeight = mutation({
-  args: { userId: v.id("users"), date: v.string(), weightKg: v.number() },
-  handler: async (ctx, { userId, date, weightKg }) => {
+  args: { userId: v.id("users"), date: v.string(), weightKg: v.number(), waistCm: v.optional(v.number()) },
+  handler: async (ctx, { userId, date, weightKg, waistCm }) => {
     const existing = await ctx.db
       .query("weightEntries")
       .withIndex("by_user_date", q => q.eq("userId", userId).eq("date", date))
       .first();
     if (existing) {
-      await ctx.db.patch(existing._id, { weightKg, timestamp: Date.now() });
+      await ctx.db.patch(existing._id, { weightKg, timestamp: Date.now(), ...(waistCm !== undefined ? { waistCm } : {}) });
     } else {
-      await ctx.db.insert("weightEntries", { userId, date, weightKg, timestamp: Date.now() });
+      await ctx.db.insert("weightEntries", { userId, date, weightKg, timestamp: Date.now(), ...(waistCm !== undefined ? { waistCm } : {}) });
     }
+  },
+});
+
+// Upsert a waist measurement for a day without touching (or requiring) weight —
+// waist is a weekly metric that may be logged on its own. Creates a
+// weight-less row if none exists yet for that day.
+export const logWaist = mutation({
+  args: { userId: v.id("users"), date: v.string(), waistCm: v.number() },
+  handler: async (ctx, { userId, date, waistCm }) => {
+    const existing = await ctx.db
+      .query("weightEntries")
+      .withIndex("by_user_date", q => q.eq("userId", userId).eq("date", date))
+      .first();
+    if (existing) {
+      await ctx.db.patch(existing._id, { waistCm, timestamp: Date.now() });
+    } else {
+      await ctx.db.insert("weightEntries", { userId, date, weightKg: 0, waistCm, timestamp: Date.now() });
+    }
+  },
+});
+
+// Most recent entry that has a waist measurement, regardless of date.
+export const getLatestWaist = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, { userId }) => {
+    const entries = await ctx.db
+      .query("weightEntries")
+      .withIndex("by_user", q => q.eq("userId", userId))
+      .order("desc")
+      .take(60);
+    return entries.find(e => e.waistCm !== undefined) ?? null;
   },
 });
 

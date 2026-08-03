@@ -1116,6 +1116,8 @@ export default function StatsScreen() {
   // Weight input state
   const [weightInput, setWeightInput]   = useState("");
   const [weightFocused, setWeightFocused] = useState(false);
+  const [waistInput, setWaistInput]     = useState("");
+  const [waistFocused, setWaistFocused] = useState(false);
 
   // Queries
   const profile       = useQuery(api.userProfile.getByUser, userId ? { userId } : "skip");
@@ -1129,8 +1131,10 @@ export default function StatsScreen() {
   const foodTarget      = useQuery(api.nutrition.getFoodTarget, userId ? { userId } : "skip");
   const dateSummary = useQuery(api.workouts.getWorkoutDates, userId ? { userId } : "skip");
   const allPhotos   = useQuery(api.progressPhotos.listPhotos, userId ? { userId } : "skip");
+  const photoCadence = useQuery(api.progressPhotos.getPhotoCadence, userId ? { userId, today } : "skip");
 
   const logWeight = useMutation(api.weightTracking.logWeight);
+  const logWaist  = useMutation(api.weightTracking.logWaist);
 
   const hasPhotoToday   = !!todayPhoto;
   const progressLoading = profile === undefined || dashboard === undefined;
@@ -1199,6 +1203,23 @@ export default function StatsScreen() {
     setWeightFocused(false);
   }
 
+  function handleLogWaist() {
+    const val = parseFloat(waistInput);
+    if (!userId || isNaN(val) || val <= 0) return;
+    logWaist({ userId, date: today, waistCm: val });
+    setWaistInput("");
+    setWaistFocused(false);
+  }
+
+  // Photo cadence nudge text (shown under CHECK IN when none logged today).
+  const photoNudge = hasPhotoToday
+    ? "come back tomorrow"
+    : photoCadence?.lastDate == null
+    ? "log your first pic"
+    : photoCadence.due
+    ? "photo due — 2wk check-in"
+    : `next due in ${Math.max(0, 14 - (photoCadence.daysSince ?? 0))}d`;
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: P.bg }} edges={["top"]}>
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
@@ -1219,8 +1240,8 @@ export default function StatsScreen() {
               <Text style={{ fontFamily: OUT_L, fontSize: 10, letterSpacing: 3, color: hasPhotoToday ? P.mid : P.gold }}>
                 {hasPhotoToday ? "✓ LOGGED" : "⊕ CHECK IN"}
               </Text>
-              <Text style={{ fontFamily: OUT_L, fontSize: 9, letterSpacing: 1, color: P.mid, marginTop: 3 }}>
-                {hasPhotoToday ? "come back tomorrow" : "log today's pic"}
+              <Text style={{ fontFamily: OUT_L, fontSize: 9, letterSpacing: 1, color: (!hasPhotoToday && photoCadence?.due) ? P.gold : P.mid, marginTop: 3 }}>
+                {photoNudge}
               </Text>
             </TouchableOpacity>
           </View>
@@ -1273,6 +1294,43 @@ export default function StatsScreen() {
                         onPress={handleLogWeight}
                         style={[s.logBtn, (!weightInput || isNaN(parseFloat(weightInput))) && { opacity: 0.3 }]}
                         disabled={!weightInput || isNaN(parseFloat(weightInput))}
+                      >
+                        <Text style={{ fontFamily: OUT_L, fontSize: 10, letterSpacing: 2, color: P.bg }}>SAVE</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
+                  {/* Waist — logged weekly, separates fat from muscle */}
+                  <View style={{ height: 1, backgroundColor: P.border, marginVertical: 16 }} />
+                  <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                    <View style={{ flexDirection: "row", alignItems: "baseline", gap: 6 }}>
+                      <Text style={s.sectionLabel}>WAIST</Text>
+                      {todayWeight?.waistCm != null && (
+                        <Text style={{ fontFamily: CG, fontSize: 20, color: P.ink }}>
+                          {todayWeight.waistCm}<Text style={{ fontFamily: OUT_L, fontSize: 11, color: P.mid }}> cm</Text>
+                        </Text>
+                      )}
+                    </View>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                      <View style={[s.weightInputRow, waistFocused && { borderColor: P.gold }]}>
+                        <TextInput
+                          style={[s.weightInput, { outlineWidth: 0, outlineStyle: "none" } as any]}
+                          value={waistInput}
+                          onChangeText={setWaistInput}
+                          onFocus={() => setWaistFocused(true)}
+                          onBlur={() => setWaistFocused(false)}
+                          placeholder={todayWeight?.waistCm != null ? String(todayWeight.waistCm) : "0.0"}
+                          placeholderTextColor={P.dim}
+                          keyboardType="decimal-pad"
+                          returnKeyType="done"
+                          onSubmitEditing={handleLogWaist}
+                        />
+                        <Text style={{ fontFamily: OUT_L, fontSize: 12, color: P.dim }}>cm</Text>
+                      </View>
+                      <TouchableOpacity
+                        onPress={handleLogWaist}
+                        style={[s.logBtn, { width: 56 }, (!waistInput || isNaN(parseFloat(waistInput))) && { opacity: 0.3 }]}
+                        disabled={!waistInput || isNaN(parseFloat(waistInput))}
                       >
                         <Text style={{ fontFamily: OUT_L, fontSize: 10, letterSpacing: 2, color: P.bg }}>SAVE</Text>
                       </TouchableOpacity>

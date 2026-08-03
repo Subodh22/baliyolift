@@ -38,6 +38,39 @@ export const getTodayPhoto = query({
   },
 });
 
+// Progress-photo cadence — the plan calls for a photo every 2 weeks, same
+// lighting/poses. `today` is passed in (YYYY-MM-DD, local day) so it matches the
+// rest of the app's local-date handling. Returns whether one is due now and
+// when the next is expected.
+export const getPhotoCadence = query({
+  args: { userId: v.id("users"), today: v.string(), intervalDays: v.optional(v.number()) },
+  handler: async (ctx, { userId, today, intervalDays }) => {
+    const interval = intervalDays ?? 14;
+    const last = await ctx.db
+      .query("progressPhotos")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .order("desc")
+      .first();
+
+    // Whole days between two YYYY-MM-DD keys (parsed at UTC midnight so DST can't skew it).
+    const daysBetween = (from: string, to: string) =>
+      Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
+    const addDays = (from: string, n: number) =>
+      new Date(Date.parse(`${from}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
+
+    if (!last) {
+      return { lastDate: null as string | null, daysSince: null as number | null, due: true, nextDueDate: today };
+    }
+    const daysSince = daysBetween(last.date, today);
+    return {
+      lastDate: last.date,
+      daysSince,
+      due: daysSince >= interval,
+      nextDueDate: addDays(last.date, interval),
+    };
+  },
+});
+
 export const listPhotos = query({
   args: { userId: v.id("users") },
   handler: async (ctx, { userId }) => {
