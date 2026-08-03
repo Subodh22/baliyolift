@@ -3,7 +3,12 @@
 // Total macros are pre-summed per recipe for display performance
 
 export type GoalType = "cut" | "bulk" | "maintain";
+// MealType = recipe CATEGORY (used for browsing/classifying recipes).
 export type MealType = "breakfast" | "lunch" | "dinner" | "snack" | "post-workout" | "sauce" | "smoothie" | "dessert";
+// MealSlot = the schedulable/loggable daily meals. Meal-plan slots
+// (mealPlanSlots) and food entries (foodEntries) only ever use these four —
+// a recipe categorised "post-workout"/"sauce"/etc. is logged into one of them.
+export type MealSlot = "breakfast" | "lunch" | "dinner" | "snack";
 
 export type Ingredient = {
   name: string;

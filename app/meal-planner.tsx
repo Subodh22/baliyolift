@@ -14,7 +14,7 @@ import { P } from "@/constants/colors";
 import { CG, CG_ITALIC, OUT_L, OUT } from "@/constants/typography";
 import {
   GOAL_COLORS, MEAL_TYPE_LABELS,
-  type Recipe, type GoalType, type MealType,
+  type Recipe, type GoalType, type MealType, type MealSlot,
 } from "@/data/mealPlans";
 
 // ── Meal variety (unique recipes to rotate per meal type) ─────────────────────
@@ -159,7 +159,7 @@ function formatWeekLabel(monday: Date): string {
 }
 
 const DAY_LABELS  = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
-const MEAL_ORDER: MealType[] = ["breakfast","lunch","dinner","snack"];
+const MEAL_ORDER: MealSlot[] = ["breakfast","lunch","dinner","snack"];
 const PORTION_STEPS = [0.5, 1, 1.5, 2, 3];
 const PORTION_LABELS: Record<number, string> = { 0.5: "×½", 1: "×1", 1.5: "×1½", 2: "×2", 3: "×3" };
 
@@ -215,8 +215,8 @@ function getSimilar(recipe: Recipe, n = 5, recipes: Recipe[] = []): Recipe[] {
 }
 
 // ── Autofill algorithm ──────────────────────────────────────────────────────
-const SLOT_WEIGHTS: Record<MealType, number> = {
-  breakfast: 0.25, lunch: 0.35, dinner: 0.40, snack: 0, "post-workout": 0,
+const SLOT_WEIGHTS: Record<MealSlot, number> = {
+  breakfast: 0.25, lunch: 0.35, dinner: 0.40, snack: 0,
 };
 
 type AutofillEntry = { recipeId: string; portion: number };
@@ -270,7 +270,7 @@ function autofillDay(
   };
 
   // Pass 1: fill breakfast / lunch / dinner
-  const primaryMeals: MealType[] = ["breakfast", "lunch", "dinner"];
+  const primaryMeals: MealSlot[] = ["breakfast", "lunch", "dinner"];
   for (const mealType of primaryMeals) {
     if (!activeMeals.includes(mealType)) continue;
     if ((existingSlots[mealType]?.length ?? 0) > 0) continue;
@@ -1115,7 +1115,7 @@ export default function MealPlannerScreen() {
   // ── UI state ─────────────────────────────────────────────────────────────
   const [viewMode,     setViewMode]     = useState<"week" | "setup">("week");
   const [activeDay,    setActiveDay]    = useState(0);
-  const [pickerMeal,   setPickerMeal]   = useState<MealType | null>(null);
+  const [pickerMeal,   setPickerMeal]   = useState<MealSlot | null>(null);
   // slot recipe assignment: { breakfast: { A: Recipe, B: Recipe }, ... }
   const [chosenSlots,  setChosenSlots]  = useState<Partial<Record<MealType, Record<string, Recipe>>>>({});
   const [pickingSlot,  setPickingSlot]  = useState<{ mealType: MealType; letter: string } | null>(null);
@@ -1284,7 +1284,7 @@ export default function MealPlannerScreen() {
         dayPrefs = { ...dayPrefs, plannedMealTypes: activeMeals };
       }
       const filled = autofillDay(tgt, goal, activeDaySlots, allRecipes, recipeMap, new Set(), dayPrefs, [], new Map(), myMealIds);
-      for (const [mealType, entry] of Object.entries(filled) as [MealType, AutofillEntry][]) {
+      for (const [mealType, entry] of Object.entries(filled) as [MealSlot, AutofillEntry][]) {
         if (!entry) continue;
         await addItem({ userId, weekStart, dayIndex: activeDay, mealType, recipeId: entry.recipeId, portion: entry.portion });
       }
@@ -1296,7 +1296,7 @@ export default function MealPlannerScreen() {
     setFilling(true); setAutofillOpen(false);
     try {
       const variety = prefs?.mealVariety ?? DEFAULT_MEAL_VARIETY;
-      const mealTypes: MealType[] = ["breakfast", "lunch", "dinner", "snack"];
+      const mealTypes: MealSlot[] = ["breakfast", "lunch", "dinner", "snack"];
 
       // ── Step 1: build recipe pool per meal type ─────────────────────────
       //   Honour user-chosen slot recipes; auto-pick the rest.
