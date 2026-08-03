@@ -202,6 +202,9 @@ export const createCustom = mutation({
     name: v.string(),
     weeks: v.number(),
     volumeTargets: v.array(volumeTargetValidator),
+    phase: v.optional(
+      v.union(v.literal("cut"), v.literal("maintenance"), v.literal("gain"), v.literal("prep"))
+    ),
     // Each session: day of week + ordered muscle groups
     sessions: v.array(v.object({
       dayOfWeek: v.number(),
@@ -228,6 +231,7 @@ export const createCustom = mutation({
       weeks: args.weeks,
       status: "active",
       volumeTargets: args.volumeTargets,
+      ...(args.phase ? { phase: args.phase } : {}),
     });
 
     for (const sessionDef of args.sessions) {

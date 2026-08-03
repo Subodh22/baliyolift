@@ -344,6 +344,186 @@ export const createLaxmanTemplate = mutation({
 });
 
 /**
+ * Show Prep — 4-day hypertrophy split (Chest/Back · Legs · Shoulders/Arms · Upper).
+ *
+ * The bodybuilding-prep program: side-delt & hamstring priority, one leg day,
+ * supersets + myorep finishers. ⭐ anchor lifts are marked
+ * `progressionType: "load"` so the autoregulation engine holds their sets fixed
+ * and progresses them by weight, routing added volume only to the accessory /
+ * pump work (see getSuggestionV2). Note the DB lateral raise is an *isolation*
+ * anchor — proof that "anchor" means load-progressed, not "compound".
+ *
+ * Exercises are findOrCreate'd so the template works even on an unseeded library.
+ */
+export const createShowPrepTemplate = mutation({
+  args: {
+    userId: v.id("users"),
+    weeks: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const weeks = args.weeks ?? 5;
+
+    // Resolve an exercise by name (case-insensitive); create it if missing.
+    const all = await ctx.db.query("exercises").collect();
+    const byName = new Map<string, any>();
+    for (const e of all) byName.set(e.name.toLowerCase(), e._id);
+
+    const findOrCreate = async (exDef: {
+      name: string;
+      mg: any;
+      eq: any;
+      sfr: any;
+    }) => {
+      const key = exDef.name.toLowerCase();
+      const existing = byName.get(key);
+      if (existing) return existing;
+      const id = await ctx.db.insert("exercises", {
+        name: exDef.name,
+        muscleGroup: exDef.mg,
+        equipment: exDef.eq,
+        sfr: exDef.sfr,
+        isCustom: false,
+      });
+      byName.set(key, id);
+      return id;
+    };
+
+    // mg = muscleGroup, eq = equipment. progressionType "load" = ⭐ anchor
+    // (fixed sets, progress by weight); "volume" = earns autoregulated sets.
+    const sessionDefs = [
+      {
+        name: "Chest & Back",
+        dayOfWeek: 1, // Monday
+        order: 0,
+        muscleGroups: ["chest", "back", "shoulders", "abs"],
+        exercises: [
+          { name: "Incline Barbell Press",     mg: "chest",     eq: "barbell",   sfr: "medium", repRangeMin: 5,  repRangeMax: 8,  targetSets: 4, setType: "regular" as const, progressionType: "load"   as const },
+          { name: "Chest-Supported Row",       mg: "back",      eq: "machine",   sfr: "medium", repRangeMin: 6,  repRangeMax: 10, targetSets: 4, setType: "regular" as const, progressionType: "load"   as const },
+          { name: "Machine Chest Press",       mg: "chest",     eq: "machine",   sfr: "high",   repRangeMin: 10, repRangeMax: 12, targetSets: 3, setType: "regular" as const, progressionType: "volume" as const },
+          { name: "Reverse Grip Pulldown",     mg: "back",      eq: "cable",     sfr: "high",   repRangeMin: 10, repRangeMax: 12, targetSets: 3, setType: "regular" as const, progressionType: "volume" as const },
+          { name: "Machine Lateral Raise",     mg: "shoulders", eq: "machine",   sfr: "high",   repRangeMin: 12, repRangeMax: 15, targetSets: 3, setType: "regular" as const, progressionType: "volume" as const },
+          { name: "Cable Face Pull",           mg: "shoulders", eq: "cable",     sfr: "high",   repRangeMin: 15, repRangeMax: 15, targetSets: 3, setType: "regular" as const, progressionType: "volume" as const },
+          { name: "Cable Crunch",              mg: "abs",       eq: "cable",     sfr: "high",   repRangeMin: 10, repRangeMax: 15, targetSets: 3, setType: "regular" as const, progressionType: "volume" as const },
+        ],
+      },
+      {
+        name: "Legs",
+        dayOfWeek: 2, // Tuesday
+        order: 1,
+        muscleGroups: ["quads", "hamstrings", "calves"],
+        exercises: [
+          { name: "Barbell Back Squat",        mg: "quads",      eq: "barbell", sfr: "low",    repRangeMin: 6,  repRangeMax: 10, targetSets: 4, setType: "regular" as const, progressionType: "load"   as const },
+          { name: "Romanian Deadlift",         mg: "hamstrings", eq: "barbell", sfr: "medium", repRangeMin: 8,  repRangeMax: 10, targetSets: 3, setType: "regular" as const, progressionType: "load"   as const },
+          { name: "Leg Press",                 mg: "quads",      eq: "machine", sfr: "medium", repRangeMin: 10, repRangeMax: 12, targetSets: 3, setType: "regular" as const, progressionType: "volume" as const },
+          { name: "Seated Leg Curl",           mg: "hamstrings", eq: "machine", sfr: "high",   repRangeMin: 12, repRangeMax: 15, targetSets: 3, setType: "regular" as const, progressionType: "volume" as const },
+          { name: "Leg Extension",             mg: "quads",      eq: "machine", sfr: "high",   repRangeMin: 12, repRangeMax: 15, targetSets: 2, setType: "myorep"  as const, progressionType: "volume" as const },
+          { name: "Standing Calf Raise",       mg: "calves",     eq: "machine", sfr: "high",   repRangeMin: 12, repRangeMax: 15, targetSets: 4, setType: "regular" as const, progressionType: "volume" as const },
+        ],
+      },
+      {
+        name: "Shoulders & Arms",
+        dayOfWeek: 4, // Thursday
+        order: 2,
+        muscleGroups: ["shoulders", "biceps", "triceps", "abs"],
+        exercises: [
+          // Laterals FIRST, fresh, logged — the single most important change for the delt weak point.
+          { name: "Dumbbell Lateral Raise",       mg: "shoulders", eq: "dumbbell",   sfr: "high",   repRangeMin: 10, repRangeMax: 15, targetSets: 4, setType: "regular" as const, progressionType: "load"   as const },
+          { name: "Machine Shoulder Press",       mg: "shoulders", eq: "machine",    sfr: "high",   repRangeMin: 8,  repRangeMax: 10, targetSets: 4, setType: "regular" as const, progressionType: "load"   as const },
+          { name: "Upright Row",                  mg: "shoulders", eq: "barbell",    sfr: "medium", repRangeMin: 10, repRangeMax: 12, targetSets: 3, setType: "regular" as const, progressionType: "volume" as const },
+          { name: "Reverse Pec Deck",             mg: "shoulders", eq: "machine",    sfr: "high",   repRangeMin: 15, repRangeMax: 15, targetSets: 3, setType: "regular" as const, progressionType: "volume" as const },
+          // Superset: EZ Bar Curl + Cable Pushdown
+          { name: "EZ Bar Curl",                  mg: "biceps",    eq: "barbell",    sfr: "medium", repRangeMin: 10, repRangeMax: 12, targetSets: 3, setType: "regular" as const, progressionType: "volume" as const },
+          { name: "Cable Pushdown",               mg: "triceps",   eq: "cable",      sfr: "high",   repRangeMin: 10, repRangeMax: 12, targetSets: 3, setType: "regular" as const, progressionType: "volume" as const },
+          // Superset: Hammer Curl + Overhead Extension
+          { name: "Hammer Curl",                  mg: "biceps",    eq: "dumbbell",   sfr: "high",   repRangeMin: 12, repRangeMax: 12, targetSets: 2, setType: "regular" as const, progressionType: "volume" as const },
+          { name: "Overhead Tricep Extension",    mg: "triceps",   eq: "dumbbell",   sfr: "high",   repRangeMin: 12, repRangeMax: 12, targetSets: 2, setType: "regular" as const, progressionType: "volume" as const },
+          { name: "Hanging Leg Raise",            mg: "abs",       eq: "bodyweight", sfr: "high",   repRangeMin: 10, repRangeMax: 15, targetSets: 3, setType: "regular" as const, progressionType: "volume" as const },
+        ],
+      },
+      {
+        name: "Upper",
+        dayOfWeek: 5, // Friday
+        order: 3,
+        muscleGroups: ["chest", "back", "shoulders", "biceps"],
+        exercises: [
+          { name: "Dips",                         mg: "chest",     eq: "bodyweight", sfr: "medium", repRangeMin: 6,  repRangeMax: 10, targetSets: 3, setType: "regular" as const, progressionType: "load"   as const },
+          { name: "Dumbbell Row",                 mg: "back",      eq: "dumbbell",   sfr: "medium", repRangeMin: 8,  repRangeMax: 10, targetSets: 4, setType: "regular" as const, progressionType: "volume" as const },
+          { name: "Incline Dumbbell Press",       mg: "chest",     eq: "dumbbell",   sfr: "medium", repRangeMin: 10, repRangeMax: 12, targetSets: 3, setType: "regular" as const, progressionType: "volume" as const },
+          { name: "Lat Pulldown",                 mg: "back",      eq: "cable",      sfr: "high",   repRangeMin: 12, repRangeMax: 15, targetSets: 3, setType: "regular" as const, progressionType: "volume" as const },
+          { name: "Cable Lateral Raise",          mg: "shoulders", eq: "cable",      sfr: "high",   repRangeMin: 15, repRangeMax: 15, targetSets: 3, setType: "myorep"  as const, progressionType: "volume" as const },
+          { name: "Preacher Curl Machine",        mg: "biceps",    eq: "machine",    sfr: "high",   repRangeMin: 10, repRangeMax: 12, targetSets: 2, setType: "regular" as const, progressionType: "volume" as const },
+        ],
+      },
+    ];
+
+    // Cut/prep landmarks — modest, upper half of the 10-20 range, with side
+    // delts & hamstrings (the named weak points) biased higher relative to size.
+    const volumeTargets = [
+      { muscleGroup: "chest",      mev: 10, mav: 14, mrv: 18 },
+      { muscleGroup: "back",       mev: 12, mav: 17, mrv: 22 },
+      { muscleGroup: "shoulders",  mev: 14, mav: 20, mrv: 26 },
+      { muscleGroup: "biceps",     mev: 8,  mav: 12, mrv: 16 },
+      { muscleGroup: "triceps",    mev: 8,  mav: 12, mrv: 16 },
+      { muscleGroup: "quads",      mev: 8,  mav: 12, mrv: 16 },
+      { muscleGroup: "hamstrings", mev: 8,  mav: 12, mrv: 16 },
+      { muscleGroup: "calves",     mev: 6,  mav: 10, mrv: 14 },
+      { muscleGroup: "abs",        mev: 4,  mav: 8,  mrv: 12 },
+    ];
+
+    // Pause any currently active mesocycle
+    const activeMeso = await ctx.db
+      .query("mesocycles")
+      .withIndex("by_user_status", (q) => q.eq("userId", args.userId).eq("status", "active"))
+      .first();
+    if (activeMeso) await ctx.db.patch(activeMeso._id, { status: "paused" });
+
+    const mesoId = await ctx.db.insert("mesocycles", {
+      userId: args.userId,
+      name: "Show Prep",
+      startDate: Date.now(),
+      weeks,
+      status: "active",
+      volumeTargets,
+      phase: "prep",
+    });
+
+    for (const def of sessionDefs) {
+      const resolved: { id: any; exDef: (typeof def.exercises)[number] }[] = [];
+      for (const exDef of def.exercises) {
+        const id = await findOrCreate({ name: exDef.name, mg: exDef.mg, eq: exDef.eq, sfr: exDef.sfr });
+        resolved.push({ id, exDef });
+      }
+
+      const sessionId = await ctx.db.insert("sessions", {
+        mesocycleId: mesoId,
+        userId: args.userId,
+        dayOfWeek: def.dayOfWeek,
+        name: def.name,
+        exerciseIds: resolved.map((r) => r.id),
+        order: def.order,
+        muscleGroups: def.muscleGroups,
+      });
+
+      for (let i = 0; i < resolved.length; i++) {
+        const { id, exDef } = resolved[i];
+        await ctx.db.insert("sessionExercises", {
+          sessionId,
+          exerciseId: id,
+          order: i,
+          repRangeMin: exDef.repRangeMin,
+          repRangeMax: exDef.repRangeMax,
+          targetSets: exDef.targetSets,
+          setType: exDef.setType,
+          progressionType: exDef.progressionType,
+        });
+      }
+    }
+
+    return mesoId;
+  },
+});
+
+/**
  * Upper/Lower 4-day template — good for beginners/intermediate who want less frequency.
  */
 export const createUpperLowerTemplate = mutation({

@@ -69,6 +69,21 @@ function autoFillExercises(muscleGroups: MuscleGroup[]): string[] {
 
 const TEMPLATES = [
   {
+    id: "show_prep",
+    name: "Show Prep",
+    subtitle: "4 days · Chest/Back · Legs · Shoulders/Arms · Upper",
+    tag: "Contest Prep",
+    tagColor: "#C9A84C",
+    description: "Bodybuilding-prep split with side-delt & hamstring priority and one leg day. ⭐ anchor lifts progress by load (fixed sets); accessory work earns autoregulated volume from your pump/soreness feedback.",
+    weeks: 5,
+    sessions: [
+      { day: 1, name: "Chest & Back", exercises: ["Incline Barbell Press ⭐", "Chest-Supported Row ⭐", "Machine Chest Press", "Reverse Grip Pulldown", "Machine Lateral Raise", "Cable Face Pull", "Cable Crunch"] },
+      { day: 2, name: "Legs", exercises: ["Barbell Back Squat ⭐", "Romanian Deadlift ⭐", "Leg Press", "Seated Leg Curl", "Leg Extension (myorep)", "Standing Calf Raise"] },
+      { day: 4, name: "Shoulders & Arms", exercises: ["Dumbbell Lateral Raise ⭐", "Machine Shoulder Press ⭐", "Upright Row", "Reverse Pec Deck", "EZ Bar Curl", "Cable Pushdown", "Hammer Curl", "Overhead Tricep Extension", "Hanging Leg Raise"] },
+      { day: 5, name: "Upper", exercises: ["Dips ⭐", "Dumbbell Row", "Incline Dumbbell Press", "Lat Pulldown", "Cable Lateral Raise (myorep)", "Preacher Curl Machine"] },
+    ],
+  },
+  {
     id: "laxman",
     name: "Laxman",
     subtitle: "4 days · Shoulders/Bi · Chest/Tri · Back · Legs",
@@ -340,9 +355,17 @@ const tplStyles = StyleSheet.create({
 
 // ─── Step 0: Name & Duration ──────────────────────────────────────────────────
 
-function StepNameDuration({ name, setName, weeks, setWeeks, colors, typography }: any) {
+const PHASE_OPTIONS = [
+  { value: "cut",         label: "Cut",   hint: "conservative ramp" },
+  { value: "maintenance", label: "Maint", hint: "full ramp" },
+  { value: "gain",        label: "Gain",  hint: "full ramp" },
+  { value: "prep",        label: "Prep",  hint: "conservative ramp" },
+] as const;
+
+function StepNameDuration({ name, setName, weeks, setWeeks, phase, setPhase, colors, typography }: any) {
   return (
     <Animated.View entering={FadeInRight} style={{ flex: 1 }}>
+      <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
       <Text style={[typography.largeTitle, { color: colors.label }]}>Name your block</Text>
       <Text style={[typography.body, { color: colors.labelSecondary, marginTop: 6, marginBottom: 32 }]}>
         A mesocycle is a focused training block. 4–6 weeks is optimal for hypertrophy.
@@ -382,6 +405,35 @@ function StepNameDuration({ name, setName, weeks, setWeeks, colors, typography }
           </TouchableOpacity>
         ))}
       </View>
+
+      <Text style={[typography.footnote, { color: colors.labelSecondary, marginTop: 32, marginBottom: 6, letterSpacing: 0.8, fontWeight: "600" }]}>
+        DIET PHASE
+      </Text>
+      <Text style={[typography.caption1, { color: colors.labelTertiary, marginBottom: 12 }]}>
+        Cut & prep blocks add volume more slowly, matching lower recovery.
+      </Text>
+      <View style={{ flexDirection: "row", gap: 8 }}>
+        {PHASE_OPTIONS.map((p) => {
+          const active = phase === p.value;
+          return (
+            <TouchableOpacity
+              key={p.value}
+              style={[ndStyles.phasePill, { borderColor: active ? colors.accent : colors.separator, flex: 1 }]}
+              onPress={() => { selectionAsync(); setPhase(p.value); }}
+              activeOpacity={0.8}
+            >
+              <Text style={{ fontSize: 13, fontWeight: "700", color: active ? colors.accent : colors.label }}>
+                {p.label}
+              </Text>
+              <Text style={{ fontSize: 8.5, letterSpacing: 0.5, textTransform: "uppercase", textAlign: "center", color: active ? colors.accent : colors.labelTertiary, marginTop: 3 }}>
+                {p.hint}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+      <View style={{ height: 40 }} />
+      </ScrollView>
     </Animated.View>
   );
 }
@@ -400,6 +452,13 @@ const ndStyles = StyleSheet.create({
     borderWidth: 1,
     alignItems: "center",
     gap: 4,
+  },
+  phasePill: {
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+    borderRadius: 4,
+    borderWidth: 1,
+    alignItems: "center",
   },
 });
 
@@ -992,6 +1051,7 @@ export default function MesoNew() {
   const createJeffNippard = useMutation(api.templates.createJeffNippardTemplate);
   const createLeanBeefPatty = useMutation(api.templates.createLeanBeefPattyTemplate);
   const createSamSulek    = useMutation(api.templates.createSamSulekTemplate);
+  const createShowPrep    = useMutation(api.templates.createShowPrepTemplate);
 
   // -1 = template picker, 0–4 = wizard steps
   const [step, setStep] = useState(-1);
@@ -1000,6 +1060,7 @@ export default function MesoNew() {
 
   const [name, setName] = useState("");
   const [weeks, setWeeks] = useState(5);
+  const [phase, setPhase] = useState<"cut" | "maintenance" | "gain" | "prep">("maintenance");
   const [selectedDays, setSelectedDays] = useState<number[]>([1, 3, 5]);
   const [sessionMuscles, setSessionMuscles] = useState<Record<number, MuscleGroup[]>>({});
   const [sessionExercises, setSessionExercises] = useState<Record<number, string[]>>({});
@@ -1013,7 +1074,8 @@ export default function MesoNew() {
     setTemplateLoading(true);
     try {
       const id = previewTemplate.id;
-      if (id === "laxman")               await createLaxman({ userId });
+      if (id === "show_prep")            await createShowPrep({ userId });
+      else if (id === "laxman")          await createLaxman({ userId });
       else if (id === "ppl")             await createPPL({ userId });
       else if (id === "upper_lower")     await createUpperLower({ userId });
       else if (id === "cbum")            await createCBum({ userId });
@@ -1143,6 +1205,7 @@ export default function MesoNew() {
         userId,
         name,
         weeks,
+        phase,
         volumeTargets: buildVolumeTargets(),
         sessions: buildSessions(),
       });
@@ -1204,6 +1267,7 @@ export default function MesoNew() {
             <StepNameDuration
               name={name} setName={setName}
               weeks={weeks} setWeeks={setWeeks}
+              phase={phase} setPhase={setPhase}
               {...stepProps}
             />
           )}
