@@ -9,6 +9,7 @@
  */
 
 import type * as cardioSets from "../cardioSets.js";
+import type * as dailyReview from "../dailyReview.js";
 import type * as exercises from "../exercises.js";
 import type * as foodPreferences from "../foodPreferences.js";
 import type * as http from "../http.js";
@@ -39,6 +40,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   cardioSets: typeof cardioSets;
+  dailyReview: typeof dailyReview;
   exercises: typeof exercises;
   foodPreferences: typeof foodPreferences;
   http: typeof http;

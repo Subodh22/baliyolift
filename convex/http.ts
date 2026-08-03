@@ -1,5 +1,6 @@
 import { httpRouter } from "convex/server";
 import { httpAction } from "./_generated/server";
+import { api } from "./_generated/api";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 const CORS_HEADERS = {
@@ -51,6 +52,48 @@ http.route({
     return new Response(JSON.stringify({ url }), {
       headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
     });
+  }),
+});
+
+// ── Daily-review endpoint (for the scheduled coach agent) ────────────────────
+// Read-only. Guarded by a bearer token stored in the Convex env var
+// DAILY_REVIEW_TOKEN (set via `npx convex env set DAILY_REVIEW_TOKEN <secret>`),
+// never hardcoded. Query params: clerkId (required), date (YYYY-MM-DD, optional
+// — the caller's local day is preferred), tzOffsetMinutes (optional).
+http.route({
+  path: "/daily-review",
+  method: "GET",
+  handler: httpAction(async (ctx, req) => {
+    const expected = process.env.DAILY_REVIEW_TOKEN;
+    if (!expected) {
+      return new Response("DAILY_REVIEW_TOKEN not configured", { status: 503 });
+    }
+    const auth = req.headers.get("Authorization") ?? "";
+    const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+    if (token !== expected) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    const url = new URL(req.url);
+    const clerkId = url.searchParams.get("clerkId");
+    const date = url.searchParams.get("date");
+    const tzRaw = url.searchParams.get("tzOffsetMinutes");
+    if (!clerkId || !date) {
+      return new Response("Missing clerkId or date", { status: 400 });
+    }
+
+    try {
+      const result = await ctx.runQuery(api.dailyReview.dailyReview, {
+        clerkId,
+        date,
+        tzOffsetMinutes: tzRaw != null ? Number(tzRaw) : undefined,
+      });
+      return new Response(JSON.stringify(result), {
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch (e) {
+      return new Response(String(e instanceof Error ? e.message : e), { status: 404 });
+    }
   }),
 });
 
