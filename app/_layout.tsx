@@ -5,6 +5,7 @@ import { unlockAudioContext } from "@/utils/audio";
 import { ConvexProvider, ConvexReactClient, useMutation, useQuery } from "convex/react";
 import { useEffect } from "react";
 import { WorkoutProvider } from "@/hooks/useWorkoutStore";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { api } from "@/convex/_generated/api";
 import { tokenCache } from "@/utils/tokenCache";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
@@ -192,7 +193,9 @@ export default function RootLayout() {
           <SeedOnMount />
           <WorkoutProvider>
             <StatusBar style="light" backgroundColor="#0A0A0B" />
-            <WebLayout />
+            <ErrorBoundary name="web">
+              <WebLayout />
+            </ErrorBoundary>
           </WorkoutProvider>
         </ConvexProvider>
       </ClerkProvider>
@@ -206,7 +209,9 @@ export default function RootLayout() {
         <SeedOnMount />
         <WorkoutProvider>
           <StatusBar style="light" backgroundColor="#0A0A0B" />
-          <NativeLayout />
+          <ErrorBoundary name="native">
+            <NativeLayout />
+          </ErrorBoundary>
         </WorkoutProvider>
       </ConvexProvider>
     </ClerkProvider>
