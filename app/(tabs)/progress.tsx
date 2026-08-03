@@ -13,12 +13,9 @@ import { P, MUSCLE_BADGE_COLORS } from "@/constants/colors";
 import { CG, CG_ITALIC, OUT_L, OUT } from "@/constants/typography";
 import { router } from "expo-router";
 import { MUSCLE_DISPLAY_NAMES } from "@/constants/muscles";
+import { todayStr, offsetDateStr } from "@/utils/date";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function todayStr() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
 function dayKey(ts: number) {
   const d = new Date(ts);
   return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
@@ -261,10 +258,7 @@ function WeightRoadmap({ profile, currentWeight, caloriesByDate, foodTargetCalor
   const goalRate     = isCut ? -0.5 : isBulk ? 0.3 : 0;
 
   // Only look at logged days in the last 30 days — no assumptions for missing days
-  const cutoffDate = (() => {
-    const d = new Date(); d.setDate(d.getDate() - 30);
-    return d.toISOString().slice(0, 10);
-  })();
+  const cutoffDate = offsetDateStr(todayStr(), -30);
   const loggedValues = Object.entries(caloriesByDate)
     .filter(([date]) => date >= cutoffDate)
     .map(([, cal]) => cal);
@@ -1131,7 +1125,7 @@ export default function StatsScreen() {
   const todayWeight   = useQuery(api.weightTracking.getTodayWeight, userId ? { userId, date: today } : "skip");
   const weightHistory = useQuery(api.weightTracking.getWeightHistory, userId ? { userId, days: 90 } : "skip");
   const activeMeso      = useQuery(api.mesocycles.getActiveWithDetails, userId ? { userId } : "skip");
-  const dailyCalories   = useQuery(api.nutrition.getDailyTotals, userId ? { userId, fromDate: (() => { const d = new Date(); d.setDate(d.getDate() - 90); return d.toISOString().slice(0,10); })(), toDate: today } : "skip");
+  const dailyCalories   = useQuery(api.nutrition.getDailyTotals, userId ? { userId, fromDate: offsetDateStr(today, -90), toDate: today } : "skip");
   const foodTarget      = useQuery(api.nutrition.getFoodTarget, userId ? { userId } : "skip");
   const dateSummary = useQuery(api.workouts.getWorkoutDates, userId ? { userId } : "skip");
   const allPhotos   = useQuery(api.progressPhotos.listPhotos, userId ? { userId } : "skip");
@@ -1149,8 +1143,7 @@ export default function StatsScreen() {
     const change = latest - first;
 
     // Weekly avg change over last 4 weeks
-    const fourWeeksAgo = new Date(); fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
-    const cutoff = fourWeeksAgo.toISOString().slice(0, 10);
+    const cutoff = offsetDateStr(todayStr(), -28);
     const recent = weightHistory.filter(e => e.date >= cutoff);
     let weeklyChange: number | null = null;
     if (recent.length >= 2) {
