@@ -916,6 +916,52 @@ export default function WorkoutScreen() {
     return [...new Set((sessionExs as any[]).map((se) => se.exercise?.muscleGroup).filter(Boolean))];
   }, [sessionExs]);
 
+  // Exercises actually trained (≥1 logged set), non-cardio — the set the
+  // end-of-workout modal collects per-exercise pump/workload for. Uses the
+  // effective (post-swap) exercise so feedback attaches to what was done.
+  const feedbackExercises = useMemo((): { exerciseId: Id<"exercises">; name: string; muscleGroup: string }[] => {
+    const out: { exerciseId: Id<"exercises">; name: string; muscleGroup: string }[] = [];
+    const seen = new Set<string>();
+    const push = (id: Id<"exercises"> | undefined, name: string, mg: string, logged: boolean) => {
+      const key = id as string;
+      if (!logged || !key || seen.has(key)) return;
+      seen.add(key);
+      out.push({ exerciseId: id as Id<"exercises">, name, muscleGroup: mg });
+    };
+    const isLogged = (stateKey: string) => {
+      const st = state.exStates[stateKey];
+      return !!st && st.sets.length > 0 && st.sets.some((s) => s.isLogged);
+    };
+    (sessionExs as any[] | undefined)?.forEach((se: any) => {
+      const oldExId = se.exercise._id as string;
+      if (state.hiddenExIds.includes(oldExId)) return;
+      if (se.exercise?.category === "cardio") return;
+      const override = state.swapOverrides[oldExId];
+      const ex = override
+        ? { id: override.exerciseId, name: override.exercise.name, mg: override.exercise.muscleGroup }
+        : { id: se.exercise._id as Id<"exercises">, name: se.exercise.name as string, mg: se.exercise.muscleGroup as string };
+      push(ex.id, ex.name, ex.mg, isLogged(se._id as string));
+    });
+    state.extraExercises.forEach((ex) => {
+      if (state.hiddenExIds.includes(ex._id as string)) return;
+      if (ex.category === "cardio") return;
+      if ((sessionExs as any[] | undefined)?.some((se: any) => (se.exercise._id as string) === (ex._id as string))) return;
+      push(ex._id, ex.name, ex.muscleGroup, isLogged(ex._id as string));
+    });
+    return out;
+  }, [sessionExs, state.exStates, state.swapOverrides, state.extraExercises, state.hiddenExIds]);
+
+  // Session-start soreness — asked once, only from week 2 on (week 1 has no
+  // prior session to be sore from). Skippable; missing soreness reads as neutral.
+  const [sorenessVisible, setSorenessVisible] = useState(false);
+  const sorenessAskedRef = useRef(false);
+  useEffect(() => {
+    if (sorenessAskedRef.current) return;
+    if (!wid || !userId || weekNumber <= 1 || trainedMuscles.length === 0) return;
+    sorenessAskedRef.current = true;
+    setSorenessVisible(true);
+  }, [wid, userId, weekNumber, trainedMuscles]);
+
   const allLogged = useMemo(() => {
     if (!sessionExs || !(sessionExs as any[]).length) return false;
     return (sessionExs as any[]).every((se: any) => {
@@ -1169,9 +1215,16 @@ export default function WorkoutScreen() {
         </TouchableOpacity>
       )}
 
-      {/* Feedback modal */}
+      {/* Session-start soreness (recovery check) */}
+      {sorenessVisible && wid && userId && (
+        <FeedbackModal mode="soreness" visible muscleGroups={trainedMuscles} workoutId={wid} userId={userId}
+          onSave={() => setSorenessVisible(false)}
+          onCancel={() => setSorenessVisible(false)} />
+      )}
+
+      {/* End-of-workout per-exercise pump/workload */}
       {state.feedbackVisible && wid && userId && (
-        <FeedbackModal visible muscleGroups={trainedMuscles} workoutId={wid} userId={userId}
+        <FeedbackModal mode="exercise" visible exercises={feedbackExercises} workoutId={wid} userId={userId}
           onSave={() => { dispatch({ type: "HIDE_FB" }); router.replace("/(tabs)"); }}
           onCancel={() => { dispatch({ type: "HIDE_FB" }); router.replace("/(tabs)"); }} />
       )}

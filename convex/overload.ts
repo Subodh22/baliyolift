@@ -99,13 +99,20 @@ export const getSuggestionV2 = query({
       let muscleSlots = sessionExs
         .filter((se) => mgById.get(se.exerciseId as string) === muscle)
         .sort((a, b) => a.order - b.order)
-        .map((se) => ({ exerciseId: se.exerciseId as string, seed: Math.max(1, se.targetSets) }));
+        .map((se) => ({
+          exerciseId: se.exerciseId as string,
+          seed: Math.max(1, se.targetSets),
+          // Anchor (⭐) lifts progress by load and are excluded from set-adding.
+          isAnchor: se.progressionType === "load",
+        }));
       let thisIdx = muscleSlots.findIndex((s) => s.exerciseId === (args.exerciseId as string));
       if (thisIdx < 0) {
         // Not in the stored plan — treat this exercise as its own slot.
-        muscleSlots = [{ exerciseId: args.exerciseId as string, seed: Math.max(1, baseSets) }];
+        muscleSlots = [{ exerciseId: args.exerciseId as string, seed: Math.max(1, baseSets), isAnchor: false }];
         thisIdx = 0;
       }
+      // Slots that can earn volume — never the load-progressed anchors.
+      const eligible = muscleSlots.map((_, i) => i).filter((i) => !muscleSlots[i].isAnchor);
 
       // Session-total ceiling from the muscle's MRV, shared across the days that
       // train it. Falls back to seed-sum + headroom when there's no landmark.
@@ -119,46 +126,105 @@ export const getSuggestionV2 = query({
         // Recovery: roughly half each exercise's programmed sets.
         for (let i = 0; i < counts.length; i++) counts[i] = Math.max(1, Math.round(muscleSlots[i].seed / 2));
       } else {
-        // Per-week muscle feedback, keyed to this session-day's workouts.
+        // Per-week feedback, keyed to this session-day's workouts. Feedback now
+        // arrives in two shapes (both indexed by muscle):
+        //   • soreness rows (exerciseId unset) — muscle-level recovery, asked at
+        //     the start of the *next* session (the only time it's knowable).
+        //   • per-exercise rows (exerciseId set) — pump + workload for one
+        //     movement, so added sets can be routed to the one that
+        //     under-delivered stimulus rather than to the whole muscle.
+        // Legacy combined rows (exerciseId unset, pump/workload present) still
+        // work: they read as muscle-level soreness + pump + workload.
         const workoutByWeek = new Map<number, string>();
         for (const w of mesoWorkouts) {
           if ((w.sessionId as string) === (args.sessionId as string)) workoutByWeek.set(w.weekNumber, w._id as string);
         }
-        const fbByWorkout = new Map<string, { soreness: number; pump: number; workload: number }>();
+        const sorenessByWorkout = new Map<string, number>();
+        const muscleLevelPW = new Map<string, { pump?: number; workload?: number }>();
+        const exFbByWorkout = new Map<string, Map<string, { pump: number; workload: number }>>();
         const muscleFeedback = await ctx.db
           .query("sessionFeedback")
           .withIndex("by_user_muscle", (q) => q.eq("userId", args.userId).eq("muscleGroup", muscle))
           .order("desc")
-          .take(50);
+          .take(200);
         for (const f of muscleFeedback) {
-          if (mesoWorkoutIds.has(f.workoutId as string)) {
-            fbByWorkout.set(f.workoutId as string, { soreness: f.soreness, pump: f.pump, workload: f.workload });
+          const wid = f.workoutId as string;
+          if (!mesoWorkoutIds.has(wid)) continue;
+          if (f.exerciseId) {
+            if (!exFbByWorkout.has(wid)) exFbByWorkout.set(wid, new Map());
+            exFbByWorkout.get(wid)!.set(f.exerciseId as string, { pump: f.pump ?? 1, workload: f.workload ?? 1 });
+          } else {
+            if (f.soreness != null) sorenessByWorkout.set(wid, f.soreness);
+            if (f.pump != null || f.workload != null) muscleLevelPW.set(wid, { pump: f.pump ?? undefined, workload: f.workload ?? undefined });
           }
         }
+
         const sum = () => counts.reduce((a, c) => a + c, 0);
+        const pumpOf = (exFb: Map<string, { pump: number; workload: number }> | undefined, i: number) =>
+          exFb?.get(muscleSlots[i].exerciseId)?.pump;
+        const workloadOf = (exFb: Map<string, { pump: number; workload: number }> | undefined, i: number) =>
+          exFb?.get(muscleSlots[i].exerciseId)?.workload;
+
         for (let wk = 1; wk < args.weekNumber; wk++) {
           const wid = workoutByWeek.get(wk);
           if (!wid) continue; // session not trained that week — no progression
-          const fb = fbByWorkout.get(wid);
-          // Session done but not rated → neutral +1 ("recovered on time").
-          let delta = fb ? setDelta(fb.soreness, fb.pump, fb.workload) : 1;
-          while (delta > 0 && sum() < mrvSession) {
-            // Add to the exercise with the fewest sets that's under its cap.
-            let target = -1;
-            for (let i = 0; i < counts.length; i++) {
-              if (counts[i] >= PER_EXERCISE_SET_CAP) continue;
-              if (target < 0 || counts[i] < counts[target]) target = i;
+          const soreness = sorenessByWorkout.get(wid);
+          const exFb = exFbByWorkout.get(wid);
+          const legacyPW = muscleLevelPW.get(wid);
+          const hasFeedback = soreness != null || exFb != null || legacyPW != null;
+
+          // Muscle budget still comes from setDelta (soreness primary, pump /
+          // workload temper it). Pump/workload are aggregated worst-case across
+          // the eligible exercises so a single blown-up movement can't inflate
+          // the whole muscle's add.
+          let aggPump: number | undefined;
+          let aggWorkload: number | undefined;
+          if (exFb) {
+            for (const i of eligible) {
+              const p = pumpOf(exFb, i), w = workloadOf(exFb, i);
+              if (p != null) aggPump = aggPump == null ? p : Math.max(aggPump, p);
+              if (w != null) aggWorkload = aggWorkload == null ? w : Math.max(aggWorkload, w);
             }
-            if (target < 0) break; // all exercises capped
+          }
+          if (aggPump == null) aggPump = legacyPW?.pump;
+          if (aggWorkload == null) aggWorkload = legacyPW?.workload;
+
+          // Session done but not rated → neutral +1 ("recovered on time").
+          let delta = hasFeedback ? setDelta(soreness, aggPump, aggWorkload) : 1;
+
+          // Cut/prep blocks ramp conservatively — at most +1 set/week/muscle, so
+          // volume creeps toward MRV instead of spiking while calories (and
+          // recovery) are down. Backing off (negative delta) is never clamped.
+          if ((meso.phase === "cut" || meso.phase === "prep") && delta > 1) delta = 1;
+
+          while (delta > 0 && sum() < mrvSession) {
+            // Route the added set to the eligible exercise that under-delivered:
+            // lowest pump first, skipping any that reported "too much" workload,
+            // tie-broken by fewest current sets. With no per-exercise pump data
+            // this degrades to plain fewest-first over the non-anchor slots.
+            let target = -1;
+            for (const i of eligible) {
+              if (counts[i] >= PER_EXERCISE_SET_CAP) continue;
+              if ((workloadOf(exFb, i) ?? 0) >= 3) continue; // "too much" — don't pile on
+              if (target < 0) { target = i; continue; }
+              const iPump = pumpOf(exFb, i) ?? 99;       // unknown pump ranks after any known-low
+              const tPump = pumpOf(exFb, target) ?? 99;
+              if (iPump < tPump || (iPump === tPump && counts[i] < counts[target])) target = i;
+            }
+            if (target < 0) break; // all eligible capped / maxed out on workload
             counts[target]++;
             delta--;
           }
           while (delta < 0) {
-            // Remove from the exercise with the most sets (never below 1).
+            // Pull a set from the eligible exercise most in need of a cut:
+            // highest workload, then most sets. Never touches anchors or drops
+            // below 1.
             let target = -1;
-            for (let i = 0; i < counts.length; i++) {
+            for (const i of eligible) {
               if (counts[i] <= 1) continue;
-              if (target < 0 || counts[i] > counts[target]) target = i;
+              if (target < 0) { target = i; continue; }
+              const iW = workloadOf(exFb, i) ?? -1, tW = workloadOf(exFb, target) ?? -1;
+              if (iW > tW || (iW === tW && counts[i] > counts[target])) target = i;
             }
             if (target < 0) break;
             counts[target]--;
@@ -413,7 +479,9 @@ export const getCardioSuggestion = query({
 
 /**
  * Save post-workout feedback for all muscle groups trained.
- * One row per muscle group per workout.
+ * One row per muscle group per workout. Legacy combined path — still supported
+ * for older clients; new clients split into saveSessionSoreness (session start)
+ * and saveExerciseFeedback (per exercise). See getSuggestionV2.
  */
 export const saveFeedback = mutation({
   args: {
@@ -435,6 +503,66 @@ export const saveFeedback = mutation({
         userId: args.userId,
         muscleGroup: item.muscleGroup,
         soreness: item.soreness,
+        pump: item.pump,
+        workload: item.workload,
+      });
+    }
+  },
+});
+
+/**
+ * Session-start soreness — the only moment soreness is knowable (it's a
+ * question about the *previous* session for these muscles). One muscle-level
+ * row per muscle about to be trained; leaves exerciseId/pump/workload unset.
+ */
+export const saveSessionSoreness = mutation({
+  args: {
+    workoutId: v.id("workouts"),
+    userId: v.id("users"),
+    feedback: v.array(
+      v.object({
+        muscleGroup: v.string(),
+        soreness: v.number(),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    for (const item of args.feedback) {
+      await ctx.db.insert("sessionFeedback", {
+        workoutId: args.workoutId,
+        userId: args.userId,
+        muscleGroup: item.muscleGroup,
+        soreness: item.soreness,
+      });
+    }
+  },
+});
+
+/**
+ * Per-exercise pump + workload, collected right after the exercise's work is
+ * done. Stored against the exercise (not just the muscle) so added sets can be
+ * routed to the specific movement that under-delivered stimulus.
+ */
+export const saveExerciseFeedback = mutation({
+  args: {
+    workoutId: v.id("workouts"),
+    userId: v.id("users"),
+    feedback: v.array(
+      v.object({
+        exerciseId: v.id("exercises"),
+        muscleGroup: v.string(),
+        pump: v.number(),
+        workload: v.number(),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    for (const item of args.feedback) {
+      await ctx.db.insert("sessionFeedback", {
+        workoutId: args.workoutId,
+        userId: args.userId,
+        muscleGroup: item.muscleGroup,
+        exerciseId: item.exerciseId,
         pump: item.pump,
         workload: item.workload,
       });

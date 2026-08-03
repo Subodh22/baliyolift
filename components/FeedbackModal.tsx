@@ -18,20 +18,28 @@ import { MUSCLE_DISPLAY_NAMES } from "@/constants/muscles";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface FeedbackState {
-  soreness: 0 | 1 | 2 | 3;
-  pump: 0 | 1 | 2;
-  workload: 0 | 1 | 2 | 3;
+interface FeedbackExercise {
+  exerciseId: Id<"exercises">;
+  name: string;
+  muscleGroup: string;
 }
 
-interface FeedbackModalProps {
+interface CommonProps {
   visible: boolean;
-  muscleGroups: string[];
   workoutId: Id<"workouts">;
   userId: Id<"users">;
   onSave: () => void;
   onCancel: () => void;
 }
+
+// Two collection moments:
+//   • "soreness" — session start, per muscle about to be trained. Soreness is a
+//     question about the *previous* session, so it's only knowable now.
+//   • "exercise" — after the work, per exercise. Pump + workload, so added sets
+//     can be routed to the specific movement that under-delivered.
+type FeedbackModalProps =
+  | (CommonProps & { mode: "soreness"; muscleGroups: string[] })
+  | (CommonProps & { mode: "exercise"; exercises: FeedbackExercise[] });
 
 // ─── Option Config ────────────────────────────────────────────────────────────
 
@@ -106,129 +114,156 @@ function OptionPill({
   );
 }
 
-function FeedbackSection({
-  muscle,
-  feedback,
-  onChange,
-}: {
-  muscle: string;
-  feedback: FeedbackState;
-  onChange: (muscle: string, field: keyof FeedbackState, value: number) => void;
-}) {
+function MuscleBadge({ muscle }: { muscle: string }) {
   const { colors, typography } = useTheme();
   const badgeColor = MUSCLE_BADGE_COLORS[muscle] ?? colors.accent;
   const displayName =
     MUSCLE_DISPLAY_NAMES[muscle as keyof typeof MUSCLE_DISPLAY_NAMES] ?? muscle;
-
   return (
-    <View style={[styles.section, { backgroundColor: colors.backgroundSecondary }]}>
-      {/* Muscle badge */}
-      <View style={[styles.muscleBadge, { backgroundColor: badgeColor }]}>
-        <Text style={[typography.caption2, styles.muscleBadgeText]}>
-          {displayName.toUpperCase()}
-        </Text>
-        <View style={[styles.badgeDot, { backgroundColor: "rgba(255,255,255,0.8)" }]} />
-      </View>
-
-      {/* Soreness */}
-      <Text style={[typography.footnote, styles.questionLabel, { color: colors.label }]}>
-        {displayName.toUpperCase()} SORENESS
+    <View style={[styles.muscleBadge, { backgroundColor: badgeColor }]}>
+      <Text style={[typography.caption2, styles.muscleBadgeText]}>
+        {displayName.toUpperCase()}
       </Text>
-      <Text style={[typography.caption1, { color: colors.labelSecondary, marginBottom: 10 }]}>
-        How sore did you get in your {displayName.toLowerCase()} AFTER training them last time?
-      </Text>
-      <View style={styles.pillRow}>
-        {SORENESS_OPTIONS.map((opt) => (
-          <OptionPill
-            key={opt.value}
-            label={opt.label}
-            selected={feedback.soreness === opt.value}
-            danger={opt.value === 3 && feedback.soreness === 3}
-            onPress={() => onChange(muscle, "soreness", opt.value)}
-          />
-        ))}
-      </View>
-
-      {/* Pump */}
-      <Text style={[typography.footnote, styles.questionLabel, { color: colors.label, marginTop: 16 }]}>
-        {displayName.toUpperCase()} PUMP
-      </Text>
-      <Text style={[typography.caption1, { color: colors.labelSecondary, marginBottom: 10 }]}>
-        How much of a pump did you get today in your {displayName.toLowerCase()}?
-      </Text>
-      <View style={styles.pillRow}>
-        {PUMP_OPTIONS.map((opt) => (
-          <OptionPill
-            key={opt.value}
-            label={opt.label}
-            selected={feedback.pump === opt.value}
-            success={opt.value === 2 && feedback.pump === 2}
-            onPress={() => onChange(muscle, "pump", opt.value)}
-          />
-        ))}
-      </View>
-
-      {/* Workload */}
-      <Text style={[typography.footnote, styles.questionLabel, { color: colors.label, marginTop: 16 }]}>
-        {displayName.toUpperCase()} WORKLOAD
-      </Text>
-      <Text style={[typography.caption1, { color: colors.labelSecondary, marginBottom: 10 }]}>
-        How would you rate the difficulty of the work you did for your {displayName.toLowerCase()}?
-      </Text>
-      <View style={styles.pillRow}>
-        {WORKLOAD_OPTIONS.map((opt) => (
-          <OptionPill
-            key={opt.value}
-            label={opt.label}
-            selected={feedback.workload === opt.value}
-            danger={opt.value === 3 && feedback.workload === 3}
-            onPress={() => onChange(muscle, "workload", opt.value)}
-          />
-        ))}
-      </View>
+      <View style={[styles.badgeDot, { backgroundColor: "rgba(255,255,255,0.8)" }]} />
     </View>
   );
 }
 
-// ─── Main Modal ───────────────────────────────────────────────────────────────
+function QuestionRow({
+  label,
+  prompt,
+  options,
+  value,
+  onPick,
+  dangerValue,
+  successValue,
+  marginTop = 0,
+}: {
+  label: string;
+  prompt: string;
+  options: { label: string; value: number }[];
+  value: number;
+  onPick: (value: number) => void;
+  dangerValue?: number;
+  successValue?: number;
+  marginTop?: number;
+}) {
+  const { colors, typography } = useTheme();
+  return (
+    <>
+      <Text style={[typography.footnote, styles.questionLabel, { color: colors.label, marginTop }]}>
+        {label}
+      </Text>
+      <Text style={[typography.caption1, { color: colors.labelSecondary, marginBottom: 10 }]}>
+        {prompt}
+      </Text>
+      <View style={styles.pillRow}>
+        {options.map((opt) => (
+          <OptionPill
+            key={opt.value}
+            label={opt.label}
+            selected={value === opt.value}
+            danger={dangerValue === opt.value && value === opt.value}
+            success={successValue === opt.value && value === opt.value}
+            onPress={() => onPick(opt.value)}
+          />
+        ))}
+      </View>
+    </>
+  );
+}
 
-export function FeedbackModal({
+// ─── Soreness mode (session start, per muscle) ────────────────────────────────
+
+function SorenessModal({
   visible,
   muscleGroups,
   workoutId,
   userId,
   onSave,
   onCancel,
-}: FeedbackModalProps) {
+}: CommonProps & { muscleGroups: string[] }) {
   const { colors, typography } = useTheme();
-  const saveFeedback = useMutation(api.overload.saveFeedback);
+  const saveSoreness = useMutation(api.overload.saveSessionSoreness);
 
-  const defaultFeedback = (): FeedbackState => ({ soreness: 2, pump: 1, workload: 1 });
-
-  const [feedbackMap, setFeedbackMap] = useState<Record<string, FeedbackState>>(
-    () => Object.fromEntries(muscleGroups.map((m) => [m, defaultFeedback()]))
+  const [map, setMap] = useState<Record<string, number>>(
+    () => Object.fromEntries(muscleGroups.map((m) => [m, 2]))
   );
 
-  const handleChange = useCallback(
-    (muscle: string, field: keyof FeedbackState, value: number) => {
-      setFeedbackMap((prev) => ({
-        ...prev,
-        [muscle]: { ...prev[muscle], [field]: value as any },
-      }));
+  const handleSave = async () => {
+    notificationSuccess();
+    await saveSoreness({
+      workoutId,
+      userId,
+      feedback: muscleGroups.map((m) => ({ muscleGroup: m, soreness: map[m] ?? 2 })),
+    });
+    onSave();
+  };
+
+  if (!visible) return null;
+
+  return (
+    <ModalShell
+      title="RECOVERY CHECK"
+      onCancel={onCancel}
+      onSave={handleSave}
+      saveLabel="START"
+    >
+      {muscleGroups.map((muscle) => {
+        const displayName =
+          MUSCLE_DISPLAY_NAMES[muscle as keyof typeof MUSCLE_DISPLAY_NAMES] ?? muscle;
+        return (
+          <View key={muscle} style={[styles.section, { backgroundColor: colors.backgroundSecondary }]}>
+            <MuscleBadge muscle={muscle} />
+            <QuestionRow
+              label={`${displayName.toUpperCase()} SORENESS`}
+              prompt={`How sore did your ${displayName.toLowerCase()} get after training them last time?`}
+              options={SORENESS_OPTIONS}
+              value={map[muscle] ?? 2}
+              onPick={(v) => setMap((prev) => ({ ...prev, [muscle]: v }))}
+              dangerValue={3}
+            />
+          </View>
+        );
+      })}
+    </ModalShell>
+  );
+}
+
+// ─── Exercise mode (post-work, per exercise) ──────────────────────────────────
+
+function ExerciseFeedbackModal({
+  visible,
+  exercises,
+  workoutId,
+  userId,
+  onSave,
+  onCancel,
+}: CommonProps & { exercises: FeedbackExercise[] }) {
+  const { colors } = useTheme();
+  const saveExerciseFeedback = useMutation(api.overload.saveExerciseFeedback);
+
+  const [map, setMap] = useState<Record<string, { pump: number; workload: number }>>(
+    () => Object.fromEntries(exercises.map((e) => [e.exerciseId as string, { pump: 1, workload: 1 }]))
+  );
+
+  const setField = useCallback(
+    (exId: string, field: "pump" | "workload", value: number) => {
+      setMap((prev) => ({ ...prev, [exId]: { ...(prev[exId] ?? { pump: 1, workload: 1 }), [field]: value } }));
     },
     []
   );
 
   const handleSave = async () => {
     notificationSuccess();
-    await saveFeedback({
+    await saveExerciseFeedback({
       workoutId,
       userId,
-      feedback: muscleGroups.map((m) => ({
-        muscleGroup: m,
-        soreness: feedbackMap[m]?.soreness ?? 2,
-        pump: feedbackMap[m]?.pump ?? 1,
-        workload: feedbackMap[m]?.workload ?? 1,
+      feedback: exercises.map((e) => ({
+        exerciseId: e.exerciseId,
+        muscleGroup: e.muscleGroup,
+        pump: map[e.exerciseId as string]?.pump ?? 1,
+        workload: map[e.exerciseId as string]?.workload ?? 1,
       })),
     });
     onSave();
@@ -237,6 +272,55 @@ export function FeedbackModal({
   if (!visible) return null;
 
   return (
+    <ModalShell title="FEEDBACK" onCancel={onCancel} onSave={handleSave} saveLabel="SAVE">
+      {exercises.map((ex) => {
+        const key = ex.exerciseId as string;
+        const fb = map[key] ?? { pump: 1, workload: 1 };
+        return (
+          <View key={key} style={[styles.section, { backgroundColor: colors.backgroundSecondary }]}>
+            <MuscleBadge muscle={ex.muscleGroup} />
+            <Text style={[styles.exerciseName, { color: colors.label }]}>{ex.name}</Text>
+            <QuestionRow
+              label="PUMP"
+              prompt="How much of a pump did you get on this exercise?"
+              options={PUMP_OPTIONS}
+              value={fb.pump}
+              onPick={(v) => setField(key, "pump", v)}
+              successValue={2}
+            />
+            <QuestionRow
+              label="WORKLOAD"
+              prompt="How hard was the work on this exercise?"
+              options={WORKLOAD_OPTIONS}
+              value={fb.workload}
+              onPick={(v) => setField(key, "workload", v)}
+              dangerValue={3}
+              marginTop={16}
+            />
+          </View>
+        );
+      })}
+    </ModalShell>
+  );
+}
+
+// ─── Shared shell ─────────────────────────────────────────────────────────────
+
+function ModalShell({
+  title,
+  saveLabel,
+  onCancel,
+  onSave,
+  children,
+}: {
+  title: string;
+  saveLabel: string;
+  onCancel: () => void;
+  onSave: () => void;
+  children: React.ReactNode;
+}) {
+  const { colors, typography } = useTheme();
+  return (
     <View style={[styles.overlay, { backgroundColor: colors.background }]}>
       <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
         {/* Header */}
@@ -244,7 +328,7 @@ export function FeedbackModal({
           <TouchableOpacity onPress={onCancel} activeOpacity={0.7} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <Text style={[typography.body, { color: colors.accent }]}>CANCEL</Text>
           </TouchableOpacity>
-          <Text style={[typography.headline, { color: colors.label }]}>FEEDBACK</Text>
+          <Text style={[typography.headline, { color: colors.label }]}>{title}</Text>
           <View style={{ width: 60 }} />
         </View>
 
@@ -253,29 +337,33 @@ export function FeedbackModal({
           contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}
         >
-          {muscleGroups.map((muscle) => (
-            <FeedbackSection
-              key={muscle}
-              muscle={muscle}
-              feedback={feedbackMap[muscle] ?? defaultFeedback()}
-              onChange={handleChange}
-            />
-          ))}
+          {children}
         </ScrollView>
 
         {/* Save button */}
         <View style={[styles.saveBar, { backgroundColor: colors.background, borderTopColor: colors.separator }]}>
           <TouchableOpacity
             style={[styles.saveButton, { backgroundColor: colors.accent }]}
-            onPress={handleSave}
+            onPress={onSave}
             activeOpacity={0.85}
           >
-            <Text style={[typography.headline, { color: "#FFFFFF" }]}>SAVE</Text>
+            <Text style={[typography.headline, { color: "#FFFFFF" }]}>{saveLabel}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
     </View>
   );
+}
+
+// ─── Main entry ───────────────────────────────────────────────────────────────
+
+export function FeedbackModal(props: FeedbackModalProps) {
+  if (props.mode === "soreness") {
+    const { mode, ...rest } = props;
+    return <SorenessModal {...rest} />;
+  }
+  const { mode, ...rest } = props;
+  return <ExerciseFeedbackModal {...rest} />;
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
@@ -313,6 +401,11 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 3.5,
+  },
+  exerciseName: {
+    fontSize: 17,
+    fontWeight: "600",
+    marginBottom: 12,
   },
   questionLabel: {
     fontWeight: "700",

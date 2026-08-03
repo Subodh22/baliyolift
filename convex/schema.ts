@@ -77,6 +77,17 @@ export default defineSchema({
         mrv: v.number(),
       })
     ),
+    // Diet phase this block is run under. The overload engine can't infer it, so
+    // cut/prep blocks ramp volume more conservatively (see getSuggestionV2).
+    // Absent = neutral (full ramp), preserving legacy behaviour.
+    phase: v.optional(
+      v.union(
+        v.literal("cut"),
+        v.literal("maintenance"),
+        v.literal("gain"),
+        v.literal("prep")
+      )
+    ),
   })
     .index("by_user", ["userId"])
     .index("by_user_status", ["userId", "status"]),
@@ -104,6 +115,14 @@ export default defineSchema({
       v.literal("regular"),
       v.literal("myorep"),
       v.literal("myorep_match")
+    ),
+    // How this exercise progresses across the meso:
+    //   "load"   → ⭐ anchor lift; fixed sets, progress by weight. Excluded from
+    //              autoregulated set-adding.
+    //   "volume" → accessory/pump work; earns added sets from recovery feedback.
+    // Absent (legacy rows) is treated as "volume".
+    progressionType: v.optional(
+      v.union(v.literal("load"), v.literal("volume"))
     ),
   })
     .index("by_session", ["sessionId"])
@@ -183,9 +202,16 @@ export default defineSchema({
     workoutId: v.id("workouts"),
     userId: v.id("users"),
     muscleGroup: v.string(),
-    soreness: v.number(), // 0=never, 1=long ago, 2=just in time, 3=still sore
-    pump: v.number(),     // 0=low, 1=moderate, 2=amazing
-    workload: v.number(), // 0=easy, 1=good, 2=pushed limits, 3=too much
+    // Optional so feedback can attach to a specific exercise rather than only a
+    // muscle. Session-start soreness rows leave this undefined (soreness is a
+    // muscle-level recovery signal); per-exercise pump/workload rows set it.
+    exerciseId: v.optional(v.id("exercises")),
+    // All three are optional because the two collection moments each write a
+    // subset: session start → soreness only; per-exercise (post-set) → pump +
+    // workload only. Legacy combined rows still carry all three.
+    soreness: v.optional(v.number()), // 0=never, 1=long ago, 2=just in time, 3=still sore
+    pump: v.optional(v.number()),     // 0=low, 1=moderate, 2=amazing
+    workload: v.optional(v.number()), // 0=easy, 1=good, 2=pushed limits, 3=too much
     notes: v.optional(v.string()),
   })
     .index("by_workout", ["workoutId"])
@@ -259,6 +285,7 @@ export default defineSchema({
     userId: v.id("users"),
     date: v.string(),      // "YYYY-MM-DD"
     weightKg: v.number(),
+    waistCm: v.optional(v.number()), // logged weekly — separates fat from muscle better than the scale
     timestamp: v.number(),
   })
     .index("by_user_date", ["userId", "date"])

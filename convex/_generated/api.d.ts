@@ -21,6 +21,7 @@ import type * as mealPlans from "../mealPlans.js";
 import type * as mesocycles from "../mesocycles.js";
 import type * as nutrition from "../nutrition.js";
 import type * as overload from "../overload.js";
+import type * as overloadMath from "../overloadMath.js";
 import type * as progress from "../progress.js";
 import type * as progressPhotos from "../progressPhotos.js";
 import type * as seed from "../seed.js";
@@ -52,6 +53,7 @@ declare const fullApi: ApiFromModules<{
   mesocycles: typeof mesocycles;
   nutrition: typeof nutrition;
   overload: typeof overload;
+  overloadMath: typeof overloadMath;
   progress: typeof progress;
   progressPhotos: typeof progressPhotos;
   seed: typeof seed;
