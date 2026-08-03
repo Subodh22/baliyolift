@@ -12,6 +12,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { P } from "@/constants/colors";
 import { CG, CG_ITALIC, OUT_L, OUT } from "@/constants/typography";
 import { calcTargets, calcTargetsForGoal } from "@/utils/nutritionTargets";
+import { todayStr, offsetDateStr } from "@/utils/date";
 
 // ── Macro colours ─────────────────────────────────────────────────────────────
 const C_PROTEIN = P.gold;
@@ -50,16 +51,9 @@ const MEALS: { type: MealType; label: string }[] = [
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function todayStr() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-function offsetDate(base: string, days: number): string {
-  const d = new Date(base + "T12:00:00");
-  d.setDate(d.getDate() + days);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
+// todayStr / offsetDate are the shared local-date helpers — food entries are
+// keyed by LOCAL calendar day, and every writer must agree with this reader.
+const offsetDate = offsetDateStr;
 
 function fmtDate(dateStr: string): string {
   return new Date(dateStr + "T12:00:00").toLocaleDateString("en-AU", {

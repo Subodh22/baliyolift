@@ -10,6 +10,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { localDateStr } from "@/utils/date";
 import { P } from "@/constants/colors";
 import { CG, CG_ITALIC, OUT_L, OUT } from "@/constants/typography";
 import {
@@ -421,7 +422,10 @@ export default function MealPlansScreen() {
   const handleLog = async (mealType: "breakfast" | "lunch" | "dinner" | "snack") => {
     if (!userId || !selected) return;
     setLogging(true);
-    const today = new Date().toISOString().split("T")[0];
+    // Local day key — must match Fuel's getDayEntries, which keys by local date.
+    // Using UTC here (toISOString) stamped entries on the wrong day in +/- UTC
+    // timezones, so logged food never appeared on today's Fuel view.
+    const today = localDateStr();
     try {
       await addEntry({
         userId,
