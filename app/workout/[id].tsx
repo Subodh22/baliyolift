@@ -522,14 +522,14 @@ function ExCard({ se, originalExId, exState, suggestion, activeCell, dispatch, w
 
 // ─── Card wrapper fetching per-exercise suggestion ────────────────────────────
 
-function ExCardWithSuggestion({ se, originalExId, exState, activeCell, dispatch, workoutId, userId, weekNumber, mesoId, onOpenSwap, onOpenVideo, onDelete }: {
+function ExCardWithSuggestion({ se, originalExId, exState, activeCell, dispatch, workoutId, userId, weekNumber, mesoId, sessionId, onOpenSwap, onOpenVideo, onDelete }: {
   se: any; originalExId: string; exState: LocalExState | undefined; activeCell: WState["activeCell"];
   dispatch: React.Dispatch<Action>; workoutId: Id<"workouts"> | null; userId: Id<"users"> | null;
-  weekNumber: number; mesoId: Id<"mesocycles"> | null; onOpenSwap: () => void; onOpenVideo: () => void; onDelete: (scope: "today" | "meso") => void;
+  weekNumber: number; mesoId: Id<"mesocycles"> | null; sessionId: Id<"sessions"> | null; onOpenSwap: () => void; onOpenVideo: () => void; onDelete: (scope: "today" | "meso") => void;
 }) {
   const suggestion = useQuery(
     api.overload.getSuggestionV2,
-    userId && mesoId ? { userId, exerciseId: se.exerciseId, mesocycleId: mesoId, weekNumber, repRangeMin: se.repRangeMin, repRangeMax: se.repRangeMax, targetSets: se.targetSets } : "skip"
+    userId && mesoId ? { userId, exerciseId: se.exerciseId, mesocycleId: mesoId, sessionId: sessionId ?? undefined, weekNumber, repRangeMin: se.repRangeMin, repRangeMax: se.repRangeMax, targetSets: se.targetSets } : "skip"
   );
   return <ExCard se={se} originalExId={originalExId} exState={exState} suggestion={suggestion} activeCell={activeCell} dispatch={dispatch} workoutId={workoutId} userId={userId} onOpenSwap={onOpenSwap} onOpenVideo={onOpenVideo} onDelete={onDelete} />;
 }
@@ -1025,6 +1025,7 @@ export default function WorkoutScreen() {
               userId={userId ?? null}
               weekNumber={weekNumber}
               mesoId={meso?._id ?? null}
+              sessionId={resolvedSessionId}
               onOpenSwap={() => setSwapTarget({ seId, exercise: se.exercise, oldExId })}
               onOpenVideo={() => {
                 const exName = effectiveSe.exercise?.name ?? "";
@@ -1081,6 +1082,7 @@ export default function WorkoutScreen() {
               userId={userId ?? null}
               weekNumber={weekNumber}
               mesoId={meso?._id ?? null}
+              sessionId={resolvedSessionId}
               onOpenSwap={() => {}}
               onOpenVideo={() => {
                 const storedUrl = (ex as any)?.videoUrl as string | undefined;
