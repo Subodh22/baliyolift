@@ -11,12 +11,13 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInRight, FadeInUp } from "react-native-reanimated";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { router } from "expo-router";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useTheme } from "@/hooks/useTheme";
+import { generateRoadmap, inferObjective, type Objective, type Aggressiveness } from "@/utils/goalRoadmap";
 
 // ── US Navy body fat formula ─────────────────────────────────────────────────
 function calcBf(
@@ -214,14 +215,39 @@ const segStyles = StyleSheet.create({
 
 // ── Main screen ──────────────────────────────────────────────────────────────
 const WEEKLY_OPTIONS = [3, 4, 5];
+const DAY_MS = 86_400_000;
+const MONTH_MS = 30.44 * DAY_MS;
+const HORIZON_OPTIONS = [
+  { label: "3 mo", value: 3 },
+  { label: "6 mo", value: 6 },
+  { label: "1 yr", value: 12 },
+  { label: "2 yr", value: 24 },
+];
+
+const OBJECTIVE_OPTIONS: { value: Objective; label: string; desc: string }[] = [
+  { value: "lose_fat",     label: "Lose fat",       desc: "Cut to your target, keep muscle" },
+  { value: "build_muscle", label: "Build muscle",   desc: "Lean bulk up to your ceiling" },
+  { value: "recomp",       label: "Recomp",         desc: "Add muscle & lose fat at maintenance" },
+  { value: "peak",         label: "Peak for a date",desc: "Hit a low body fat by a deadline" },
+  { value: "maintain",     label: "Maintain",       desc: "Hold your current composition" },
+];
+
+const AGGRESSIVENESS_OPTIONS: { label: string; value: Aggressiveness }[] = [
+  { label: "Steady",   value: "conservative" },
+  { label: "Standard", value: "standard" },
+  { label: "Fast",     value: "aggressive" },
+];
 
 export default function OnboardingScreen() {
   const { colors, typography } = useTheme();
   const { userId } = useCurrentUser();
   const saveProfile = useMutation(api.userProfile.saveProfile);
+  const saveGeneratedPlan = useMutation(api.goalPlans.saveGeneratedPlan);
+  const existingProfile = useQuery(api.userProfile.getByUser, userId ? { userId } : "skip");
 
   const [step, setSt] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [seeded, setSeeded] = useState(false);
 
   const [sex, setSex]       = useState<"male" | "female">("male");
   const [age, setAge]       = useState("");
@@ -234,8 +260,38 @@ export default function OnboardingScreen() {
   const [waist, setWaist] = useState("");
   const [hip, setHip]     = useState("");
 
-  const [targetBf, setTargetBf]     = useState<number | null>(null);
-  const [weeklyGoal, setWeeklyGoal] = useState(4);
+  const [targetBf, setTargetBf]         = useState<number | null>(null);
+  const [weeklyGoal, setWeeklyGoal]     = useState(4);
+  const [horizonMonths, setHorizonMonths] = useState(12);
+  const [objective, setObjective]       = useState<Objective | null>(null);
+  const [aggressiveness, setAggressiveness] = useState<Aggressiveness>("standard");
+
+  // Prefill from an existing profile (restart / quarterly check-in). First-time
+  // users have no profile, so nothing seeds. Runs once, before the user edits.
+  useEffect(() => {
+    if (seeded || !existingProfile) return;
+    setSex(existingProfile.sex);
+    setAge(String(existingProfile.age));
+    setHeight(String(existingProfile.heightCm));
+    setWeight(String(existingProfile.weightKg));
+    setTargetBf(existingProfile.targetBf);
+    setWeeklyGoal(existingProfile.weeklyGoal);
+    if (existingProfile.objective) setObjective(existingProfile.objective);
+    if (existingProfile.aggressiveness) setAggressiveness(existingProfile.aggressiveness);
+    // Seed the last-known body fat via manual mode so the flow is valid
+    // immediately; the user can switch to "Calculate" to re-measure.
+    setManualMode(true);
+    setManualBfInput(String(existingProfile.currentBf));
+    if (existingProfile.targetDate) {
+      const months = Math.round((existingProfile.targetDate - Date.now()) / MONTH_MS);
+      const nearest = HORIZON_OPTIONS.reduce(
+        (a, b) => (Math.abs(b.value - months) < Math.abs(a.value - months) ? b : a),
+        HORIZON_OPTIONS[2],
+      );
+      setHorizonMonths(nearest.value);
+    }
+    setSeeded(true);
+  }, [existingProfile, seeded]);
 
   const formulaBf = calcBf(
     sex,
@@ -248,6 +304,31 @@ export default function OnboardingScreen() {
   const currentBf = manualMode
     ? (manualBf && manualBf > 2 && manualBf < 60 ? Math.round(manualBf * 10) / 10 : null)
     : formulaBf;
+
+  // The objective actually used: an explicit pick, else auto-suggested from the
+  // body-fat gap (still overridable). Server re-resolves the same way on save.
+  const effObjective: Objective =
+    objective ?? (currentBf !== null && targetBf !== null ? inferObjective(currentBf, targetBf) : "lose_fat");
+
+  // Live roadmap preview from the current inputs (client-side; not persisted —
+  // the server regenerates authoritatively on save).
+  const previewPlan = useMemo(() => {
+    if (currentBf === null || targetBf === null) return null;
+    const now = Date.now();
+    return generateRoadmap(
+      {
+        weightKg: parseFloat(weight) || 0,
+        currentBf,
+        targetBf,
+        weeklyGoal,
+        sex,
+        age: parseInt(age) || 0,
+        heightCm: parseFloat(height) || 0,
+      },
+      { objective: effObjective, targetBf, aggressiveness, deadlineMs: now + horizonMonths * MONTH_MS },
+      now,
+    );
+  }, [currentBf, targetBf, weight, weeklyGoal, sex, age, height, horizonMonths, effObjective, aggressiveness]);
 
   const step1Valid = age && height && weight;
   const step2Valid = manualMode
@@ -266,6 +347,8 @@ export default function OnboardingScreen() {
     if (!userId || !currentBf || targetBf === null) return;
     setSaving(true);
     try {
+      const now = Date.now();
+      const deadlineMs = now + horizonMonths * MONTH_MS;
       await saveProfile({
         userId,
         sex,
@@ -278,7 +361,12 @@ export default function OnboardingScreen() {
         currentBf,
         targetBf,
         weeklyGoal,
+        objective: effObjective,
+        aggressiveness,
+        targetDate: deadlineMs,
       });
+      // Generate the multi-phase roadmap from the freshly-saved profile.
+      await saveGeneratedPlan({ userId, targetBf, deadlineMs, startMs: now, objective: effObjective, aggressiveness });
       router.replace("/(tabs)");
     } finally {
       setSaving(false);
@@ -426,6 +514,32 @@ export default function OnboardingScreen() {
                 You're at {currentBf}% — where do you want to be?
               </Text>
 
+              <Text style={sectionLabel(colors)}>Your goal</Text>
+              <View style={{ gap: 8, marginBottom: 28 }}>
+                {OBJECTIVE_OPTIONS.map((o) => {
+                  const selected = effObjective === o.value;
+                  return (
+                    <TouchableOpacity
+                      key={o.value}
+                      onPress={() => setObjective(o.value)}
+                      style={[styles.goalRow, {
+                        borderColor: selected ? colors.accent : colors.separator,
+                      }]}
+                      activeOpacity={0.8}
+                    >
+                      <View style={{ flex: 1 }}>
+                        <Text style={[typography.headline, { color: selected ? colors.accent : colors.label }]}>
+                          {o.label}
+                        </Text>
+                        <Text style={{ fontSize: 11, color: colors.labelSecondary, marginTop: 2 }}>
+                          {o.desc}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
               <Text style={sectionLabel(colors)}>Target body fat</Text>
               <View style={{ gap: 8, marginBottom: 28 }}>
                 {targetPresets.map((p) => {
@@ -464,12 +578,28 @@ export default function OnboardingScreen() {
                 colors={colors}
               />
 
+              <Text style={sectionLabel(colors)}>Reach it by</Text>
+              <SegmentControl
+                options={HORIZON_OPTIONS}
+                value={horizonMonths}
+                onChange={setHorizonMonths}
+                colors={colors}
+              />
+
+              <Text style={sectionLabel(colors)}>Pace</Text>
+              <SegmentControl
+                options={AGGRESSIVENESS_OPTIONS}
+                value={aggressiveness}
+                onChange={setAggressiveness}
+                colors={colors}
+              />
+
               {targetBf !== null && (
                 <Animated.View
                   entering={FadeInUp.springify()}
                   style={[styles.card, { borderColor: colors.separator }]}
                 >
-                  <Text style={sectionLabel(colors)}>Your Journey</Text>
+                  <Text style={sectionLabel(colors)}>Your Roadmap</Text>
                   <BfZoneBar
                     sex={sex}
                     current={currentBf}
@@ -477,12 +607,40 @@ export default function OnboardingScreen() {
                     colors={colors}
                     typography={typography}
                   />
+
+                  {/* Phase sequence preview */}
+                  {previewPlan && previewPlan.phases.length > 0 && (
+                    <View style={{ gap: 8, marginTop: 8 }}>
+                      {previewPlan.phases.map((p) => (
+                        <View
+                          key={p.order}
+                          style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}
+                        >
+                          <Text style={{ fontSize: 13, color: colors.label, fontWeight: "600" }}>
+                            {p.label}
+                          </Text>
+                          <Text style={{ fontSize: 11, color: colors.labelSecondary, letterSpacing: 0.3 }}>
+                            {p.durationWeeks}w · {p.calories} kcal · {p.startBf}→{p.endBf}%
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+
+                  {previewPlan?.note && (
+                    <Text style={{ fontSize: 11, color: colors.accent, marginTop: 12, lineHeight: 16 }}>
+                      {previewPlan.note}
+                    </Text>
+                  )}
+
                   <View style={[styles.timeRow, { borderTopColor: colors.separator }]}>
                     <Text style={{ fontSize: 10, color: colors.labelSecondary, letterSpacing: 1.2, textTransform: "uppercase" }}>
-                      Estimated time
+                      Total plan
                     </Text>
                     <Text style={{ fontSize: 14, color: colors.accent, fontWeight: "700", letterSpacing: 0.5 }}>
-                      {estimateMonths(currentBf, targetBf, weeklyGoal)}
+                      {previewPlan && previewPlan.totalWeeks > 0
+                        ? `~${Math.round(previewPlan.totalWeeks / 4.3)} months`
+                        : estimateMonths(currentBf, targetBf, weeklyGoal)}
                     </Text>
                   </View>
                 </Animated.View>

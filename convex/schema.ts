@@ -230,7 +230,59 @@ export default defineSchema({
     currentBf: v.number(),         // Navy formula result at onboarding
     targetBf: v.number(),
     weeklyGoal: v.number(),        // workouts per week commitment
+    // Objective-driven roadmap inputs (optional for back-compat; the engine
+    // infers a default from the BF gap when absent).
+    objective: v.optional(v.union(
+      v.literal("lose_fat"), v.literal("build_muscle"),
+      v.literal("recomp"), v.literal("peak"), v.literal("maintain"),
+    )),
+    aggressiveness: v.optional(v.union(
+      v.literal("conservative"), v.literal("standard"), v.literal("aggressive"),
+    )),
+    targetDate: v.optional(v.number()),    // long-term goal deadline (ms) — drives the roadmap
+    lastCheckInAt: v.optional(v.number()), // Phase B: quarterly re-onboarding anchor
+    updatedAt: v.optional(v.number()),     // set on every saveProfile — drift/nudge detection
   }).index("by_user", ["userId"]),
+
+  // --- Goal Plans (multi-phase roadmap: cut → bulk → mini-cut → prep) ---
+  // The whole roadmap is denormalized into one document (phases is a small fixed
+  // array), mirroring how mesocycles store volumeTargets inline.
+  goalPlans: defineTable({
+    userId:              v.id("users"),
+    objective:           v.optional(v.union(
+      v.literal("lose_fat"), v.literal("build_muscle"),
+      v.literal("recomp"), v.literal("peak"), v.literal("maintain"),
+    )),
+    targetBf:            v.number(),
+    requestedDeadlineMs: v.number(),   // what the user asked for
+    deadlineMs:          v.number(),   // effective deadline (may be auto-extended)
+    startMs:             v.number(),   // when the plan was anchored
+    status:              v.union(v.literal("active"), v.literal("archived")),
+    feasible:            v.boolean(),
+    adjusted:            v.boolean(),  // true when the deadline was auto-extended
+    note:                v.optional(v.string()),
+    basisWeightKg:       v.number(),   // profile snapshot the plan was generated from
+    basisBf:             v.number(),   // (Phase B compares live profile to detect drift)
+    phases: v.array(v.object({
+      order:           v.number(),
+      kind:            v.union(v.literal("cut"), v.literal("bulk"), v.literal("maintain"), v.literal("prep")),
+      label:           v.string(),
+      startWeekOffset: v.number(),
+      durationWeeks:   v.number(),
+      startWeightKg:   v.number(),
+      endWeightKg:     v.number(),
+      startBf:         v.number(),
+      endBf:           v.number(),
+      calories:        v.number(),
+      proteinG:        v.number(),
+      carbsG:          v.number(),
+      fatG:            v.number(),
+    })),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_status", ["userId", "status"]),
 
   // --- Food Entries ---
   foodEntries: defineTable({

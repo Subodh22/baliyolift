@@ -427,3 +427,58 @@ export const getHistory = query({
     );
   },
 });
+
+// Completed workouts within a single local day [dayStartMs, dayEndMs), with a
+// per-exercise summary (working-set count + heaviest set). Powers the calendar
+// day-detail sheet on the Stats screen.
+export const getDayWorkout = query({
+  args: {
+    userId: v.id("users"),
+    dayStartMs: v.number(),
+    dayEndMs: v.number(),
+  },
+  handler: async (ctx, { userId, dayStartMs, dayEndMs }) => {
+    const workouts = await ctx.db
+      .query("workouts")
+      .withIndex("by_user_date", (q) =>
+        q.eq("userId", userId).gte("date", dayStartMs).lt("date", dayEndMs)
+      )
+      .filter((q) => q.eq(q.field("status"), "completed"))
+      .collect();
+
+    return await Promise.all(
+      workouts.map(async (w) => {
+        const session = await ctx.db.get(w.sessionId);
+        const sets = await ctx.db
+          .query("sets")
+          .withIndex("by_workout", (q) => q.eq("workoutId", w._id))
+          .filter((q) => q.eq(q.field("isWarmup"), false))
+          .collect();
+
+        const exMap = new Map<
+          string,
+          { name: string; muscleGroup: string; sets: number; topWeight: number; topReps: number; volume: number }
+        >();
+        for (const s of sets) {
+          const ex = await ctx.db.get(s.exerciseId);
+          if (!ex) continue;
+          const key = s.exerciseId as string;
+          if (!exMap.has(key)) {
+            exMap.set(key, { name: ex.name, muscleGroup: ex.muscleGroup, sets: 0, topWeight: 0, topReps: 0, volume: 0 });
+          }
+          const e = exMap.get(key)!;
+          e.sets += 1;
+          e.volume += s.weight * s.reps;
+          if (s.weight > e.topWeight) { e.topWeight = s.weight; e.topReps = s.reps; }
+        }
+
+        return {
+          sessionName: session?.name ?? "Workout",
+          durationMin: w.durationMs ? Math.round(w.durationMs / 60000) : null,
+          totalSets: sets.length,
+          exercises: Array.from(exMap.values()),
+        };
+      })
+    );
+  },
+});

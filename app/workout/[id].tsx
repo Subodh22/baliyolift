@@ -364,6 +364,7 @@ function ExCard({ se, originalExId, exState, suggestion, activeCell, dispatch, w
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [lastExpanded, setLastExpanded] = useState(false);
 
   return (
     <Animated.View entering={FadeInDown.springify().damping(20)} style={[styles.card, { backgroundColor: colors.backgroundSecondary }]}>
@@ -410,20 +411,34 @@ function ExCard({ se, originalExId, exState, suggestion, activeCell, dispatch, w
         </View>
       </View>
 
-      {/* Last session — every set performed, so a low set is never hidden */}
-      {suggestion?.lastSessionSets && suggestion.lastSessionSets.length > 0 && (
-        <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
-          <Text style={{ color: colors.labelTertiary, fontSize: 11, fontFamily: "Outfit_400Regular", letterSpacing: 0.5, marginRight: 2 }}>LAST</Text>
-          {suggestion.lastSessionSets.map((s: { weight: number; reps: number; rir: number }, i: number) => (
-            <View key={i} style={{ backgroundColor: colors.fillSecondary, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 }}>
-              <Text style={{ color: colors.labelSecondary, fontSize: 12, fontFamily: "Outfit_400Regular" }}>
-                {s.weight}×{s.reps}
-                <Text style={{ color: colors.labelTertiary, fontSize: 10 }}> @{s.rir}</Text>
+      {/* Last session — collapsed to the final set; tap to reveal every set performed */}
+      {suggestion?.lastSessionSets && suggestion.lastSessionSets.length > 0 && (() => {
+        const lastSets: { weight: number; reps: number; rir: number }[] = suggestion.lastSessionSets;
+        const shown = lastExpanded ? lastSets : lastSets.slice(-1);
+        const hasMore = lastSets.length > 1;
+        return (
+          <TouchableOpacity
+            activeOpacity={hasMore ? 0.6 : 1}
+            onPress={() => { if (hasMore) { selectionAsync(); setLastExpanded((v) => !v); } }}
+            style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end", flexWrap: "wrap", gap: 6, marginBottom: 10 }}
+          >
+            <Text style={{ color: colors.labelTertiary, fontSize: 11, fontFamily: "Outfit_400Regular", letterSpacing: 0.5, marginRight: 2 }}>LAST</Text>
+            {shown.map((s, i) => (
+              <View key={i} style={{ backgroundColor: colors.fillSecondary, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 }}>
+                <Text style={{ color: colors.labelSecondary, fontSize: 12, fontFamily: "Outfit_400Regular" }}>
+                  {s.weight}×{s.reps}
+                  <Text style={{ color: colors.labelTertiary, fontSize: 10 }}> @{s.rir}</Text>
+                </Text>
+              </View>
+            ))}
+            {hasMore && (
+              <Text style={{ color: colors.labelTertiary, fontSize: 11, fontFamily: "Outfit_400Regular" }}>
+                {lastExpanded ? "▲" : `+${lastSets.length - 1} ▾`}
               </Text>
-            </View>
-          ))}
-        </View>
-      )}
+            )}
+          </TouchableOpacity>
+        );
+      })()}
 
       {/* Today's target banner */}
       {suggestion && (() => {

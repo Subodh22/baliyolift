@@ -61,6 +61,12 @@ export default function ProfileScreen() {
   const displayName = user?.fullName ?? user?.firstName ?? "Athlete";
   const imageUrl    = user?.imageUrl ?? null;
 
+  const goalValue = profile
+    ? profile.targetDate
+      ? `${profile.targetBf}% · ${new Date(profile.targetDate).toLocaleDateString("en-AU", { month: "short", year: "numeric" })}`
+      : `${profile.targetBf}%`
+    : "—";
+
   const handleConfirmReset = async () => {
     if (!userId) return;
     setResetting(true);
@@ -135,6 +141,22 @@ export default function ProfileScreen() {
               thumbColor="#FFFFFF"
             />
           </View>
+        </Animated.View>
+
+        {/* Goal & Roadmap */}
+        <Animated.View entering={FadeInDown.delay(210).springify()}>
+          <Text style={s.sectionLabel}>GOAL</Text>
+          <RowGroup>
+            <Row
+              label="Goal & Roadmap"
+              value={goalValue}
+              onPress={() => router.push("/onboarding")}
+            />
+            <Row
+              label="Restart Onboarding"
+              onPress={() => router.push("/onboarding")}
+            />
+          </RowGroup>
         </Animated.View>
 
         {/* Nutrition */}

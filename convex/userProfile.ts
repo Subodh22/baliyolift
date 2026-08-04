@@ -14,16 +14,25 @@ export const saveProfile = mutation({
     currentBf: v.number(),
     targetBf: v.number(),
     weeklyGoal: v.number(),
+    objective: v.optional(v.union(
+      v.literal("lose_fat"), v.literal("build_muscle"),
+      v.literal("recomp"), v.literal("peak"), v.literal("maintain"),
+    )),
+    aggressiveness: v.optional(v.union(
+      v.literal("conservative"), v.literal("standard"), v.literal("aggressive"),
+    )),
+    targetDate: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("userProfile")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .first();
+    const withMeta = { ...args, updatedAt: Date.now() };
     if (existing) {
-      await ctx.db.patch(existing._id, args);
+      await ctx.db.patch(existing._id, withMeta);
     } else {
-      await ctx.db.insert("userProfile", args);
+      await ctx.db.insert("userProfile", withMeta);
     }
   },
 });
