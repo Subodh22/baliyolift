@@ -10,6 +10,8 @@ import { useRouter } from "expo-router";
 import { P } from "@/constants/colors";
 import { CG_ITALIC, OUT_L, OUT } from "@/constants/typography";
 import { calcTargetsForGoal, GOAL_LABEL, type Goal } from "@/utils/nutritionTargets";
+import { usePostHog } from "posthog-react-native";
+import { captureError, sentryEnabled } from "@/utils/monitoring";
 
 const GOAL_OPTIONS: { goal: Goal; blurb: string }[] = [
   { goal: "cut",      blurb: "Lose fat — calories set below maintenance." },
@@ -37,6 +39,29 @@ export default function ProfileScreen() {
   const latestWeight = useQuery(api.weightTracking.getLatestWeight, userId ? { userId } : "skip");
   const router = useRouter();
   const authHook = useAuth();
+  const posthog = usePostHog();
+  const [monitorMsg, setMonitorMsg] = useState<string | null>(null);
+
+  const handleTestError = () => {
+    captureError(new Error("Baliyo test error — from Profile → Developer"), {
+      source: "profile.dev.testButton",
+      userId: userId ?? "anonymous",
+    });
+    setMonitorMsg(
+      sentryEnabled
+        ? "Sent test error to Sentry ✓"
+        : "Sentry has no DSN — logged to console only."
+    );
+  };
+
+  const handleTestEvent = () => {
+    posthog?.capture("dev_test_event", { source: "profile.dev.testButton" });
+    setMonitorMsg(
+      posthog
+        ? "Sent 'dev_test_event' to PostHog ✓ (may take ~1 min to appear)"
+        : "PostHog not configured."
+    );
+  };
 
   const currentGoal: Goal = foodTarget?.goal ?? "maintain";
   const targetProfile = useMemo(
@@ -215,6 +240,21 @@ export default function ProfileScreen() {
             </Pressable>
           )}
         </Animated.View>
+
+        {__DEV__ && (
+          <Animated.View entering={FadeInDown.delay(420).springify()}>
+            <Text style={s.sectionLabel}>DEVELOPER</Text>
+            <RowGroup>
+              <Row label="Send test error (Sentry)" onPress={handleTestError} showChevron={false} />
+              <Row label="Send test event (PostHog)" onPress={handleTestEvent} showChevron={false} />
+            </RowGroup>
+            {!!monitorMsg && (
+              <Text style={{ fontFamily: OUT_L, fontSize: 12, color: P.mid, marginTop: 10, lineHeight: 18 }}>
+                {monitorMsg}
+              </Text>
+            )}
+          </Animated.View>
+        )}
 
         <Text style={{ fontFamily: OUT_L, fontSize: 11, letterSpacing: 2, color: P.dim, textAlign: "center", marginTop: 32 }}>
           BALIYO v1.0.0

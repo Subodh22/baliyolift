@@ -17,7 +17,9 @@
       "bundleIdentifier": "com.baliyolift.app",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "UIBackgroundModes": ["audio"]
+        "UIBackgroundModes": [
+          "audio"
+        ]
       }
     },
     "android": {
@@ -48,6 +50,16 @@
       "eas": {
         "projectId": "9644ae9d-60fc-4f87-bcfa-422d142e0053"
       }
-    }
+    },
+    "plugins": [
+      [
+        "@sentry/react-native",
+        {
+          "organization": "YOUR_SENTRY_ORG_SLUG",
+          "project": "baliyo"
+        }
+      ],
+      "expo-localization"
+    ]
   }
 }

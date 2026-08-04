@@ -1,5 +1,6 @@
 import React from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { captureError } from "@/utils/monitoring";
 
 type Props = {
   children: React.ReactNode;
@@ -34,6 +35,11 @@ export class ErrorBoundary extends React.Component<Props, State> {
       error,
       info.componentStack
     );
+    // Report to Sentry with the boundary label + React component stack.
+    captureError(error, {
+      boundary: this.props.name ?? "root",
+      componentStack: info.componentStack,
+    });
   }
 
   reset = () => this.setState({ error: null });
