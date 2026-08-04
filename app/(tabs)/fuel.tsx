@@ -11,8 +11,14 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { P } from "@/constants/colors";
 import { CG, CG_ITALIC, OUT_L, OUT } from "@/constants/typography";
-import { calcTargets, calcTargetsForGoal } from "@/utils/nutritionTargets";
+import { calcTargets, calcTargetsForGoal, type Goal } from "@/utils/nutritionTargets";
+import { activePhaseOf, type PhaseKind } from "@/utils/goalRoadmap";
 import { todayStr, offsetDateStr } from "@/utils/date";
+
+// Roadmap phase → the diet-goal enum persisted in foodTargets (drives recipe
+// filtering). Prep / mini-cut behave like a cut.
+const phaseGoal = (kind: PhaseKind): Goal =>
+  kind === "bulk" ? "bulk" : kind === "maintain" ? "maintain" : "cut";
 
 // ── Macro colours ─────────────────────────────────────────────────────────────
 const C_PROTEIN = P.gold;
@@ -343,6 +349,7 @@ export default function FuelScreen() {
   // ── Queries ───────────────────────────────────────────────────────────────
   const profile       = useQuery(api.userProfile.getByUser,          userId ? { userId } : "skip");
   const storedTarget  = useQuery(api.nutrition.getFoodTarget,         userId ? { userId } : "skip");
+  const activePlan    = useQuery(api.goalPlans.getActivePlan,         userId ? { userId } : "skip");
   const dayEntries    = useQuery(api.nutrition.getDayEntries,         userId ? { userId, date } : "skip") ?? [];
   const weekSummary   = useQuery(api.nutrition.getWeekSummary,        userId ? { userId, date } : "skip") ?? [];
   const suggestions   = useQuery(api.mealPlanSlots.getDaySuggestions, userId ? { userId, date } : "skip") ?? [];
@@ -361,13 +368,28 @@ export default function FuelScreen() {
     () => profile ?? null,
     [profile]
   );
+  // Active roadmap phase (if any) — its calorie/macro target wins over the
+  // profile-derived one. Falls back to the last phase past the deadline.
+  const activePhase = useMemo(() => activePhaseOf(activePlan, Date.now()), [activePlan]);
+  const phaseTargets = useMemo(
+    () => activePhase
+      ? {
+          calories: activePhase.calories,
+          proteinG: activePhase.proteinG,
+          carbsG:   activePhase.carbsG,
+          fatG:     activePhase.fatG,
+          goal:     phaseGoal(activePhase.kind),
+        }
+      : null,
+    [activePhase]
+  );
   const computedTargets = useMemo(
-    () => targetProfile
+    () => phaseTargets ?? (targetProfile
       ? storedTarget
         ? calcTargetsForGoal(targetProfile, storedTarget.goal)
         : calcTargets(targetProfile)
-      : null,
-    [targetProfile, storedTarget]
+      : null),
+    [phaseTargets, targetProfile, storedTarget]
   );
 
   // Auto-init and refresh targets from profile + latest weigh-in.
@@ -505,15 +527,22 @@ export default function FuelScreen() {
               <View>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
                   <Text style={s.sectionLabel}>CALORIES</Text>
-                  <TouchableOpacity onPress={() => {
-                    setDraftCals(targets.calories);
-                    setDraftPro(targets.proteinG);
-                    setDraftCarbs(targets.carbsG);
-                    setDraftFat(targets.fatG);
-                    setMacroEditorOpen(true);
-                  }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                    <Text style={{ fontFamily: OUT_L, fontSize: 16, color: P.mid, letterSpacing: 2 }}>⋯</Text>
-                  </TouchableOpacity>
+                  {activePhase ? (
+                    // Roadmap active → the phase locks the target; no manual edit.
+                    <Text style={{ fontFamily: OUT_L, fontSize: 9, letterSpacing: 1.5, color: P.gold, textTransform: "uppercase" }}>
+                      🔒 {activePhase.label}
+                    </Text>
+                  ) : (
+                    <TouchableOpacity onPress={() => {
+                      setDraftCals(targets.calories);
+                      setDraftPro(targets.proteinG);
+                      setDraftCarbs(targets.carbsG);
+                      setDraftFat(targets.fatG);
+                      setMacroEditorOpen(true);
+                    }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                      <Text style={{ fontFamily: OUT_L, fontSize: 16, color: P.mid, letterSpacing: 2 }}>⋯</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
                 <View style={{ flexDirection: "row", alignItems: "baseline", gap: 4, marginTop: 6 }}>
                   <Text style={s.bigNumber}>{totalCals}</Text>

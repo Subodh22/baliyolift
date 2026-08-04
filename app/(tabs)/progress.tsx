@@ -188,7 +188,10 @@ function estimateMonths(current: number, target: number, weekly: number): string
   return months <= 1 ? "~1 month" : `~${months} months`;
 }
 
-function BfZoneBar({ sex, current, target }: { sex: "male" | "female"; current: number; target: number }) {
+function BfZoneBar({ sex, current, target, nowWeightKg, goalWeightKg }: {
+  sex: "male" | "female"; current: number; target: number;
+  nowWeightKg?: number | null; goalWeightKg?: number | null;
+}) {
   const minBf = sex === "male" ? 3 : 10;
   const maxBf = 40;
   const range = maxBf - minBf;
@@ -227,12 +230,138 @@ function BfZoneBar({ sex, current, target }: { sex: "male" | "female"; current: 
         <View>
           <Text style={{ fontFamily: OUT_L, fontSize: 11, color: P.mid }}>Now</Text>
           <Text style={{ fontFamily: CG, fontSize: 18, color: P.ink }}>{current}%</Text>
+          {nowWeightKg != null && (
+            <Text style={{ fontFamily: OUT_L, fontSize: 12, color: P.mid, marginTop: 1 }}>
+              {nowWeightKg.toFixed(1)} kg
+            </Text>
+          )}
         </View>
         <View style={{ alignItems: "flex-end" }}>
           <Text style={{ fontFamily: OUT_L, fontSize: 11, color: P.mid }}>Goal</Text>
           <Text style={{ fontFamily: CG, fontSize: 18, color: P.gold }}>{target}%</Text>
+          {goalWeightKg != null && (
+            <Text style={{ fontFamily: OUT_L, fontSize: 12, color: P.gold, marginTop: 1 }}>
+              ~{goalWeightKg.toFixed(1)} kg
+            </Text>
+          )}
         </View>
       </View>
+    </View>
+  );
+}
+
+// ── Goal Roadmap (multi-phase timeline) ───────────────────────────────────────
+const PHASE_COLORS: Record<string, string> = {
+  cut:      "#E07070",
+  bulk:     "#6DBF8A",
+  maintain: "#8A8A8F",
+  prep:     P.gold,
+};
+
+type PlanLike = {
+  phases: { kind: string; label: string; startWeekOffset: number; durationWeeks: number }[];
+  startMs: number; deadlineMs: number; feasible: boolean;
+} | null | undefined;
+
+// The roadmap phase covering a given calendar day (past or upcoming), or null.
+function phaseForDate(plan: PlanLike, dateMs: number) {
+  if (!plan?.feasible || !plan.phases?.length) return null;
+  const weeks = (dateMs - plan.startMs) / (7 * 86400000);
+  if (weeks < 0) return null;
+  return plan.phases.find(
+    (p) => weeks >= p.startWeekOffset && weeks < p.startWeekOffset + p.durationWeeks,
+  ) ?? null;
+}
+function phaseColorForDate(plan: PlanLike, dateMs: number): string | null {
+  const p = phaseForDate(plan, dateMs);
+  return p ? (PHASE_COLORS[p.kind] ?? null) : null;
+}
+
+function GoalRoadmap({ plan }: {
+  plan: {
+    phases: {
+      order: number; kind: string; label: string;
+      startWeekOffset: number; durationWeeks: number;
+      startBf: number; endBf: number; calories: number;
+      proteinG: number; carbsG: number; fatG: number;
+    }[];
+    startMs: number; deadlineMs: number; targetBf: number;
+    feasible: boolean; adjusted: boolean; note?: string;
+  };
+}) {
+  const weeksSinceStart = (Date.now() - plan.startMs) / (7 * 86400000);
+  const activeOrder = useMemo(() => {
+    const p = plan.phases.find(
+      (ph) => weeksSinceStart >= ph.startWeekOffset && weeksSinceStart < ph.startWeekOffset + ph.durationWeeks,
+    ) ?? plan.phases[plan.phases.length - 1];
+    return p?.order ?? -1;
+  }, [plan, weeksSinceStart]);
+
+  if (!plan.feasible || plan.phases.length === 0) {
+    return (
+      <Text style={{ fontFamily: OUT_L, fontSize: 13, color: P.mid, lineHeight: 20 }}>
+        {plan.note ?? "No roadmap yet."}
+      </Text>
+    );
+  }
+
+  const total = plan.phases.reduce((sum, p) => sum + p.durationWeeks, 0) || 1;
+
+  return (
+    <View style={{ marginTop: 16, gap: 14 }}>
+      {/* Proportional phase bar */}
+      <View style={{ flexDirection: "row", height: 10, overflow: "hidden", borderRadius: 2 }}>
+        {plan.phases.map((p) => (
+          <View
+            key={p.order}
+            style={{
+              flex: p.durationWeeks / total,
+              backgroundColor: PHASE_COLORS[p.kind] ?? P.mid,
+              opacity: p.order === activeOrder ? 1 : 0.4,
+              marginRight: 1,
+            }}
+          />
+        ))}
+      </View>
+
+      {/* Per-phase rows */}
+      <View style={{ gap: 10 }}>
+        {plan.phases.map((p) => {
+          const active = p.order === activeOrder;
+          return (
+            <View
+              key={p.order}
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                opacity: active ? 1 : 0.6,
+              }}
+            >
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: PHASE_COLORS[p.kind] ?? P.mid }} />
+                <Text style={{ fontFamily: active ? OUT : OUT_L, fontSize: 13, color: P.ink }}>
+                  {p.label}
+                </Text>
+                {active && (
+                  <Text style={{ fontFamily: OUT_L, fontSize: 8, letterSpacing: 1.5, color: P.gold, textTransform: "uppercase" }}>
+                    Now
+                  </Text>
+                )}
+              </View>
+              <Text style={{ fontFamily: OUT_L, fontSize: 11, color: P.mid }}>
+                {p.durationWeeks}w · {p.calories} kcal · {p.startBf}→{p.endBf}%
+              </Text>
+            </View>
+          );
+        })}
+      </View>
+
+      {plan.note && (
+        <Text style={{ fontFamily: OUT_L, fontSize: 11, color: plan.adjusted ? P.gold : P.mid, lineHeight: 16 }}>
+          {plan.note}
+        </Text>
+      )}
     </View>
   );
 }
@@ -896,17 +1025,24 @@ function E1RMChart({ points }: { points: any[] }) {
 // ── Calendar Heatmap (Log tab) ────────────────────────────────────────────────
 const MONTH_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-function CalendarHeatmap({ workoutDates, photoDates, onDayPress }: {
-  workoutDates: Set<string>; photoDates: Set<string>; onDayPress: (d: string) => void;
+function CalendarHeatmap({ workoutDates, photoDates, plan, onDayPress }: {
+  workoutDates: Set<string>; photoDates: Set<string>; plan: PlanLike; onDayPress: (d: string) => void;
 }) {
   const { width } = useWindowDimensions();
   const LABEL_W = 26, LABEL_GAP = 8, H_GAP = 2, ROW_GAP = 4;
-  const CELL = Math.max(6, Math.floor((width - 60 - LABEL_W - LABEL_GAP - 30 * H_GAP) / 31));
+  // Horizontal chrome = scroll padding (24×2) + calendar card padding (16×2) = 80.
+  const CELL = Math.max(6, Math.floor((width - 80 - LABEL_W - LABEL_GAP - 30 * H_GAP) / 31));
 
   const months = useMemo(() => {
     const today = new Date(); today.setHours(0, 0, 0, 0);
+    // Slide the 12-month window forward so upcoming roadmap months are visible
+    // (up to 6 future months when a plan runs that far ahead).
+    const monthsToDeadline = plan?.feasible
+      ? Math.round((plan.deadlineMs - Date.now()) / (30.44 * 86400000))
+      : 0;
+    const forward = Math.max(0, Math.min(6, monthsToDeadline));
     return Array.from({ length: 12 }, (_, i) => {
-      const base = new Date(today.getFullYear(), today.getMonth() - (11 - i), 1);
+      const base = new Date(today.getFullYear(), today.getMonth() - (11 - i) + forward, 1);
       const year = base.getFullYear(), month = base.getMonth();
       const daysInMonth = new Date(year, month + 1, 0).getDate();
       const days = Array.from({ length: 31 }, (_, di) => {
@@ -914,11 +1050,11 @@ function CalendarHeatmap({ workoutDates, photoDates, onDayPress }: {
         if (day > daysInMonth) return { empty: true };
         const cellDate = new Date(year, month, day);
         const pd = toPhotoDate(year, month, day);
-        return { empty: false, isFuture: cellDate > today, hasWorkout: workoutDates.has(`${year}-${month}-${day}`), hasPhoto: photoDates.has(pd), photoDate: pd };
+        return { empty: false, isFuture: cellDate > today, hasWorkout: workoutDates.has(`${year}-${month}-${day}`), hasPhoto: photoDates.has(pd), photoDate: pd, phaseColor: phaseColorForDate(plan, cellDate.getTime()) };
       });
       return { label: MONTH_SHORT[month], days };
     });
-  }, [workoutDates, photoDates]);
+  }, [workoutDates, photoDates, plan]);
 
   return (
     <View>
@@ -936,7 +1072,13 @@ function CalendarHeatmap({ workoutDates, photoDates, onDayPress }: {
                 style={{
                   width: CELL, height: CELL, borderRadius: 1.5,
                   marginRight: di < 30 ? H_GAP : 0,
-                  backgroundColor: day.empty ? "transparent" : day.hasWorkout ? P.gold : P.s2,
+                  backgroundColor: day.empty
+                    ? "transparent"
+                    : day.hasWorkout
+                      ? P.gold
+                      : day.phaseColor
+                        ? day.phaseColor + "44"
+                        : P.s2,
                   ...(day.hasPhoto && !day.empty ? { borderWidth: 1, borderColor: P.bg } : {}),
                 }}
               />
@@ -956,10 +1098,11 @@ function CalendarHeatmap({ workoutDates, photoDates, onDayPress }: {
 
 const DAY_HEADERS = ["M","T","W","T","F","S","S"];
 
-function MonthCalendar({ viewDate, workoutDates, photoDates, weightByDate, caloriesByDate, onDayPress }: any) {
+function MonthCalendar({ viewDate, workoutDates, photoDates, weightByDate, caloriesByDate, plan, onDayPress }: any) {
   const { width } = useWindowDimensions();
   const GAP = 3;
-  const CELL = Math.floor((width - 60 - 6 * GAP) / 7);
+  // Horizontal chrome = scroll padding (24×2) + calendar card padding (16×2) = 80.
+  const CELL = Math.floor((width - 80 - 6 * GAP) / 7);
   const today = useMemo(() => { const d = new Date(); d.setHours(0,0,0,0); return d; }, []);
 
   const cells = useMemo(() => {
@@ -979,11 +1122,23 @@ function MonthCalendar({ viewDate, workoutDates, photoDates, weightByDate, calor
         photoDate: pd,
         weight: weightByDate?.[pd],
         cals: caloriesByDate?.[pd],
+        phaseColor: phaseColorForDate(plan, cellDate.getTime()),
       });
     }
     while (result.length % 7 !== 0) result.push({ day: null });
     return result;
-  }, [viewDate, workoutDates, photoDates, weightByDate, caloriesByDate, today]);
+  }, [viewDate, workoutDates, photoDates, weightByDate, caloriesByDate, plan, today]);
+
+  // Distinct phases visible this month, for the legend.
+  const monthPhases = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const c of cells) {
+      if (c.day === null || !c.phaseColor) continue;
+      const p = phaseForDate(plan, new Date(viewDate.getFullYear(), viewDate.getMonth(), c.day).getTime());
+      if (p && !seen.has(p.label)) seen.set(p.label, c.phaseColor);
+    }
+    return Array.from(seen.entries());
+  }, [cells, plan, viewDate]);
 
   const rows: any[][] = [];
   for (let i = 0; i < cells.length; i += 7) rows.push(cells.slice(i, i + 7));
@@ -1011,13 +1166,20 @@ function MonthCalendar({ viewDate, workoutDates, photoDates, weightByDate, calor
                 style={{
                   width: CELL, minHeight: CELL + 20,
                   borderRadius: 4,
-                  backgroundColor: cell.hasWorkout ? P.gold : P.s2,
+                  overflow: "hidden",
+                  // Non-workout days inside a plan get a faint phase wash; workout
+                  // days stay gold and carry the phase on the bottom stripe.
+                  backgroundColor: cell.hasWorkout
+                    ? P.gold
+                    : cell.phaseColor
+                      ? cell.phaseColor + "22"
+                      : P.s2,
                   alignItems: "center",
                   justifyContent: "flex-start",
                   paddingTop: 4,
                   borderWidth: cell.isToday ? 1.5 : 0,
                   borderColor: P.gold,
-                  opacity: cell.isFuture ? 0.3 : 1,
+                  opacity: cell.isFuture ? 0.35 : 1,
                 }}
               >
                 <Text style={{ fontFamily: cell.isToday ? OUT : OUT_L, fontSize: 11, color: cell.hasWorkout ? "#fff" : cell.isFuture ? P.border : P.mid }}>
@@ -1030,11 +1192,27 @@ function MonthCalendar({ viewDate, workoutDates, photoDates, weightByDate, calor
                     {cell.cals !== undefined && <View style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: cell.hasWorkout ? "rgba(255,255,255,0.5)" : P.mid }} />}
                   </View>
                 )}
+                {/* Roadmap phase stripe */}
+                {cell.phaseColor && (
+                  <View style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 3, backgroundColor: cell.phaseColor }} />
+                )}
               </TouchableOpacity>
             );
           })}
         </View>
       ))}
+
+      {/* Roadmap phase legend */}
+      {monthPhases.length > 0 && (
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12, marginTop: 12 }}>
+          {monthPhases.map(([label, color]) => (
+            <View key={label} style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <View style={{ width: 8, height: 3, borderRadius: 1.5, backgroundColor: color }} />
+              <Text style={{ fontFamily: OUT_L, fontSize: 9, color: P.dim }}>{label}</Text>
+            </View>
+          ))}
+        </View>
+      )}
 
       {/* Legend */}
       <View style={{ flexDirection: "row", gap: 12, marginTop: 10, justifyContent: "flex-end" }}>
@@ -1052,19 +1230,36 @@ function MonthCalendar({ viewDate, workoutDates, photoDates, weightByDate, calor
 }
 
 // ── Photo Modal ───────────────────────────────────────────────────────────────
-function PhotoModal({ visible, dateStr, userId, weight, cals, onClose }: any) {
+function PhotoModal({ visible, dateStr, userId, weight, cals, phaseLabel, onClose }: any) {
   const photo = useQuery(api.progressPhotos.getTodayPhoto, visible && userId && dateStr ? { userId, date: dateStr } : "skip");
+  const range = useMemo(() => {
+    if (!dateStr) return null;
+    const [y, m, d] = dateStr.split("-").map(Number);
+    return { start: new Date(y, m - 1, d).getTime(), end: new Date(y, m - 1, d + 1).getTime() };
+  }, [dateStr]);
+  const dayWorkout = useQuery(
+    api.workouts.getDayWorkout,
+    visible && userId && range ? { userId, dayStartMs: range.start, dayEndMs: range.end } : "skip",
+  );
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" }} onPress={onClose}>
         <Pressable style={[s.photoSheet, { backgroundColor: P.s1 }]} onPress={() => {}}>
           <View style={[s.handle, { backgroundColor: P.border }]} />
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
-            <View>
-              <Text style={{ fontFamily: OUT, fontSize: 16, color: P.ink, marginBottom: 2 }}>Progress Photo</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontFamily: OUT, fontSize: 16, color: P.ink, marginBottom: 2 }}>Day Summary</Text>
               <Text style={{ fontFamily: OUT_L, fontSize: 12, color: P.mid }}>
                 {dateStr ? formatPhotoDate(dateStr) : ""}
               </Text>
+              {phaseLabel && (
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginTop: 6 }}>
+                  <View style={{ width: 8, height: 3, borderRadius: 1.5, backgroundColor: PHASE_COLORS[phaseLabel.kind] ?? P.mid }} />
+                  <Text style={{ fontFamily: OUT_L, fontSize: 11, color: P.mid, letterSpacing: 0.5 }}>
+                    {phaseLabel.label} phase
+                  </Text>
+                </View>
+              )}
             </View>
             {(weight !== undefined || cals !== undefined) && (
               <View style={{ alignItems: "flex-end", gap: 4 }}>
@@ -1083,14 +1278,42 @@ function PhotoModal({ visible, dateStr, userId, weight, cals, onClose }: any) {
               </View>
             )}
           </View>
+          {/* Training done this day */}
+          {dayWorkout && dayWorkout.length > 0 && (
+            <View style={{ marginBottom: 16 }}>
+              {dayWorkout.map((w: any, wi: number) => (
+                <View key={wi} style={{ marginBottom: wi < dayWorkout.length - 1 ? 14 : 0 }}>
+                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+                    <Text style={{ fontFamily: OUT, fontSize: 14, color: P.gold }}>{w.sessionName}</Text>
+                    <Text style={{ fontFamily: OUT_L, fontSize: 10, color: P.mid, letterSpacing: 0.5 }}>
+                      {w.totalSets} sets{w.durationMin ? ` · ${w.durationMin} min` : ""}
+                    </Text>
+                  </View>
+                  {w.exercises.map((ex: any, ei: number) => (
+                    <View key={ei} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 4 }}>
+                      <Text style={{ fontFamily: OUT_L, fontSize: 13, color: P.ink, flex: 1 }} numberOfLines={1}>
+                        {ex.name}
+                      </Text>
+                      <Text style={{ fontFamily: OUT_L, fontSize: 12, color: P.mid, marginLeft: 10 }}>
+                        {ex.sets}×{ex.topReps} @ {ex.topWeight}kg
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              ))}
+            </View>
+          )}
+
           {photo === undefined ? (
             <View style={{ height: 280, alignItems: "center", justifyContent: "center" }}>
               <ActivityIndicator color={P.gold} />
             </View>
           ) : photo === null ? (
-            <View style={[s.noPhoto, { borderColor: P.border }]}>
-              <Text style={{ fontFamily: OUT_L, fontSize: 14, color: P.mid }}>No photo for this day</Text>
-            </View>
+            (dayWorkout && dayWorkout.length > 0) ? null : (
+              <View style={[s.noPhoto, { borderColor: P.border }]}>
+                <Text style={{ fontFamily: OUT_L, fontSize: 14, color: P.mid }}>No photo for this day</Text>
+              </View>
+            )
           ) : (
             <Image source={{ uri: photo.imageUrl }} style={s.photoImg} resizeMode="cover" />
           )}
@@ -1129,6 +1352,8 @@ export default function StatsScreen() {
   const activeMeso      = useQuery(api.mesocycles.getActiveWithDetails, userId ? { userId } : "skip");
   const dailyCalories   = useQuery(api.nutrition.getDailyTotals, userId ? { userId, fromDate: offsetDateStr(today, -90), toDate: today } : "skip");
   const foodTarget      = useQuery(api.nutrition.getFoodTarget, userId ? { userId } : "skip");
+  const activePlan      = useQuery(api.goalPlans.getActivePlan, userId ? { userId } : "skip");
+  const checkIn         = useQuery(api.goalPlans.getCheckInStatus, userId ? { userId } : "skip");
   const dateSummary = useQuery(api.workouts.getWorkoutDates, userId ? { userId } : "skip");
   const allPhotos   = useQuery(api.progressPhotos.listPhotos, userId ? { userId } : "skip");
   const photoCadence = useQuery(api.progressPhotos.getPhotoCadence, userId ? { userId, today } : "skip");
@@ -1168,11 +1393,21 @@ export default function StatsScreen() {
   const caloriesByDate = dailyCalories ?? {};
 
   // Lean mass
-  const leanMass = profile && weightStats
-    ? (weightStats.latest * (1 - profile.currentBf / 100)).toFixed(1)
-    : profile
-    ? (profile.weightKg * (1 - profile.currentBf / 100)).toFixed(1)
-    : null;
+  const nowWeight = weightStats?.latest ?? profile?.weightKg ?? null;
+  const leanMassNum =
+    profile && nowWeight != null ? nowWeight * (1 - profile.currentBf / 100) : null;
+  const leanMass = leanMassNum != null ? leanMassNum.toFixed(1) : null;
+
+  // Projected goal weight: prefer the roadmap's final phase (accounts for lean
+  // mass gained on the bulk), but only when it actually lands on the target —
+  // otherwise the shown weight would contradict the "Goal 16%" header, so fall
+  // back to holding lean mass constant at the target BF.
+  const goalWeight = useMemo(() => {
+    const last = activePlan?.feasible ? activePlan.phases[activePlan.phases.length - 1] : null;
+    if (last && profile && Math.abs(last.endBf - profile.targetBf) <= 0.5) return last.endWeightKg;
+    if (leanMassNum != null && profile) return leanMassNum / (1 - profile.targetBf / 100);
+    return null;
+  }, [activePlan, leanMassNum, profile]);
 
   // Log data
   const photoDates = useMemo(() => {
@@ -1246,6 +1481,34 @@ export default function StatsScreen() {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* ── Quarterly check-in nudge ──────────────────────────── */}
+        {checkIn?.due && (
+          <TouchableOpacity
+            onPress={() => router.push("/onboarding")}
+            activeOpacity={0.85}
+            style={{
+              backgroundColor: P.goldDim,
+              borderWidth: 1,
+              borderColor: P.gold,
+              padding: 16,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+            }}
+          >
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontFamily: OUT, fontSize: 14, color: P.ink }}>Quarterly check-in due</Text>
+              <Text style={{ fontFamily: OUT_L, fontSize: 12, color: P.mid, marginTop: 3, lineHeight: 17 }}>
+                It's been {checkIn.daysSince} days. Re-measure and refresh your roadmap.
+              </Text>
+            </View>
+            <Text style={{ fontFamily: OUT_L, fontSize: 10, letterSpacing: 2, color: P.gold, textTransform: "uppercase" }}>
+              Update →
+            </Text>
+          </TouchableOpacity>
+        )}
 
         {progressLoading && <ActivityIndicator color={P.gold} style={{ marginTop: 40 }} />}
 
@@ -1410,10 +1673,16 @@ export default function StatsScreen() {
                       </View>
                     </View>
 
-                    {/* Month nav (only in month view) */}
+                    {/* Month nav (only in month view) — forward-navigable up to
+                        the roadmap deadline so you can page through future phases. */}
                     {calView === "month" && (() => {
-                      const now = new Date();
-                      const atCurrent = calMonth.getFullYear() === now.getFullYear() && calMonth.getMonth() === now.getMonth();
+                      const maxMs = activePlan?.feasible
+                        ? activePlan.deadlineMs
+                        : Date.now() + 18 * 30.44 * 86400000;
+                      const maxD = new Date(maxMs);
+                      const atMax =
+                        calMonth.getFullYear() > maxD.getFullYear() ||
+                        (calMonth.getFullYear() === maxD.getFullYear() && calMonth.getMonth() >= maxD.getMonth());
                       return (
                         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
                           <TouchableOpacity onPress={() => setCalMonth(d => new Date(d.getFullYear(), d.getMonth() - 1, 1))}>
@@ -1422,8 +1691,8 @@ export default function StatsScreen() {
                           <Text style={{ fontFamily: OUT, fontSize: 14, color: P.ink }}>
                             {MONTH_SHORT[calMonth.getMonth()]} {calMonth.getFullYear()}
                           </Text>
-                          <TouchableOpacity onPress={() => !atCurrent && setCalMonth(d => new Date(d.getFullYear(), d.getMonth() + 1, 1))}>
-                            <Text style={{ fontSize: 20, color: atCurrent ? P.border : P.mid }}>›</Text>
+                          <TouchableOpacity onPress={() => !atMax && setCalMonth(d => new Date(d.getFullYear(), d.getMonth() + 1, 1))}>
+                            <Text style={{ fontSize: 20, color: atMax ? P.border : P.mid }}>›</Text>
                           </TouchableOpacity>
                         </View>
                       );
@@ -1450,10 +1719,11 @@ export default function StatsScreen() {
                         photoDates={photoDates}
                         weightByDate={weightByDate}
                         caloriesByDate={caloriesByDate}
+                        plan={activePlan}
                         onDayPress={setSelectedPhotoDate}
                       />
                     ) : (
-                      <CalendarHeatmap workoutDates={workoutDates} photoDates={photoDates} onDayPress={setSelectedPhotoDate} />
+                      <CalendarHeatmap workoutDates={workoutDates} photoDates={photoDates} plan={activePlan} onDayPress={setSelectedPhotoDate} />
                     )}
                   </Animated.View>
                 )}
@@ -1463,7 +1733,7 @@ export default function StatsScreen() {
                   <Animated.View entering={FadeInDown.delay(60).springify()} style={s.card}>
                     <Text style={s.sectionLabel}>BODY COMPOSITION</Text>
                     <View style={{ marginTop: 20 }}>
-                      <BfZoneBar sex={profile.sex} current={profile.currentBf} target={profile.targetBf} />
+                      <BfZoneBar sex={profile.sex} current={profile.currentBf} target={profile.targetBf} nowWeightKg={nowWeight} goalWeightKg={goalWeight} />
                     </View>
                     <View style={{ height: 1, backgroundColor: P.border, marginVertical: 16 }} />
                     <View style={s.statRow}>
@@ -1475,11 +1745,21 @@ export default function StatsScreen() {
                       </View>
                       <View style={s.statItem}>
                         <Text style={{ fontFamily: CG, fontSize: 20, color: P.gold, letterSpacing: -0.5 }}>
-                          {estimateMonths(profile.currentBf, profile.targetBf, profile.weeklyGoal)}
+                          {activePlan?.feasible && activePlan.phases.length > 0
+                            ? `~${Math.max(1, Math.round(activePlan.phases.reduce((sum, p) => sum + p.durationWeeks, 0) / 4.3))} months`
+                            : estimateMonths(profile.currentBf, profile.targetBf, profile.weeklyGoal)}
                         </Text>
                         <Text style={{ fontFamily: OUT_L, fontSize: 10, color: P.mid, marginTop: 3 }}>to goal</Text>
                       </View>
                     </View>
+                  </Animated.View>
+                )}
+
+                {/* ── Goal Roadmap (multi-phase) ───────────────────── */}
+                {activePlan && (
+                  <Animated.View entering={FadeInDown.delay(70).springify()} style={s.card}>
+                    <Text style={s.sectionLabel}>GOAL ROADMAP · TARGET {activePlan.targetBf}%</Text>
+                    <GoalRoadmap plan={activePlan} />
                   </Animated.View>
                 )}
 
@@ -1508,6 +1788,11 @@ export default function StatsScreen() {
         userId={userId}
         weight={selectedPhotoDate ? weightByDate[selectedPhotoDate] : undefined}
         cals={selectedPhotoDate ? caloriesByDate[selectedPhotoDate] : undefined}
+        phaseLabel={(() => {
+          if (!selectedPhotoDate) return null;
+          const [y, m, d] = selectedPhotoDate.split("-").map(Number);
+          return phaseForDate(activePlan, new Date(y, m - 1, d).getTime());
+        })()}
         onClose={() => setSelectedPhotoDate(null)}
       />
     </SafeAreaView>

@@ -55,6 +55,9 @@ function ProfileGate() {
     if (profile === null && !inOnboarding) {
       router.replace("/onboarding");
     }
+    // PHASE B: quarterly re-onboarding nudge — when profile.lastCheckInAt is
+    // older than ~90 days, push a lightweight `/check-in` flow that re-measures
+    // weight/BF and regenerates the goal roadmap (goalPlans.saveGeneratedPlan).
   }, [userId, userLoading, profile, segments]);
 
   return null;
